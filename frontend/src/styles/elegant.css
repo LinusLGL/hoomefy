@@ -1,0 +1,464 @@
+/* ==========================================================================
+   Elegant experience: "Scandinavian Dreams by Hoomefy"
+
+   Everything here is scoped to html:not([data-experience='haunted']), so the Haunted look is
+   untouched. Colours come from the palette tokens (features/haunting/palettes.ts).
+
+   The wide layout (>= 1180px) reproduces the design at any width: the hero and the top of the
+   styles section live in one box (.hf-top) that is measured in container units. --k is "one
+   pixel of the 1780px-wide design" at the current width, so the photo, waves, text and card keep
+   the proportions of the mockup. Below 1180px the hero stacks.
+   ========================================================================== */
+
+html:not([data-experience='haunted']) {
+  --hf-ink: rgb(var(--c-ivory));
+}
+
+/* Elegant-only artwork: hidden by default (so it never shows in Haunted), switched on by the layouts below. */
+.hf-hero__art,
+.hf-hero__leaves,
+.hf-hero__card {
+  display: none;
+}
+
+/* ---------- Header ------------------------------------------------------ */
+
+html:not([data-experience='haunted']) .hf-nav {
+  box-shadow: 0 1px 0 rgb(var(--c-navy-700) / 0.35);
+}
+html:not([data-experience='haunted']) .hf-brand,
+html:not([data-experience='haunted']) .hf-brand__text {
+  color: var(--hf-ink);
+}
+html:not([data-experience='haunted']) .hf-brand {
+  gap: 0.75rem;
+}
+html:not([data-experience='haunted']) .hf-brand__icon {
+  width: 2.125rem;
+  height: 2.125rem;
+  stroke-width: 1.75;
+}
+html:not([data-experience='haunted']) .hf-brand__text {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  line-height: 1;
+}
+@media (min-width: 768px) {
+  html:not([data-experience='haunted']) .hf-nav__inner {
+    max-width: 1386px;
+    padding-right: 1.75rem;
+  }
+  html:not([data-experience='haunted']) .hf-nav__links {
+    gap: 2.25rem;
+    /* the design's menu sits a little left of centre */
+    margin-right: 1.2rem;
+  }
+  html:not([data-experience='haunted']) .hf-nav__auth {
+    gap: 1.75rem;
+  }
+}
+html:not([data-experience='haunted']) .hf-nav__link {
+  font-size: 1.025rem;
+  font-weight: 500;
+}
+html:not([data-experience='haunted']) .hf-nav__signin {
+  font-size: 1rem;
+  font-weight: 500;
+}
+html:not([data-experience='haunted']) .hf-nav__link:not([aria-current='page']),
+html:not([data-experience='haunted']) .hf-nav__signin {
+  color: var(--hf-ink);
+}
+html:not([data-experience='haunted']) .hf-nav__signin {
+  padding-left: 0;
+  padding-right: 0;
+}
+html:not([data-experience='haunted']) .hf-nav__cta {
+  font-size: 1rem;
+  padding: 0.625rem 1.4rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgb(11 33 36 / 0.12);
+}
+
+/* ---------- Hero: shared pieces ----------------------------------------- */
+
+
+html:not([data-experience='haunted']) .hf-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  font-size: 0.96875rem;
+  letter-spacing: 0.2em;
+  color: var(--hf-ink);
+}
+html:not([data-experience='haunted']) .hf-eyebrow__rule {
+  display: block;
+  width: 5.4rem;
+  height: 1px;
+  background: #869a88;
+}
+html[data-experience='haunted'] .hf-eyebrow__rule {
+  display: none;
+}
+
+/* Headline: kerning is kept by letting the letters flow inline, except while the takeover animates them. */
+html:not([data-experience='haunted']):not([data-takeover]) .hf-ch {
+  display: inline;
+}
+html:not([data-experience='haunted']) h1.hf-glitch {
+  font-weight: 500;
+  color: var(--hf-ink);
+  letter-spacing: -0.012em;
+}
+/* "Reimagined" is italic with an olive-to-green fade; its full stop is upright dark green. */
+html:not([data-experience='haunted']) .hf-word.hf-emphasis {
+  font-style: italic;
+  background: linear-gradient(90deg, #747250 0%, #757352 45%, #546b53 74%, #43604e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-right: 0.04em;
+}
+html:not([data-experience='haunted']) .hf-word.hf-emphasis .hf-ch {
+  color: transparent;
+}
+html:not([data-experience='haunted']) .hf-word.hf-emphasis .hf-ch:last-child {
+  font-style: normal;
+  -webkit-text-fill-color: #2c4a3d;
+  color: #2c4a3d;
+}
+
+/* Buttons */
+html:not([data-experience='haunted']) .hf-btn {
+  border-radius: 0.75rem;
+  font-size: 1.078rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 1.125rem 2.06rem;
+}
+html:not([data-experience='haunted']) .hf-btn--primary {
+  box-shadow: 0 6px 16px rgb(44 74 61 / 0.22);
+}
+html:not([data-experience='haunted']) .hf-btn--secondary {
+  border-width: 1.5px;
+  /* same overall height as the primary button, which has no border */
+  padding-top: calc(1.125rem - 1.5px);
+  padding-bottom: calc(1.125rem - 1.5px);
+  background: rgb(var(--c-paper) / 0.82);
+  color: #102f24;
+}
+html:not([data-experience='haunted']) .hf-btn--secondary:hover {
+  color: rgb(var(--c-on-accent));
+}
+
+/* The photograph's soft left edge and the "Scandinavian" label */
+html:not([data-experience='haunted']) .hf-hero-frame {
+  container-type: inline-size;
+}
+html:not([data-experience='haunted']) .hf-hero-frame .hf-scene {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  outline: 0;
+}
+html:not([data-experience='haunted']) .hf-hero-frame .hf-scene__canvas {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+html:not([data-experience='haunted']) .hf-hero-frame .hf-scene[data-ready='true'] .hf-scene__canvas {
+  opacity: 1;
+}
+
+/* ---------- Styles section --------------------------------------------- */
+
+html:not([data-experience='haunted']) .hf-styles h2 {
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4rem;
+}
+html:not([data-experience='haunted']) .hf-styles h2::before,
+html:not([data-experience='haunted']) .hf-styles h2::after {
+  content: '';
+  width: 5.5rem;
+  height: 1px;
+  background: #839a8a;
+  flex: none;
+}
+html:not([data-experience='haunted']) .hf-styles h2 + p {
+  font-size: 1.125rem;
+  color: var(--hf-ink);
+}
+
+/* ---------- Stacked layout (below 1180px) -------------------------------- */
+
+@media (max-width: 1179.98px) {
+  html:not([data-experience='haunted']) .hf-hero {
+    padding-bottom: 0;
+  }
+  html:not([data-experience='haunted']) .hf-hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  html:not([data-experience='haunted']) .hf-hero-frame {
+    position: relative;
+    width: 100%;
+    max-width: 40rem;
+    margin: 0.5rem auto 0;
+  }
+  /* A square window onto the left part of the photograph: no baked-in label, no baked-in wave. */
+  html:not([data-experience='haunted']) .hf-hero-frame .hf-scene {
+    aspect-ratio: 1 / 1;
+    border-radius: 1.75rem;
+    box-shadow: 0 18px 40px rgb(11 33 36 / 0.14);
+  }
+  html:not([data-experience='haunted']) .hf-hero-frame .hf-scene__canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 165.5%;
+    height: 112.8%;
+  }
+  html:not([data-experience='haunted']) .hf-hero__card {
+    display: flex;
+    position: relative;
+    z-index: 2;
+    margin: -2.25rem 1.25rem 0;
+  }
+  html:not([data-experience='haunted']) .hf-styles {
+    position: relative;
+    margin-top: -2.5rem;
+    border-top-left-radius: 50% 2.75rem;
+    border-top-right-radius: 50% 2.75rem;
+    padding-top: 5rem;
+    background: linear-gradient(90deg, #b9c4bc 0%, #d6dad5 35%, #e4e3df 60%, #e4e3df 100%);
+  }
+}
+
+/* The label card, shared by the stacked and the wide layout */
+html:not([data-experience='haunted']) .hf-hero__card {
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border-radius: 1.4rem;
+  background: rgb(251 250 247 / 0.94);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgb(11 33 36 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.5);
+  color: var(--hf-ink);
+}
+html:not([data-experience='haunted']) .hf-hero__card-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  color: #807a52;
+  stroke-width: 1.6;
+}
+html:not([data-experience='haunted']) .hf-hero__card-rule {
+  width: 1px;
+  align-self: stretch;
+  min-height: 2rem;
+  background: #a89c74;
+  flex: none;
+}
+html:not([data-experience='haunted']) .hf-hero__card-title {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+html:not([data-experience='haunted']) .hf-hero__card-text {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #263436;
+}
+
+/* ---------- Wide layout (1180px and up) --------------------------------- */
+
+@media (min-width: 1180px) {
+  html:not([data-experience='haunted']) .hf-top {
+    --k: calc(100cqw / 1780); /* one pixel of the design */
+    container-type: inline-size;
+    position: relative;
+  }
+  html:not([data-experience='haunted']) .hf-hero {
+    position: relative;
+    height: calc(var(--k) * 700);
+    padding: 0;
+  }
+  html:not([data-experience='haunted']) .hf-hero__art {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: calc(var(--k) * 819);
+    z-index: 2;
+    pointer-events: none;
+  }
+  html:not([data-experience='haunted']) .hf-hero__waves {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  html:not([data-experience='haunted']) .hf-hero__leaves {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: calc(var(--k) * -65);
+    width: calc(var(--k) * 200);
+    height: auto;
+    z-index: 30; /* under the header, so the part that would cover the logo is hidden */
+    clip-path: inset(calc(var(--k) * 65) 0 0 0);
+    pointer-events: none;
+    user-select: none;
+  }
+  /* On wide screens the logo is clear of the leaves, so they overlap the header as in the design. */
+  @media (min-width: 1700px) {
+    html:not([data-experience='haunted']) .hf-hero__leaves {
+      z-index: 50;
+      clip-path: none;
+    }
+  }
+  html:not([data-experience='haunted']) .hf-hero__inner {
+    display: block;
+    position: static;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Copy column */
+  html:not([data-experience='haunted']) .hf-hero__copy {
+    position: absolute;
+    z-index: 3;
+    left: max(2rem, calc(var(--k) * 203));
+    top: calc(var(--k) * 75);
+    width: max(calc(var(--k) * 540), 24rem);
+  }
+  html:not([data-experience='haunted']) .hf-hero__copy > * + * {
+    margin-top: 0;
+  }
+  html:not([data-experience='haunted']) .hf-hero__copy h1.hf-glitch {
+    margin-top: calc(var(--k) * 49);
+    font-size: clamp(2.9rem, calc(var(--k) * 75), 5rem);
+    line-height: 0.98;
+  }
+  html:not([data-experience='haunted']) .hf-hero__copy [data-hero-sub] {
+    margin-top: calc(var(--k) * 24);
+    max-width: max(calc(var(--k) * 524), 23.5rem);
+    font-size: clamp(0.9375rem, calc(var(--k) * 18), 1.15rem);
+    line-height: 1.68;
+    color: rgb(var(--c-ivory) / 0.94);
+  }
+  html:not([data-experience='haunted']) .hf-hero__copy .hf-btn {
+    white-space: nowrap;
+  }
+  html:not([data-experience='haunted']) .hf-hero__copy > div:last-child {
+    margin-top: calc(var(--k) * 21);
+    gap: 1.45rem;
+  }
+
+  /* The photograph, anchored to the right edge exactly as in the design */
+  html:not([data-experience='haunted']) .hf-hero-frame {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--k) * 656);
+    top: calc(var(--k) * 2);
+    width: calc(var(--k) * 1124);
+    height: calc(var(--k) * 766);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 9%);
+  }
+  html:not([data-experience='haunted']) .hf-hero-frame .hf-scene {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+  }
+  html:not([data-experience='haunted']) .hf-hero__card {
+    display: flex;
+    position: absolute;
+    z-index: 2;
+    /* a little larger than the label baked into the photograph, so that one is completely covered;
+       on smaller screens it grows leftwards so its text stays readable */
+    right: 1.9%;
+    top: 59.8%;
+    width: max(28.2%, 17rem);
+    min-height: 18.2%;
+    box-sizing: border-box;
+    padding-bottom: 2.2cqw;
+    align-items: flex-start;
+    padding: 2.83cqw 1.4cqw 0 3.3cqw;
+    gap: 0;
+    border-radius: 2.2cqw;
+  }
+  html:not([data-experience='haunted']) .hf-hero__card-icon {
+    width: 2.3cqw;
+    height: 2.3cqw;
+    margin-top: -0.2cqw;
+  }
+  html:not([data-experience='haunted']) .hf-hero__card-rule {
+    min-height: 0;
+    height: 2cqw;
+    align-self: auto;
+    margin: 0 1.33cqw 0 1.07cqw;
+  }
+  html:not([data-experience='haunted']) .hf-hero__card-title {
+    font-size: max(0.9375rem, 1.69cqw);
+  }
+  html:not([data-experience='haunted']) .hf-hero__card-text {
+    font-size: max(0.8125rem, 1.25cqw);
+    line-height: 1.72;
+    margin-top: 0.45cqw;
+  }
+
+  /* The styles section: its heading sits on the wave, and its background continues the artwork */
+  html:not([data-experience='haunted']) .hf-styles {
+    position: relative;
+    z-index: 3; /* above the artwork, so the heading sits on the wave */
+    isolation: isolate;
+    background: none;
+    padding-top: calc(var(--k) * 9);
+    padding-bottom: 6rem;
+  }
+  html:not([data-experience='haunted']) .hf-styles::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    right: 0;
+    top: calc(var(--k) * 119);
+    bottom: 0;
+    /* the colours of the artwork's bottom row, continued downwards */
+    background: linear-gradient(
+      90deg,
+      #b4c0b7 0%,
+      #bbc5be 8.4%,
+      #cad0ca 16.9%,
+      #e2e2de 25.3%,
+      #e4e3df 33.7%,
+      #e3e2de 67.4%,
+      #dededa 78.7%,
+      #cad0ca 89.9%,
+      #c0c9c2 100%
+    );
+  }
+  html:not([data-experience='haunted']) .hf-styles h2 {
+    font-size: clamp(2.25rem, calc(var(--k) * 48), 3.6rem);
+    line-height: 1.15;
+    gap: calc(var(--k) * 43);
+  }
+  html:not([data-experience='haunted']) .hf-styles h2::before,
+  html:not([data-experience='haunted']) .hf-styles h2::after {
+    width: calc(var(--k) * 88);
+  }
+  html:not([data-experience='haunted']) .hf-styles h2 + p {
+    margin-top: calc(var(--k) * 7);
+  }
+}

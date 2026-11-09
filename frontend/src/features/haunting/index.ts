@@ -1,0 +1,18 @@
+export { HauntedExperienceProvider } from './HauntedExperienceProvider';
+export { bootstrapHaunting } from './bootstrap';
+export { useHauntingEnv } from './hauntingEnvContext';
+export { HorrorTakeoverController } from './HorrorTakeoverController';
+export { RealityDistortionOverlay } from './RealityDistortionOverlay';
+export { ChromaticAberrationEffect } from './ChromaticAberrationEffect';
+export { ScreenTearing } from './ScreenTearing';
+export { GlitchText } from './GlitchText';
+export { HauntedMansionBackground } from './HauntedMansionBackground';
+export { ParanormalShadow } from './ParanormalShadow';
+export { flashShadow, crossShadow, useLurkOnHover } from './shadowEffects';
+export { DistortedImageTransition } from './DistortedImageTransition';
+export { SceneFrame } from './SceneFrame';
+export { HauntedMirror } from './HauntedMirror';
+export { HauntingControls } from './HauntingControls';
+export { ScrollHauntingDirector } from './ScrollHauntingDirector';
+export { revealDistortion, microDistort } from './effects';
+export { useHauntingStore, useIsHaunted, useHorrorEnabled, canAutoTakeover } from './hauntingStore';

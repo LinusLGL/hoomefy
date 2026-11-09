@@ -1,0 +1,438 @@
+/**
+ * Holy water, the ghost and the two full-screen videos (Haunted experience only).
+ *
+ * Every rule is scoped to html[data-experience='haunted'], so Elegant is never touched, and every
+ * looping animation is switched off under prefers-reduced-motion. Stacking, from the bottom:
+ *   candlelight 7500 < room viewer 9500 < settings 9600 < ghost and bottle 9650 < candle cursor 9700 < video 9800
+ */
+
+html[data-experience='haunted'] {
+  --hf-ghost: 128px;
+}
+
+@media (max-width: 767px) {
+  html[data-experience='haunted'] {
+    --hf-ghost: 96px;
+  }
+}
+
+html[data-experience='haunted'] .hf-room {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0b0809;
+}
+
+html[data-experience='haunted'] .hf-room__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-room__image {
+  transition: transform .7s ease;
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-frame:hover .hf-room__image {
+  transform: scale(1.045);
+}
+
+html[data-experience='haunted'] .hf-room__open {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+html[data-experience='haunted'] .hf-room__open:focus-visible {
+  outline: 2px solid #f0d9a8;
+  outline-offset: -5px;
+}
+
+html[data-experience='haunted'] .hf-room__icon {
+  position: absolute;
+  right: .75rem;
+  bottom: .75rem;
+  box-sizing: content-box;
+  width: 1.1rem;
+  height: 1.1rem;
+  padding: .55rem;
+  border: 1px solid rgba(214, 190, 150, .55);
+  border-radius: 999px;
+  background: #0a0607b8;
+  color: #f1e5d4;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+
+html[data-experience='haunted'] .hf-room__open:hover .hf-room__icon,
+html[data-experience='haunted'] .hf-room__open:focus-visible .hf-room__icon {
+  background: #3c1812e6;
+  border-color: #f0d9a8;
+}
+
+html[data-experience='haunted'] .hf-viewer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: #060304f7;
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-viewer {
+  animation: hf-viewer-in .28s ease-out both;
+}
+
+html[data-experience='haunted'] .hf-viewer__stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;
+}
+
+html[data-experience='haunted'] .hf-viewer__figure {
+  margin: 0;
+  pointer-events: auto;
+  width: min(96vw, calc((100vh - 7rem)*1.777), 1500px);
+}
+
+html[data-experience='haunted'] .hf-viewer__canvas {
+  position: relative;
+  aspect-ratio: 1672 / 941;
+  border: 1px solid rgba(214, 190, 150, .45);
+  background: #000;
+  box-shadow: 0 0 44px #d4a57438;
+}
+
+html[data-experience='haunted'] .hf-viewer__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-experience='haunted'] .hf-viewer__caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .15rem;
+  min-height: 3rem;
+  margin-top: .6rem;
+  text-align: center;
+  font-family: var(--hf-serif);
+  font-size: 1.15rem;
+  color: var(--hf-cream);
+}
+
+html[data-experience='haunted'] .hf-viewer__found {
+  font-style: italic;
+  color: #f3dc9c;
+}
+
+html[data-experience='haunted'] .hf-viewer__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(214, 190, 150, .55);
+  border-radius: 999px;
+  background: #0a0607cc;
+  color: #f1e5d4;
+  cursor: pointer;
+}
+
+html[data-experience='haunted'] .hf-viewer__close:hover {
+  background: #3c1812eb;
+  border-color: #f0d9a8;
+}
+
+html[data-experience='haunted'] .hf-viewer__close:focus-visible,
+html[data-experience='haunted'] .hf-viewer__bottle:focus-visible {
+  outline: 2px solid #f0d9a8;
+  outline-offset: 3px;
+}
+
+html[data-experience='haunted'] .hf-viewer__bottle {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: clamp(44px, 3.4vw, 60px);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 0 5px rgba(158, 210, 255, .65));
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-viewer__bottle {
+  animation: hf-bottle-glint 3.4s ease-in-out infinite;
+}
+
+html[data-experience='haunted'] .hf-viewer__bottle-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+html[data-experience='haunted'] .hf-avatar {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(1rem + var(--hf-ghost) + .35rem);
+  z-index: 9650;
+  width: min(17rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+html[data-experience='haunted'] .hf-avatar__bubble {
+  position: relative;
+  padding: .8rem 1rem;
+  border: 1px solid rgba(214, 190, 150, .55);
+  border-radius: .6rem;
+  background: #0e080af2;
+  color: #f4e8d6;
+  font-family: var(--hf-serif);
+  font-size: 1.08rem;
+  line-height: 1.35;
+  box-shadow: 0 8px 30px #0009, 0 0 18px #d4a5742e;
+  transition: opacity .25s ease, visibility .25s ease;
+}
+
+html[data-experience='haunted'][data-motion='reduced'] .hf-avatar__bubble {
+  transition: none;
+}
+
+html[data-experience='haunted'] .hf-avatar__bubble[data-open='false'] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html[data-experience='haunted'] .hf-avatar__bubble p {
+  margin: 0;
+}
+
+html[data-experience='haunted'] .hf-avatar__bubble:after {
+  content: "";
+  position: absolute;
+  right: calc(var(--hf-ghost) / 2 - 8px);
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid rgba(214, 190, 150, .55);
+  border-bottom: 1px solid rgba(214, 190, 150, .55);
+  background: #0e080af2;
+  transform: rotate(45deg);
+}
+
+html[data-experience='haunted'] .hf-avatar__ghost {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 9650;
+  width: var(--hf-ghost);
+  height: var(--hf-ghost);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  mix-blend-mode: screen;
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-avatar__ghost {
+  animation: hf-avatar-in .9s ease-out both;
+}
+
+html[data-experience='haunted'] .hf-avatar__ghost:focus-visible {
+  outline: 2px solid #f0d9a8;
+  outline-offset: 2px;
+  border-radius: 1rem;
+}
+
+html[data-experience='haunted'] .hf-avatar__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%);
+  mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%);
+}
+
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-avatar__img {
+  animation: hf-avatar-bob 4.6s ease-in-out infinite;
+}
+
+html[data-experience='haunted'] .hf-avatar__ghost[data-armed='true'] {
+  filter: drop-shadow(0 0 14px rgba(158, 210, 255, .85));
+}
+
+html[data-experience='haunted'] .hf-avatar__ghost[data-over='true'] {
+  filter: drop-shadow(0 0 22px rgba(190, 230, 255, 1));
+}
+
+html[data-experience='haunted'] .hf-avatar__bottle {
+  position: fixed;
+  right: calc(1rem + var(--hf-ghost) + .25rem);
+  bottom: 1.25rem;
+  z-index: 9650;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 72px;
+  padding: 0;
+  border: 1px solid rgba(160, 210, 255, .45);
+  border-radius: .6rem;
+  background: #0a0e16db;
+  box-shadow: 0 0 18px #7cc4ff59;
+  cursor: grab;
+  touch-action: none;
+  pointer-events: auto;
+}
+
+html[data-experience='haunted'] .hf-avatar__bottle:focus-visible {
+  outline: 2px solid #f0d9a8;
+  outline-offset: 3px;
+}
+
+html[data-experience='haunted'] .hf-avatar__bottle[data-armed='true'] {
+  border-color: #9ed2ff;
+  box-shadow: 0 0 0 2px #9ed2ffb3, 0 0 26px #7cc4ffcc;
+}
+
+html[data-experience='haunted'] .hf-avatar__bottle[data-dragging='true'] {
+  opacity: .35;
+}
+
+html[data-experience='haunted'] .hf-avatar__bottle-art {
+  display: block;
+  width: 34px;
+  height: auto;
+}
+
+html[data-experience='haunted'] .hf-avatar__drag {
+  position: fixed;
+  z-index: 9660;
+  width: 44px;
+  transform: translate(-50%, -60%) rotate(-12deg);
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgba(158, 210, 255, .9));
+}
+
+html[data-experience='haunted'] .hf-avatar__drag .hf-avatar__bottle-art {
+  width: 100%;
+}
+
+html[data-experience='haunted'] .hf-video {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9800;
+  background: #000;
+  cursor: default;
+}
+
+html[data-experience='haunted'] .hf-video__player {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  html[data-experience='haunted'] .hf-video__player {
+    object-fit: contain;
+  }
+}
+
+html[data-experience='haunted'] .hf-video__skip {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: .5rem 1.2rem;
+  border: 1px solid rgba(225, 205, 180, .7);
+  border-radius: .2rem;
+  background: #0c0708b8;
+  color: #f6ebdd;
+  font-family: var(--hf-serif);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+html[data-experience='haunted'] .hf-video__skip:hover {
+  background: #3c1812e6;
+  border-color: #f0d9a8;
+}
+
+html[data-experience='haunted'] .hf-video__skip:focus-visible {
+  outline: 2px solid #f0d9a8;
+  outline-offset: 3px;
+}
+
+@keyframes hf-viewer-in {
+  0% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hf-avatar-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hf-avatar-bob {
+  0%,to {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes hf-bottle-glint {
+  0%,to {
+    filter: drop-shadow(0 0 4px rgba(158, 210, 255, .5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(190, 230, 255, .95));
+  }
+}
+
+/* The studio has a bottom bar on a phone: keep the ghost, its bubble and the bottle above it. */
+@media (max-width: 767px) {
+  html[data-experience='haunted'][data-studio-nav='true'] .hf-avatar {
+    bottom: calc(1rem + var(--hf-ghost) + 0.35rem + 3.75rem);
+  }
+  html[data-experience='haunted'][data-studio-nav='true'] .hf-avatar__ghost {
+    bottom: 4.75rem;
+  }
+  html[data-experience='haunted'][data-studio-nav='true'] .hf-avatar__bottle {
+    bottom: 6rem;
+  }
+}

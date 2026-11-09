@@ -1,0 +1,993 @@
+/* ==========================================================================
+   Hoomefy haunting layer
+   1. Effect primitives (overlay, tearing, scanlines, shadows, glitch text)
+   2. Controls
+   3. Haunted skin: only applies under html[data-experience="haunted"]
+   Colours come from the CSS variables defined in features/haunting/palettes.ts.
+   ========================================================================== */
+
+/* ---------- 1. Effect primitives --------------------------------------- */
+
+.hf-app {
+  position: relative;
+  z-index: 1;
+}
+
+.hf-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hf-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hf-overlay > * {
+  pointer-events: none;
+}
+
+.hf-tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: rgb(150, 178, 210);
+}
+
+.hf-flashframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  object-fit: cover;
+}
+
+.hf-tearing {
+  position: absolute;
+  inset: 0;
+}
+.hf-strip {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.hf-scan {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.32) 0 1px, transparent 1px 3px),
+    linear-gradient(to bottom, transparent 0%, rgba(255, 255, 255, 0.06) 46%, rgba(255, 255, 255, 0.1) 50%, transparent 54%, transparent 100%);
+  background-size: 100% 100%, 100% 220%;
+}
+html[data-takeover] .hf-scan {
+  animation: hf-roll 1.3s linear infinite;
+}
+@keyframes hf-roll {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, 0 220%; }
+}
+
+.hf-veil {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: #0b0809;
+}
+
+.hf-message,
+.hf-reveal {
+  /* Hidden (and therefore not selectable or findable) until a sequence is running. */
+  visibility: hidden;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  opacity: 0;
+}
+
+html[data-takeover] .hf-message,
+html[data-takeover] .hf-reveal {
+  visibility: visible;
+}
+
+.hf-message {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 7.5vw, 5.75rem);
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  color: #e6dccf;
+  text-shadow: 0 0 28px rgba(142, 27, 44, 0.85), 3px 0 rgba(142, 27, 44, 0.9), -3px 0 rgba(157, 181, 154, 0.9);
+}
+
+.hf-reveal {
+  gap: 1.25rem;
+  background: radial-gradient(ellipse at center, rgba(11, 8, 9, 0.5) 0%, rgba(11, 8, 9, 0.9) 100%);
+}
+.hf-reveal__logo {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: #9db59a;
+  text-shadow: 0 0 22px rgba(157, 181, 154, 0.7);
+}
+.hf-reveal__headline {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 4.75rem);
+  line-height: 1.08;
+  letter-spacing: 0.04em;
+  color: #e6dccf;
+  text-shadow: 2px 0 rgba(142, 27, 44, 0.85), -2px 0 rgba(157, 181, 154, 0.7), 0 0 36px rgba(0, 0, 0, 0.9);
+}
+.hf-reveal__sub {
+  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: #bdb0a2;
+}
+
+.hf-whisper {
+  position: absolute;
+  max-width: 22rem;
+  opacity: 0;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  color: rgb(122, 26, 33);
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+html[data-experience='haunted'] .hf-whisper {
+  color: #e6dccf;
+  text-shadow: 0 0 14px rgba(142, 27, 44, 0.8);
+}
+
+.hf-glyph {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: clamp(88px, 15vw, 170px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  color: rgb(122, 26, 33);
+}
+.hf-glyph svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Shadows */
+.hf-shadow {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(5px);
+}
+.hf-shadow svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hf-shadow--fixed {
+  left: 0;
+  bottom: 0;
+  height: 78vh;
+  width: 26vh;
+  filter: blur(9px);
+}
+
+/* Scene frame */
+.hf-scene {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  aspect-ratio: 16 / 10;
+  background: rgb(var(--c-navy-800));
+}
+.hf-scene__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hf-scene__shadow {
+  right: 14%;
+  bottom: 0;
+  height: 72%;
+  width: 20%;
+}
+
+/* Mirror */
+.hf-mirror {
+  display: inline-block;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+}
+.hf-mirror__frame {
+  display: block;
+  padding: 14px;
+  border-radius: 50% / 40%;
+  background: linear-gradient(135deg, #e6d3a3, #8a6630 55%, #eadcb4);
+  box-shadow: 0 26px 44px rgba(60, 45, 25, 0.28), inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  transition: transform 0.4s ease;
+}
+.hf-mirror:hover .hf-mirror__frame,
+.hf-mirror:focus-visible .hf-mirror__frame {
+  transform: translateY(-4px) rotate(-1deg);
+}
+.hf-mirror__glass {
+  position: relative;
+  display: block;
+  width: min(220px, 56vw);
+  aspect-ratio: 360 / 520;
+  overflow: hidden;
+  border-radius: 50% / 40%;
+}
+.hf-mirror__glass canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hf-mirror__shadow {
+  left: 28%;
+  bottom: 0;
+  width: 44%;
+  height: 86%;
+}
+
+/* Glitch text */
+.hf-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+.hf-ch {
+  display: inline-block;
+}
+.hf-glitch--active {
+  position: relative;
+  display: inline-block;
+}
+.hf-glitch--active::before,
+.hf-glitch--active::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  white-space: pre-wrap;
+  text-align: inherit;
+}
+.hf-glitch--active::before {
+  color: #8e1b2c;
+  transform: translate(-2px, 0);
+  clip-path: inset(0 0 52% 0);
+  animation: hf-glitch-a 2.4s steps(1) infinite;
+}
+.hf-glitch--active::after {
+  color: #9db59a;
+  transform: translate(2px, 0);
+  clip-path: inset(52% 0 0 0);
+  animation: hf-glitch-b 1.9s steps(1) infinite;
+}
+@keyframes hf-glitch-a {
+  0%, 100% { clip-path: inset(0 0 52% 0); transform: translate(-2px, 0); }
+  30% { clip-path: inset(18% 0 40% 0); transform: translate(-4px, 1px); }
+  62% { clip-path: inset(6% 0 70% 0); transform: translate(3px, 0); }
+}
+@keyframes hf-glitch-b {
+  0%, 100% { clip-path: inset(52% 0 0 0); transform: translate(2px, 0); }
+  40% { clip-path: inset(66% 0 8% 0); transform: translate(4px, -1px); }
+  75% { clip-path: inset(38% 0 36% 0); transform: translate(-3px, 0); }
+}
+
+/* ---------- 2. Controls ------------------------------------------------- */
+
+.hf-skip {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 9600;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #8e1b2c;
+  border-radius: 0.375rem;
+  background: #0b0809;
+  color: #e6dccf;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hf-skip:hover {
+  background: #17100f;
+}
+.hf-skip__hint {
+  margin-left: 0.25rem;
+  padding: 0 0.35rem;
+  border: 1px solid #756b64;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+  color: #bdb0a2;
+}
+
+.hf-controls {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 9600;
+  pointer-events: auto;
+}
+.hf-controls__toggle {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-navy-600));
+  background: rgb(var(--c-navy-800));
+  color: rgb(var(--c-ivory));
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.hf-controls--quiet .hf-controls__toggle {
+  opacity: 0.4;
+}
+.hf-controls--quiet .hf-controls__toggle:hover,
+.hf-controls--quiet .hf-controls__toggle:focus-visible {
+  opacity: 1;
+}
+.hf-controls__panel {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.5rem);
+  display: grid;
+  gap: 0.75rem;
+  width: min(20rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(var(--c-navy-600));
+  background: rgb(var(--c-navy-800));
+  color: rgb(var(--c-ivory));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  font-size: 0.875rem;
+}
+.hf-controls__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.hf-controls__group legend {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+.hf-chip {
+  min-height: 40px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(var(--c-navy-600));
+  background: transparent;
+  color: rgb(var(--c-ivory));
+  cursor: pointer;
+}
+.hf-chip--on {
+  background: rgb(var(--c-amber-600));
+  border-color: rgb(var(--c-amber-600));
+  color: rgb(var(--c-on-accent));
+}
+.hf-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.hf-controls__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+}
+.hf-controls__row small {
+  display: block;
+  color: rgb(var(--c-ivory) / 0.7);
+}
+.hf-controls__row input {
+  width: 20px;
+  height: 20px;
+  accent-color: rgb(var(--c-amber-600));
+}
+.hf-controls__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgb(var(--c-navy-600));
+  background: transparent;
+  color: rgb(var(--c-ivory));
+  cursor: pointer;
+  text-align: left;
+}
+.hf-controls__action:hover:not(:disabled) {
+  border-color: rgb(var(--c-amber-600));
+}
+.hf-controls__action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------- 3. Haunted skin -------------------------------------------- */
+
+.hf-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s ease;
+}
+html[data-experience='haunted'] .hf-bg[data-active='true'] {
+  opacity: 1;
+}
+html[data-takeover] .hf-bg {
+  transition: none;
+}
+.hf-bg__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hf-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.82) 100%);
+}
+.hf-bg__mist {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -6%;
+  height: 44%;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse at 28% 100%, rgba(150, 170, 155, 0.38), transparent 60%),
+    radial-gradient(ellipse at 76% 100%, rgba(130, 150, 140, 0.3), transparent 62%);
+}
+html[data-experience='haunted'] .hf-bg__mist {
+  opacity: 0.55;
+  animation: hf-mist 26s ease-in-out infinite alternate;
+}
+@keyframes hf-mist {
+  from { transform: translateX(-3%); }
+  to { transform: translateX(3%); }
+}
+.hf-bg__grain {
+  position: absolute;
+  inset: -10%;
+  opacity: 0.08;
+  background-image: var(--hf-grain, none);
+  animation: hf-grain 0.9s steps(6) infinite;
+}
+@keyframes hf-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-4%, 3%); }
+  40% { transform: translate(3%, -5%); }
+  60% { transform: translate(-2%, 6%); }
+  80% { transform: translate(5%, 1%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Surfaces become dark, distressed and translucent so the mansion shows through. */
+html[data-experience='haunted'] .bg-navy-900 {
+  background-color: rgb(var(--c-navy-900) / 0.56);
+}
+html[data-experience='haunted'] .bg-navy-800 {
+  background-color: rgb(var(--c-navy-800) / 0.88);
+}
+html[data-experience='haunted'] .bg-navy-950 {
+  background-color: rgb(var(--c-navy-950) / 0.88);
+}
+html[data-takeover='C'] .bg-navy-900,
+html[data-takeover='D'] .bg-navy-900 {
+  transition: background-color 1.2s ease;
+}
+
+html[data-experience='haunted'] h1,
+html[data-experience='haunted'] h2 {
+  text-shadow: 0 0 22px rgba(142, 27, 44, 0.28);
+}
+
+/* Navigation: scratched noticeboard strip */
+html[data-experience='haunted'] .hf-nav {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background-image:
+    repeating-linear-gradient(97deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 7px),
+    linear-gradient(to bottom, #17100f, #100a0a);
+  border-bottom: 1px solid #2a1f21;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.65), inset 0 -2px 0 rgba(142, 27, 44, 0.4);
+}
+html[data-experience='haunted'] .hf-nav__link {
+  position: relative;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+html[data-experience='haunted'] .hf-nav__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 2px;
+  background: #8e1b2c;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+html[data-experience='haunted'] .hf-nav__link:hover::after,
+html[data-experience='haunted'] .hf-nav__link[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+/* Gilded portrait frames */
+.hf-frame {
+  position: relative;
+}
+html[data-experience='haunted'] .hf-frame {
+  border: 8px solid #2b1c0e;
+  outline: 1px solid #a07a38;
+  border-radius: 2px;
+  background: #17100f;
+  box-shadow: inset 0 0 0 2px #0a0a09, 0 16px 34px rgba(0, 0, 0, 0.7);
+  transform: rotate(var(--hf-tilt, 0deg));
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+html[data-experience='haunted'] .hf-frame:nth-child(even) {
+  --hf-tilt: 0.5deg;
+}
+html[data-experience='haunted'] .hf-frame:nth-child(odd) {
+  --hf-tilt: -0.5deg;
+}
+html[data-experience='haunted'] .hf-frame:hover,
+html[data-experience='haunted'] .hf-frame:focus-within {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: inset 0 0 0 2px #0a0a09, 0 20px 40px rgba(0, 0, 0, 0.75), 0 0 26px rgba(142, 27, 44, 0.28);
+}
+html[data-experience='haunted'] .hf-frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(0, 0, 0, 0.5) 100%);
+  transition: opacity 0.6s ease, transform 1.6s ease;
+}
+html[data-experience='haunted'] .hf-frame:hover::after {
+  opacity: 1;
+  transform: translateX(7%);
+}
+html[data-experience='haunted'] .hf-frame img,
+html[data-experience='haunted'] .hf-frame canvas {
+  filter: saturate(0.7) contrast(1.05);
+}
+/* Colour swatches on style cards: dimmed and desaturated so they sit inside the dark scene. */
+html[data-experience='haunted'] .hf-frame .h-32 {
+  filter: grayscale(0.5) brightness(0.55) contrast(1.05);
+}
+
+/* Evidence board (upload panel) */
+.hf-pin {
+  display: none;
+}
+html[data-experience='haunted'] .hf-evidence {
+  position: relative;
+  border: 2px solid #8a6a2e;
+  border-radius: 2px;
+  background-color: #120a0b;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 5px);
+  background-size: 34px 34px, 41px 41px, auto;
+  box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.85);
+}
+html[data-experience='haunted'] .hf-evidence .hf-pin {
+  display: block;
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, #f3d9a0, #b9904a 60%, #5a4120);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+html[data-experience='haunted'] .hf-evidence .hf-pin--tl { top: 10px; left: 12px; }
+html[data-experience='haunted'] .hf-evidence .hf-pin--tr { top: 10px; right: 12px; }
+html[data-experience='haunted'] .hf-evidence::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 17px;
+  height: 1px;
+  background: rgba(185, 144, 74, 0.55);
+  transform: rotate(0.4deg);
+}
+
+/* Developing a haunted photograph (generation) */
+.hf-develop {
+  position: relative;
+  overflow: hidden;
+  border: 8px solid #2b1c0e;
+  border-radius: 2px;
+  background: #0a0a09;
+  box-shadow: 0 0 0 1px #a07a38, 0 24px 60px rgba(0, 0, 0, 0.8);
+}
+.hf-develop img {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  object-fit: cover;
+  transition: filter 1.4s ease, opacity 1.4s ease;
+}
+.hf-develop[data-stage='queued'] img {
+  filter: grayscale(1) blur(16px) brightness(0.55) sepia(0.4);
+  opacity: 0.65;
+}
+.hf-develop[data-stage='developing'] img {
+  filter: grayscale(0.7) blur(6px) brightness(0.8) sepia(0.5);
+  opacity: 0.9;
+  animation: hf-develop-pulse 3.2s ease-in-out infinite alternate;
+}
+.hf-develop[data-stage='ready'] img {
+  filter: none;
+  opacity: 1;
+}
+.hf-develop[data-stage='failed'] img {
+  filter: grayscale(1) brightness(0.5);
+}
+.hf-develop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(142, 27, 44, 0.18), rgba(0, 0, 0, 0.55) 90%);
+  mix-blend-mode: multiply;
+}
+@keyframes hf-develop-pulse {
+  from { filter: grayscale(0.8) blur(8px) brightness(0.72) sepia(0.5); }
+  to { filter: grayscale(0.55) blur(4px) brightness(0.9) sepia(0.45); }
+}
+
+/* Reduced motion: no looping or flashing from the haunting layer */
+html[data-motion='reduced'] .hf-bg__grain,
+html[data-motion='reduced'] .hf-bg__mist,
+html[data-motion='reduced'] .hf-glitch--active::before,
+html[data-motion='reduced'] .hf-glitch--active::after,
+html[data-motion='reduced'] .hf-develop img,
+html[data-motion='reduced'] .hf-scan {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hf-bg__grain,
+  .hf-bg__mist,
+  .hf-glitch--active::before,
+  .hf-glitch--active::after,
+  .hf-develop img,
+  .hf-scan {
+    animation: none !important;
+  }
+}
+
+/* Mobile: lighter atmosphere */
+@media (max-width: 767px) {
+  .hf-bg__grain { display: none; }
+  .hf-shadow--fixed { height: 60vh; width: 20vh; }
+}
+
+/* ==========================================================================
+   Haunted mansion additions
+   ========================================================================== */
+
+/* Ornamental divider under section titles */
+.hf-ornament {
+  display: none;
+}
+html[data-experience='haunted'] .hf-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: 0 auto 1.1rem;
+  color: #b04f60;
+}
+html[data-experience='haunted'] .hf-ornament::before,
+html[data-experience='haunted'] .hf-ornament::after {
+  content: '';
+  height: 1px;
+  width: min(9rem, 22vw);
+  background: linear-gradient(90deg, transparent, currentColor);
+}
+html[data-experience='haunted'] .hf-ornament::after {
+  transform: scaleX(-1);
+}
+
+/* Crimson mist rising at the foot of a section (the reference's "Haunted Styles" band) */
+html[data-experience='haunted'] .hf-red-mist {
+  background-image:
+    radial-gradient(ellipse 60% 70% at 0% 110%, rgba(142, 27, 44, 0.5), transparent 70%),
+    radial-gradient(ellipse 60% 70% at 100% 110%, rgba(142, 27, 44, 0.5), transparent 70%);
+}
+
+/* Serif display type everywhere in the mansion */
+html[data-experience='haunted'] h1,
+html[data-experience='haunted'] h2 {
+  letter-spacing: 0.01em;
+}
+
+/* ==========================================================================
+   Candle cursor
+   ========================================================================== */
+
+/* The native cursor is hidden only while the CandleCursor component is mounted (it sets data-candle). */
+html[data-candle='on'],
+html[data-candle='on'] * {
+  cursor: none !important;
+}
+/* Text fields keep the I-beam so editing stays precise. */
+html[data-candle='on']
+  :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='button']):not([type='submit']),
+    textarea,
+    [contenteditable='true']
+  ) {
+  cursor: text !important;
+}
+
+/* Above the settings and skip controls (9600), so the candle is never hidden behind them. */
+.hf-candle {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9700;
+  width: 40px;
+  height: 84px;
+  /* the flame centre (20px, 16px) sits exactly on the pointer */
+  margin: -16px 0 0 -20px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  will-change: transform;
+}
+.hf-candle[data-visible='true'] {
+  opacity: 1;
+}
+.hf-candle[data-text='true'] {
+  opacity: 0 !important;
+}
+.hf-candle__svg {
+  position: relative;
+  display: block;
+  /* the body trails down and to the right so it hides as little as possible */
+  transform: rotate(-14deg);
+  transform-origin: 20px 16px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+.hf-candle__body {
+  opacity: 0.92;
+}
+.hf-candle__halo {
+  position: absolute;
+  left: 50%;
+  top: 16px;
+  width: 190px;
+  height: 190px;
+  margin: -95px 0 0 -95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 100, 0.3) 0%, rgba(255, 150, 60, 0.12) 38%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: hf-halo 2.4s ease-in-out infinite alternate;
+  /* --hf-glow grows with the candlelight (1 = the starting 30%) */
+  transform: scale(var(--hf-glow, 1));
+  transition: transform 0.35s ease;
+}
+.hf-candle[data-hot='true'] .hf-candle__halo {
+  transform: scale(calc(var(--hf-glow, 1) * 1.35));
+}
+/* A click makes the flame flare for a moment. */
+.hf-candle[data-flare='true'] .hf-candle__halo {
+  transform: scale(calc(var(--hf-glow, 1) * 1.8));
+  transition-duration: 0.08s;
+}
+.hf-candle__flame {
+  transform-origin: 20px 24px;
+  animation: hf-flicker 0.42s steps(1) infinite;
+  transition: transform 0.2s ease;
+}
+.hf-candle[data-hot='true'] .hf-candle__flame {
+  transform: scale(1.3);
+  animation-name: hf-flicker-hot;
+}
+@keyframes hf-flicker {
+  0% { transform: scale(1, 1) skewX(0deg); }
+  25% { transform: scale(0.94, 1.07) skewX(-4deg); }
+  50% { transform: scale(1.04, 0.95) skewX(3deg); }
+  75% { transform: scale(0.97, 1.04) skewX(-2deg); }
+}
+@keyframes hf-flicker-hot {
+  0% { transform: scale(1.3, 1.3) skewX(0deg); }
+  25% { transform: scale(1.22, 1.4) skewX(-5deg); }
+  50% { transform: scale(1.34, 1.24) skewX(4deg); }
+  75% { transform: scale(1.26, 1.36) skewX(-3deg); }
+}
+@keyframes hf-halo {
+  from { opacity: 0.78; }
+  to { opacity: 1; }
+}
+html[data-motion='reduced'] .hf-candle__flame,
+html[data-motion='reduced'] .hf-candle__halo {
+  animation: none !important;
+}
+html[data-motion='reduced'] .hf-candle__halo {
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hf-candle__flame,
+  .hf-candle__halo {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   Candlelight: the dark room and the circle of light (see candleLight.ts)
+
+   The room is 80% dark. Around the flame the circle is 100% clear up to 55% of its radius,
+   then fades to the full darkness at the edge. Sits above the page and its toasts, below the
+   ghosts, the takeover effects and the settings controls, so those stay visible.
+   ========================================================================== */
+
+@property --hf-light-r {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 300px;
+}
+.hf-candlelight {
+  position: fixed;
+  inset: 0;
+  z-index: 7500;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--hf-lx, 50vw) var(--hf-ly, 50vh),
+    rgba(5, 3, 4, 0) 0,
+    rgba(5, 3, 4, 0) calc(var(--hf-light-r) * 0.55),
+    rgba(5, 3, 4, 0.18) calc(var(--hf-light-r) * 0.7),
+    rgba(5, 3, 4, 0.5) calc(var(--hf-light-r) * 0.85),
+    rgba(5, 3, 4, 0.8) var(--hf-light-r)
+  );
+  /* The radius eases to each new value (a clear, or the candle burning lower). */
+  transition: --hf-light-r 1.4s ease, opacity 0.9s ease;
+}
+.hf-candlelight[data-lit='true'] {
+  opacity: 0;
+}
+html[data-motion='reduced'] .hf-candlelight {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hf-candlelight {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Floating ghosts
+   ========================================================================== */
+
+.hf-ghosts {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 36vh;
+  overflow: hidden;
+  z-index: 8000;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.hf-ghost {
+  position: absolute;
+  bottom: -6vh;
+  pointer-events: none;
+  will-change: transform;
+  animation: hf-ghost-drift var(--hf-drift-s, 90s) ease-in-out var(--hf-delay, 0s) infinite alternate;
+}
+.hf-ghost__bob {
+  width: 100%;
+  height: 100%;
+  animation: hf-ghost-bob var(--hf-bob-s, 8s) ease-in-out var(--hf-delay, 0s) infinite alternate;
+}
+@keyframes hf-ghost-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(var(--hf-drift, 30vw), 0, 0); }
+}
+@keyframes hf-ghost-bob {
+  from { transform: translate3d(0, 10px, 0) rotate(-2deg); }
+  to { transform: translate3d(0, -26px, 0) rotate(2deg); }
+}
+html[data-motion='reduced'] .hf-ghost,
+html[data-motion='reduced'] .hf-ghost__bob {
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hf-ghost,
+  .hf-ghost__bob {
+    animation: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .hf-ghosts {
+    height: 28vh;
+  }
+}
+
+/* Spirits leaving a photograph once their furniture is replaced */
+@keyframes hf-spirit-leave {
+  0% { opacity: 0.85; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translate3d(var(--hf-leave-x, 0px), -42%, 0) scale(1.25); filter: blur(5px); }
+}
+@keyframes hf-spirit-linger {
+  from { transform: translate3d(0, 4px, 0); }
+  to { transform: translate3d(0, -8px, 0); }
+}
+.hf-spirit {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.hf-spirit[data-state='lingering'] {
+  opacity: 0.55;
+  animation: hf-spirit-linger 3.4s ease-in-out infinite alternate;
+}
+.hf-spirit[data-state='leaving'] {
+  animation: hf-spirit-leave 2.6s ease-in forwards;
+}
+.hf-spirit[data-state='gone'] {
+  display: none;
+}
+html[data-motion='reduced'] .hf-spirit[data-state='lingering'] {
+  animation: none;
+}
+html[data-motion='reduced'] .hf-spirit[data-state='leaving'] {
+  animation-duration: 0.01s;
+}
+
+/* The studio has a bottom bar on a phone: keep the sound and settings buttons above it. */
+@media (max-width: 767px) {
+  html[data-studio-nav='true'] .hf-controls {
+    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}

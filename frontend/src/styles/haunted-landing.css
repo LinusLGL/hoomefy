@@ -1,0 +1,1216 @@
+/* ==========================================================================
+   Haunted experience: "Haunted Mansion Interior Design Landing Page"
+
+   Everything here applies only under html[data-experience='haunted'], so the Elegant look is
+   untouched. Loaded after haunted.css, so it refines the base mansion skin.
+
+   The wide layout (>= 1100px) reproduces the design at any width: the hero and the steps strip
+   live in one box (.hf-top) measured in container units. --k is "one pixel of the 1672px-wide
+   design" at the current width. Below 1100px the hero stacks.
+   ========================================================================== */
+
+html[data-experience='haunted'] {
+  --hf-cream: #efe3d2;
+  --hf-cream-dim: rgba(239, 227, 210, 0.78);
+  --hf-blood: #c8101e;
+  --hf-serif: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+}
+
+/* Elegant-only parts of the page, and Haunted-only parts, stay out of the other experience. */
+.hf-art {
+  display: none;
+}
+
+/* ---------- The mansion behind everything ------------------------------- */
+
+.hf-bg__wall {
+  position: absolute;
+  inset: 0;
+  background: url('/images/haunted/wallpaper.jpg') center / cover no-repeat, #0b0809;
+  transform-origin: 50% 60%;
+}
+/* the left of the page is darker so the title reads, and the foot glows red */
+.hf-bg__wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 2, 3, 0.45) 0%, rgba(5, 2, 3, 0.15) 40%, rgba(5, 2, 3, 0) 65%),
+    radial-gradient(ellipse at 50% 120%, rgba(110, 8, 20, 0.3), transparent 60%);
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-bg__wall {
+  animation: hf-push-in 48s ease-in-out infinite alternate;
+}
+@keyframes hf-push-in {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+
+.hf-bg__lights {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hf-bg__light {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+}
+.hf-bg__light--chandelier {
+  left: 63%;
+  top: 14%;
+  width: 34vmax;
+  height: 34vmax;
+  background: radial-gradient(circle, rgba(255, 190, 110, 0.34), rgba(255, 150, 70, 0.1) 45%, transparent 70%);
+}
+.hf-bg__light--fire {
+  left: 86%;
+  top: 62%;
+  width: 30vmax;
+  height: 30vmax;
+  background: radial-gradient(circle, rgba(255, 140, 50, 0.4), rgba(255, 90, 30, 0.12) 45%, transparent 70%);
+}
+.hf-bg__light--candles {
+  left: 10%;
+  top: 52%;
+  width: 24vmax;
+  height: 24vmax;
+  background: radial-gradient(circle, rgba(255, 180, 90, 0.3), rgba(255, 140, 60, 0.08) 48%, transparent 70%);
+}
+.hf-bg__light--moon {
+  left: 46%;
+  top: 24%;
+  width: 26vmax;
+  height: 26vmax;
+  background: radial-gradient(circle, rgba(150, 185, 255, 0.2), transparent 68%);
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-bg__light--chandelier {
+  animation: hf-flicker-a 3.3s steps(1) infinite;
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-bg__light--fire {
+  animation: hf-flicker-b 2.1s steps(1) infinite;
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-bg__light--candles {
+  animation: hf-flicker-a 2.6s steps(1) infinite 0.7s;
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-bg__light--moon {
+  animation: hf-breathe 9s ease-in-out infinite alternate;
+}
+@keyframes hf-flicker-a {
+  0%, 100% { opacity: 1; }
+  12% { opacity: 0.72; }
+  27% { opacity: 0.95; }
+  41% { opacity: 0.6; }
+  58% { opacity: 1; }
+  73% { opacity: 0.8; }
+  88% { opacity: 0.9; }
+}
+@keyframes hf-flicker-b {
+  0%, 100% { opacity: 0.9; }
+  18% { opacity: 1; }
+  34% { opacity: 0.66; }
+  52% { opacity: 0.95; }
+  69% { opacity: 0.74; }
+  84% { opacity: 1; }
+}
+@keyframes hf-breathe {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+html[data-experience='haunted'] .hf-bg__vignette {
+  background: radial-gradient(ellipse at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* The wallpaper is the page: surfaces over it are clear glass, except where a section needs weight. */
+html[data-experience='haunted'] body {
+  background-color: #0b0809;
+}
+
+/* ---------- Header ------------------------------------------------------- */
+
+html[data-experience='haunted'] .hf-nav {
+  position: sticky;
+  background-image: linear-gradient(to bottom, rgba(8, 4, 5, 0.86), rgba(8, 4, 5, 0.62));
+  border-bottom: 0;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: none;
+  font-family: var(--hf-serif);
+}
+/* the red rule with its centre ornament */
+html[data-experience='haunted'] .hf-nav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -9px;
+  height: 18px;
+  pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 18' fill='none' stroke='%23d21a28' stroke-width='1.1'%3E%3Cpath d='M70 1.5 76 9 70 16.5 64 9Z' fill='%23a3111c'/%3E%3Cpath d='M58 9h-6M82 9h6M44 9h4M92 9h4' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='9' r='1.6' fill='%23d21a28'/%3E%3Ccircle cx='90' cy='9' r='1.6' fill='%23d21a28'/%3E%3Cpath d='M64 9c-4-4-8-4-10 0 2 4 6 4 10 0ZM76 9c4-4 8-4 10 0-2 4-6 4-10 0Z'/%3E%3C/svg%3E")
+      center / 140px 18px no-repeat,
+    linear-gradient(90deg, transparent 0, rgba(190, 22, 34, 0.85) 8%, rgba(190, 22, 34, 0.85) 92%, transparent 100%) center / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 4px rgba(210, 26, 40, 0.65));
+}
+html[data-experience='haunted'] .hf-nav__bar {
+  height: 4.25rem;
+}
+html[data-experience='haunted'] .hf-brand {
+  gap: 0.7rem;
+  color: var(--hf-cream);
+}
+html[data-experience='haunted'] .hf-brand__icon {
+  width: 2.45rem;
+  height: 2.45rem;
+  color: #f1d9c0;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 130, 0.35));
+}
+html[data-experience='haunted'] .hf-brand__text {
+  font-family: var(--hf-serif);
+  font-size: 2.05rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.005em;
+  color: #f2e6d6;
+}
+html[data-experience='haunted'] .hf-nav__link,
+html[data-experience='haunted'] .hf-nav__signin {
+  font-family: var(--hf-serif);
+  font-size: 1.16rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--hf-cream);
+}
+html[data-experience='haunted'] .hf-nav__link::after {
+  bottom: -4px;
+  background: var(--hf-blood);
+}
+html[data-experience='haunted'] .hf-nav__link:hover,
+html[data-experience='haunted'] .hf-nav__signin:hover {
+  color: #fff;
+  text-shadow: 0 0 12px rgba(220, 40, 50, 0.8);
+}
+html[data-experience='haunted'] .hf-nav__cta {
+  position: relative;
+  padding: 0.55rem 1.7rem;
+  border: 1px solid #d02332;
+  border-radius: 0.3rem;
+  background: linear-gradient(to bottom, #6a0b17, #3b0510);
+  color: #f6ebdd;
+  font-family: var(--hf-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  box-shadow:
+    inset 0 0 0 3px #3b0510,
+    inset 0 0 0 4px rgba(214, 62, 74, 0.6),
+    0 0 14px rgba(200, 16, 30, 0.55);
+}
+html[data-experience='haunted'] .hf-nav__cta:hover {
+  background: linear-gradient(to bottom, #86101f, #4c0714);
+  box-shadow:
+    inset 0 0 0 3px #4c0714,
+    inset 0 0 0 4px rgba(236, 84, 96, 0.8),
+    0 0 22px rgba(224, 28, 44, 0.8);
+}
+@media (min-width: 768px) {
+  html[data-experience='haunted'] .hf-nav__inner {
+    position: relative;
+    max-width: 1270px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  html[data-experience='haunted'] .hf-nav__links {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 3.1rem;
+  }
+  html[data-experience='haunted'] .hf-nav__auth {
+    gap: 1.7rem;
+  }
+  html[data-experience='haunted'] .hf-nav__signin {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* ---------- Hero: shared ------------------------------------------------- */
+
+html[data-experience='haunted'] .hf-hero {
+  background: none;
+}
+html[data-experience='haunted'] .hf-hero__copy {
+  font-family: var(--hf-serif);
+}
+html[data-experience='haunted'] .hf-hero__copy h1.hf-glitch {
+  font-family: var(--hf-serif);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: #f1e5d4;
+  text-shadow:
+    0 0 26px rgba(255, 214, 170, 0.28),
+    0 2px 3px rgba(0, 0, 0, 0.55);
+}
+html[data-experience='haunted']:not([data-takeover]) .hf-hero__copy .hf-ch {
+  display: inline;
+}
+html[data-experience='haunted'] .hf-hero__copy h1 .hf-word.hf-emphasis {
+  position: relative;
+  display: inline-block;
+  font-style: italic;
+  font-weight: 700;
+  /* the H is wet blood; the rest of the word fades to bone */
+  background: linear-gradient(90deg, #b30d1b 0%, #d01f27 15%, #e0796f 24%, #f1d7c8 34%, #f1e5d4 48%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(200, 24, 34, 0.5));
+  text-shadow: none;
+  /* room for the descender of the y: background-clip:text only paints inside the box */
+  padding-bottom: 0.3em;
+  margin-bottom: -0.3em;
+}
+html[data-experience='haunted'] .hf-hero__copy h1 .hf-word.hf-emphasis::after {
+  content: none;
+}
+html[data-experience='haunted'] .hf-hero__copy h1 .hf-word.hf-emphasis .hf-ch {
+  color: transparent;
+}
+html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] {
+  color: #efe3d3;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  font-weight: 500;
+}
+html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] .hf-word.hf-emphasis {
+  font-style: italic;
+  font-weight: 600;
+  color: #ec1523;
+  text-shadow: 0 0 12px rgba(227, 20, 31, 0.5);
+}
+html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] .hf-word.hf-emphasis::after {
+  content: none;
+}
+
+.hf-hero__ornament {
+  display: none;
+}
+html[data-experience='haunted'] .hf-hero__ornament {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #f0d9c0;
+}
+html[data-experience='haunted'] .hf-hero__ornament-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: none;
+}
+html[data-experience='haunted'] .hf-hero__ornament::before,
+html[data-experience='haunted'] .hf-hero__ornament::after {
+  content: '';
+  height: 1px;
+  width: 4.5rem;
+  background: linear-gradient(90deg, transparent, rgba(240, 217, 192, 0.85));
+  margin: 0 0.7rem;
+}
+html[data-experience='haunted'] .hf-hero__ornament::after {
+  transform: scaleX(-1);
+}
+
+/* Buttons */
+html[data-experience='haunted'] .hf-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  border-radius: 0.2rem;
+  font-family: var(--hf-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: #f6ebdd;
+}
+html[data-experience='haunted'] .hf-btn--primary {
+  border: 1px solid #e0283a;
+  background: linear-gradient(to bottom, #7a0c19, #3d0510 70%, #330410);
+  box-shadow:
+    inset 0 0 0 3px #3a0510,
+    inset 0 0 0 4px rgba(226, 70, 84, 0.65),
+    0 0 18px rgba(214, 20, 36, 0.7),
+    0 0 46px rgba(170, 10, 26, 0.4);
+}
+html[data-experience='haunted'] .hf-btn--primary:hover {
+  background: linear-gradient(to bottom, #96101f, #4d0714 70%, #3f0612);
+  box-shadow:
+    inset 0 0 0 3px #4d0714,
+    inset 0 0 0 4px rgba(240, 100, 112, 0.85),
+    0 0 26px rgba(236, 28, 46, 0.9),
+    0 0 60px rgba(190, 12, 30, 0.55);
+}
+html[data-experience='haunted'] .hf-btn--secondary {
+  border: 1px solid rgba(225, 205, 180, 0.7);
+  background: rgba(12, 7, 8, 0.72);
+  color: #f1e4d3;
+  box-shadow:
+    inset 0 0 0 3px rgba(12, 7, 8, 0.72),
+    inset 0 0 0 4px rgba(225, 205, 180, 0.4),
+    0 0 14px rgba(0, 0, 0, 0.6);
+}
+html[data-experience='haunted'] .hf-btn--secondary:hover {
+  background: rgba(40, 14, 18, 0.85);
+  border-color: #e0283a;
+  color: #fff;
+}
+html[data-experience='haunted'] .hf-btn__arrow {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 1.7;
+}
+
+/* The framed scene */
+html[data-experience='haunted'] .hf-hero-frame .hf-scene {
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  aspect-ratio: 704 / 500;
+}
+html[data-experience='haunted'] .hf-hero-frame {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 2.4%, #000 97.6%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 3%, #000 97%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 2.4%, #000 97.6%, transparent 100%),
+    linear-gradient(180deg, transparent 0, #000 3%, #000 97%, transparent 100%);
+  mask-composite: intersect;
+  filter: drop-shadow(0 0 22px rgba(0, 0, 0, 0.7));
+}
+html[data-experience='haunted'] .hf-hero-frame::before,
+html[data-experience='haunted'] .hf-hero-frame::after {
+  content: none;
+}
+
+/* ---------- The steps strip ---------------------------------------------- */
+
+.hf-steps {
+  display: none;
+}
+html[data-experience='haunted'] .hf-steps {
+  display: block;
+  position: relative;
+  z-index: 3;
+  font-family: var(--hf-serif);
+  color: var(--hf-cream);
+}
+html[data-experience='haunted'] .hf-steps__divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1px;
+}
+/* two red rules that stop short of the icon */
+html[data-experience='haunted'] .hf-steps__divider::before,
+html[data-experience='haunted'] .hf-steps__divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 1px;
+  box-shadow: 0 0 8px rgba(200, 16, 30, 0.5);
+}
+html[data-experience='haunted'] .hf-steps__divider::before {
+  left: 20%;
+  right: calc(50% + 1.9rem);
+  background: linear-gradient(90deg, transparent 0, rgba(190, 22, 34, 0.8) 30%, rgba(222, 40, 52, 0.95) 100%);
+}
+html[data-experience='haunted'] .hf-steps__divider::after {
+  left: calc(50% + 1.9rem);
+  right: 0;
+  background: linear-gradient(90deg, rgba(222, 40, 52, 0.95) 0, rgba(190, 22, 34, 0.7) 40%, rgba(190, 22, 34, 0.3) 100%);
+}
+html[data-experience='haunted'] .hf-steps__divider-icon {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  color: #e0283a;
+  filter: drop-shadow(0 0 6px rgba(224, 40, 58, 0.8));
+}
+html[data-experience='haunted'] .hf-steps__list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2.5rem 1.5rem 3rem;
+}
+html[data-experience='haunted'] .hf-steps__item {
+  text-align: center;
+}
+html[data-experience='haunted'] .hf-steps__icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.6rem;
+  color: #ecc9b0;
+  filter: drop-shadow(0 0 8px rgba(255, 170, 120, 0.3));
+}
+html[data-experience='haunted'] .hf-steps__title {
+  margin: 0;
+  font-family: var(--hf-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f4e8d8;
+}
+html[data-experience='haunted'] .hf-steps__body {
+  margin: 0.3rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: var(--hf-cream-dim);
+}
+html[data-experience='haunted'] .hf-steps__chevron {
+  display: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #d51e2e;
+  filter: drop-shadow(0 0 5px rgba(213, 30, 46, 0.7));
+}
+
+/* ---------- Stacked layout (below 1100px) -------------------------------- */
+
+@media (max-width: 1099.98px) {
+  html[data-experience='haunted'] .hf-hero {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+  html[data-experience='haunted'] .hf-hero__copy h1.hf-glitch {
+    font-size: clamp(3.4rem, 15vw, 6rem);
+    line-height: 0.95;
+  }
+  html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] {
+    font-size: clamp(1.35rem, 4.6vw, 1.7rem);
+    line-height: 1.4;
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-btn {
+    width: 100%;
+    max-width: 22rem;
+    padding: 1.1rem 1.5rem;
+  }
+  html[data-experience='haunted'] .hf-hero-frame {
+    margin: 1rem auto 0;
+    width: 100%;
+    max-width: 44rem;
+  }
+  html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] .hf-br {
+    display: none;
+  }
+}
+
+/* ---------- Wide layout (1100px and up) ---------------------------------- */
+
+@media (min-width: 1100px) {
+  html[data-experience='haunted'] .hf-top {
+    --k: calc(100cqw / 1672); /* one pixel of the design */
+    container-type: inline-size;
+    position: relative;
+  }
+  html[data-experience='haunted'] .hf-hero {
+    position: relative;
+    height: calc(var(--k) * 682);
+    padding: 0;
+  }
+  html[data-experience='haunted'] .hf-hero__inner {
+    display: block;
+    position: static;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Candles, portrait, cobwebs and candelabra, exactly where the design has them */
+  .hf-art {
+    pointer-events: none;
+    user-select: none;
+  }
+  html[data-experience='haunted'] .hf-art {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--k) * -68);
+    height: calc(var(--k) * 941);
+    z-index: 2;
+  }
+  html[data-experience='haunted'] .hf-art__left,
+  html[data-experience='haunted'] .hf-art__right {
+    position: absolute;
+    top: 0;
+    height: calc(var(--k) * 941);
+    width: auto;
+    max-width: none;
+  }
+  html[data-experience='haunted'] .hf-art__left {
+    left: 0;
+  }
+  html[data-experience='haunted'] .hf-art__right {
+    right: 0;
+  }
+  html[data-experience='haunted'] .hf-art__flame {
+    position: absolute;
+    border-radius: 50%;
+    mix-blend-mode: screen;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 214, 140, 0.95) 0, rgba(255, 150, 60, 0.45) 22%, rgba(255, 110, 30, 0.12) 52%, transparent 72%);
+  }
+  html[data-experience='haunted'] .hf-art__flame--tall {
+    left: calc(var(--k) * 35);
+    top: calc(var(--k) * 452);
+    width: calc(var(--k) * 150);
+    height: calc(var(--k) * 150);
+  }
+  html[data-experience='haunted'] .hf-art__flame--short {
+    left: calc(var(--k) * 126);
+    top: calc(var(--k) * 584);
+    width: calc(var(--k) * 110);
+    height: calc(var(--k) * 110);
+  }
+  html[data-experience='haunted']:not([data-motion='reduced']) .hf-art__flame--tall {
+    animation: hf-flame 1.7s steps(1) infinite;
+  }
+  html[data-experience='haunted']:not([data-motion='reduced']) .hf-art__flame--short {
+    animation: hf-flame 2.3s steps(1) infinite 0.4s;
+  }
+  @keyframes hf-flame {
+    0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+    20% { opacity: 1; transform: translate(-50%, -52%) scale(1.12); }
+    45% { opacity: 0.55; transform: translate(-50%, -49%) scale(0.9); }
+    70% { opacity: 0.95; transform: translate(-50%, -51%) scale(1.06); }
+  }
+
+  /* Blood under the title */
+  html[data-experience='haunted'] .hf-art__blood {
+    position: absolute;
+    left: calc(var(--k) * 170);
+    top: calc(var(--k) * 322);
+    width: calc(var(--k) * 520);
+    height: calc(var(--k) * 130);
+    overflow: visible;
+    z-index: 4;
+    filter: drop-shadow(0 0 calc(var(--k) * 6) rgba(230, 20, 34, 0.7));
+  }
+  html[data-experience='haunted'] .hf-art__swoosh {
+    fill: #c80f1c;
+  }
+  html[data-experience='haunted'] .hf-art__drip {
+    fill: #c80f1c;
+    transform-box: fill-box;
+    transform-origin: 50% 0;
+  }
+  html[data-experience='haunted']:not([data-motion='reduced']) .hf-art__drip--a {
+    animation: hf-drip 11s ease-in-out infinite;
+  }
+  html[data-experience='haunted']:not([data-motion='reduced']) .hf-art__drip--b {
+    animation: hf-drip 8s ease-in-out infinite 2s;
+  }
+  @keyframes hf-drip {
+    0%, 100% { transform: scaleY(0.82); }
+    55% { transform: scaleY(1.1); }
+  }
+
+  /* Copy column */
+  html[data-experience='haunted'] .hf-hero__copy {
+    position: absolute;
+    z-index: 3;
+    left: calc(var(--k) * 208);
+    top: 0;
+    width: calc(var(--k) * 560);
+  }
+  html[data-experience='haunted'] .hf-hero__copy > * + * {
+    margin-top: 0;
+  }
+  html[data-experience='haunted'] .hf-hero__copy h1.hf-glitch {
+    margin-top: calc(var(--k) * 102);
+    margin-left: calc(var(--k) * 14);
+    font-size: calc(var(--k) * 109);
+    line-height: calc(var(--k) * 81);
+  }
+  html[data-experience='haunted'] .hf-hero__copy h1 .hf-word.hf-emphasis {
+    margin-left: calc(var(--k) * 30);
+    padding-right: calc(var(--k) * 10);
+    font-size: 1.22em;
+    letter-spacing: -0.02em;
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-hero__ornament {
+    margin-top: calc(var(--k) * 55);
+    margin-left: calc(var(--k) * 132);
+  }
+  html[data-experience='haunted'] .hf-hero__copy [data-hero-sub] {
+    margin-top: calc(var(--k) * 12);
+    max-width: none;
+    font-size: calc(var(--k) * 26.4);
+    line-height: calc(var(--k) * 32.5);
+  }
+  html[data-experience='haunted'] .hf-hero__copy > div:last-child {
+    position: absolute;
+    left: 0;
+    top: calc(var(--k) * 484);
+    margin-top: 0;
+    gap: calc(var(--k) * 32);
+    flex-direction: row;
+    align-items: stretch;
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-btn {
+    height: calc(var(--k) * 62);
+    padding: 0 calc(var(--k) * 28);
+    font-size: calc(var(--k) * 23.6);
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-btn--primary {
+    width: calc(var(--k) * 258);
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-btn--secondary {
+    width: calc(var(--k) * 215);
+    font-size: calc(var(--k) * 21);
+    font-weight: 600;
+  }
+  html[data-experience='haunted'] .hf-hero__copy .hf-btn__arrow {
+    width: calc(var(--k) * 24);
+    height: calc(var(--k) * 24);
+  }
+
+  /* The framed scene, anchored where the design hangs it */
+  html[data-experience='haunted'] .hf-hero-frame {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--k) * 868);
+    top: calc(var(--k) * 92);
+    width: calc(var(--k) * 704);
+    height: calc(var(--k) * 500);
+  }
+  html[data-experience='haunted'] .hf-hero-frame .hf-scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Steps strip */
+  html[data-experience='haunted'] .hf-steps {
+    height: calc(var(--k) * 191);
+  }
+  html[data-experience='haunted'] .hf-steps__divider-icon {
+    width: calc(var(--k) * 30);
+    height: calc(var(--k) * 30);
+  }
+  html[data-experience='haunted'] .hf-steps__list {
+    display: block;
+    position: absolute;
+    inset: 0;
+    padding: 0;
+  }
+  html[data-experience='haunted'] .hf-steps__item {
+    position: absolute;
+    top: calc(var(--k) * 34);
+    width: calc(var(--k) * 300);
+  }
+  html[data-experience='haunted'] .hf-steps__item:nth-child(1) { left: calc(var(--k) * (543 - 150)); }
+  html[data-experience='haunted'] .hf-steps__item:nth-child(3) { left: calc(var(--k) * (839 - 150)); }
+  html[data-experience='haunted'] .hf-steps__item:nth-child(5) { left: calc(var(--k) * (1141 - 150)); }
+  html[data-experience='haunted'] .hf-steps__icon {
+    width: calc(var(--k) * 50);
+    height: calc(var(--k) * 50);
+    margin-bottom: calc(var(--k) * 7);
+  }
+  html[data-experience='haunted'] .hf-steps__title {
+    font-size: calc(var(--k) * 23);
+    line-height: 1;
+  }
+  html[data-experience='haunted'] .hf-steps__body {
+    margin-top: calc(var(--k) * 1);
+    font-size: calc(var(--k) * 18);
+  }
+  html[data-experience='haunted'] .hf-steps__chevron {
+    display: block;
+    position: absolute;
+    top: calc(var(--k) * 60);
+    width: calc(var(--k) * 24);
+    height: calc(var(--k) * 24);
+  }
+  html[data-experience='haunted'] .hf-steps__chevron:nth-child(2) { left: calc(var(--k) * (688 - 12)); }
+  html[data-experience='haunted'] .hf-steps__chevron:nth-child(4) { left: calc(var(--k) * (985 - 12)); }
+}
+
+/* ---------- Sections below the fold --------------------------------------- */
+
+html[data-experience='haunted'] .hf-styles {
+  background-color: rgb(var(--c-navy-900) / 0.7);
+}
+html[data-experience='haunted'] .hf-styles h2,
+html[data-experience='haunted'] h2.font-heading {
+  font-family: var(--hf-serif);
+  font-weight: 700;
+}
+
+/* ---------- Sign-up video ------------------------------------------------- */
+
+.hf-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #0b0809;
+}
+.hf-backdrop__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.hf-backdrop__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(8, 4, 5, 0.42) 0%, rgba(8, 4, 5, 0.82) 100%),
+    linear-gradient(to bottom, rgba(8, 4, 5, 0.5), transparent 30%, transparent 70%, rgba(8, 4, 5, 0.6));
+}
+/* ---------- Sound control ------------------------------------------------- */
+
+.hf-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.hf-controls__sound {
+  border-color: rgba(190, 22, 34, 0.7);
+}
+
+/* ---------- Sign-in gate: "Are You a Revisiting Companion or New Soul?" ---- */
+
+html[data-experience='haunted'] .hf-gate {
+  font-family: var(--hf-serif);
+  color: var(--hf-cream);
+}
+html[data-experience='haunted'] .hf-gate .hf-backdrop__shade {
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(8, 4, 5, 0.22) 0%, rgba(8, 4, 5, 0.8) 100%),
+    linear-gradient(to bottom, rgba(8, 4, 5, 0.5), transparent 30%, transparent 70%, rgba(8, 4, 5, 0.65));
+}
+html[data-experience='haunted'] .hf-gate__content {
+  max-width: 46rem;
+  margin: 0 auto;
+  text-align: center;
+}
+html[data-experience='haunted'] .hf-gate__brand {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--hf-cream);
+}
+html[data-experience='haunted'] .hf-gate__brand-icon {
+  width: 2.3rem;
+  height: 2.3rem;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 130, 0.35));
+}
+html[data-experience='haunted'] .hf-gate__brand-name {
+  /* Set here, not inherited from .hf-gate, so the form screens use the same wordmark. */
+  font-family: var(--hf-serif);
+  font-size: 1.65rem;
+  font-weight: 600;
+  line-height: 1;
+}
+html[data-experience='haunted'] .hf-gate__rule {
+  height: 18px;
+  width: min(21rem, 78%);
+  margin: 0.7rem auto 1.1rem;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 18' fill='none' stroke='%23d21a28' stroke-width='1.1'%3E%3Cpath d='M70 1.5 76 9 70 16.5 64 9Z' fill='%23a3111c'/%3E%3Cpath d='M58 9h-6M82 9h6' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='9' r='1.6' fill='%23d21a28'/%3E%3Ccircle cx='90' cy='9' r='1.6' fill='%23d21a28'/%3E%3Cpath d='M64 9c-4-4-8-4-10 0 2 4 6 4 10 0ZM76 9c4-4 8-4 10 0-2 4-6 4-10 0Z'/%3E%3C/svg%3E")
+      center / 140px 18px no-repeat,
+    linear-gradient(90deg, transparent 0, rgba(190, 22, 34, 0.85) 18%, rgba(190, 22, 34, 0.85) 82%, transparent 100%) center / 100% 1px no-repeat;
+  filter: drop-shadow(0 0 4px rgba(210, 26, 40, 0.65));
+}
+html[data-experience='haunted'] .hf-gate__title {
+  margin: 0;
+  font-family: var(--hf-serif);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.12;
+  color: #f1e5d4;
+  text-shadow: 0 0 26px rgba(255, 214, 170, 0.3), 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+html[data-experience='haunted'] .hf-gate__line {
+  display: block;
+}
+html[data-experience='haunted'] .hf-gate__line--small {
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+}
+html[data-experience='haunted'] .hf-gate__line--large {
+  font-size: clamp(2.2rem, 6.2vw, 3.2rem);
+  font-weight: 600;
+}
+html[data-experience='haunted'] .hf-gate__soul {
+  font-style: italic;
+  font-weight: 600;
+  color: #ec1523;
+  text-shadow: 0 0 22px rgba(227, 20, 31, 0.7);
+}
+/* red flourishes either side of "or New Soul?" */
+html[data-experience='haunted'] .hf-gate__line--large:last-child::before,
+html[data-experience='haunted'] .hf-gate__line--large:last-child::after {
+  content: '';
+  display: inline-block;
+  width: 4rem;
+  height: 1.3rem;
+  vertical-align: middle;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 24' fill='none'%3E%3Cpath d='M2 15c10-13 24-13 30-5s-4 12-8 6 6-14 20-12 22 6 34 2' stroke='%23d21a28' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 0 4px rgba(210, 26, 40, 0.8));
+}
+html[data-experience='haunted'] .hf-gate__line--large:last-child::before {
+  margin-right: 0.8rem;
+}
+html[data-experience='haunted'] .hf-gate__line--large:last-child::after {
+  margin-left: 0.8rem;
+  transform: scaleX(-1);
+}
+html[data-experience='haunted'] .hf-gate__lead {
+  max-width: 36rem;
+  margin: 1.1rem auto 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.3rem);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--hf-cream-dim);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+}
+
+html[data-experience='haunted'] .hf-gate__cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: center;
+  gap: 1.75rem;
+  max-width: 17rem;
+  margin: 2rem auto 0;
+}
+@media (min-width: 700px) {
+  html[data-experience='haunted'] .hf-gate__cards {
+    grid-template-columns: repeat(2, minmax(0, 16rem));
+    gap: 4.25rem;
+    max-width: none;
+  }
+}
+
+html[data-experience='haunted'] .hf-gate__card {
+  --n: 14px; /* chamfered corner */
+  --t: 12px; /* raised centre at top and bottom */
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 22.5rem;
+  padding: 2.4rem 1.3rem 1.9rem;
+  border: 0;
+  background: none;
+  color: var(--hf-cream);
+  font: inherit;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+html[data-experience='haunted'] .hf-gate__card::before,
+html[data-experience='haunted'] .hf-gate__card::after,
+html[data-experience='haunted'] .hf-auth__card::before,
+html[data-experience='haunted'] .hf-auth__card::after {
+  --shape: polygon(
+    calc(var(--n) + var(--i)) calc(var(--t) + var(--i)),
+    28% calc(var(--t) + var(--i)),
+    33% var(--i),
+    67% var(--i),
+    72% calc(var(--t) + var(--i)),
+    calc(100% - var(--n) - var(--i)) calc(var(--t) + var(--i)),
+    calc(100% - var(--i)) calc(var(--t) + var(--n) + var(--i)),
+    calc(100% - var(--i)) calc(100% - var(--t) - var(--n) - var(--i)),
+    calc(100% - var(--n) - var(--i)) calc(100% - var(--t) - var(--i)),
+    72% calc(100% - var(--t) - var(--i)),
+    67% calc(100% - var(--i)),
+    33% calc(100% - var(--i)),
+    28% calc(100% - var(--t) - var(--i)),
+    calc(var(--n) + var(--i)) calc(100% - var(--t) - var(--i)),
+    var(--i) calc(100% - var(--t) - var(--n) - var(--i)),
+    var(--i) calc(var(--t) + var(--n) + var(--i))
+  );
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: var(--shape);
+  pointer-events: none;
+}
+html[data-experience='haunted'] .hf-gate__card::before,
+html[data-experience='haunted'] .hf-auth__card::before {
+  --i: 0px;
+  z-index: -2;
+  background: var(--frame);
+}
+html[data-experience='haunted'] .hf-gate__card::after,
+html[data-experience='haunted'] .hf-auth__card::after {
+  --i: 2px;
+  z-index: -1;
+  background: var(--fill);
+}
+html[data-experience='haunted'] .hf-gate__card--companion,
+html[data-experience='haunted'] .hf-auth__card[data-tone='companion'] {
+  --frame: linear-gradient(180deg, #f6e3bd, #a88a50 50%, #ecd7aa);
+  --fill: radial-gradient(ellipse at 50% 26%, rgba(150, 90, 30, 0.38), transparent 62%), linear-gradient(180deg, #140c0a, #0a0606);
+  filter: drop-shadow(0 0 10px rgba(240, 190, 110, 0.38));
+}
+html[data-experience='haunted'] .hf-gate__card--soul,
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] {
+  --frame: linear-gradient(180deg, #ff6470, #c4101f 55%, #ff4a58);
+  --fill: radial-gradient(ellipse at 50% 28%, rgba(210, 22, 40, 0.5), transparent 66%), linear-gradient(180deg, #2c0509, #12030a);
+  filter: drop-shadow(0 0 14px rgba(226, 26, 44, 0.7));
+}
+html[data-experience='haunted'] .hf-gate__card--companion:hover,
+html[data-experience='haunted'] .hf-gate__card--companion:focus-visible {
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 20px rgba(246, 200, 120, 0.75));
+}
+html[data-experience='haunted'] .hf-gate__card--soul:hover,
+html[data-experience='haunted'] .hf-gate__card--soul:focus-visible {
+  transform: translateY(-4px);
+  filter: drop-shadow(0 0 26px rgba(240, 34, 54, 0.95));
+}
+html[data-experience='haunted']:not([data-motion='reduced']) .hf-gate__card--soul {
+  animation: hf-soul-pulse 3.6s ease-in-out infinite alternate;
+}
+@keyframes hf-soul-pulse {
+  from { filter: drop-shadow(0 0 9px rgba(226, 26, 44, 0.55)); }
+  to { filter: drop-shadow(0 0 18px rgba(236, 30, 50, 0.9)); }
+}
+html[data-experience='haunted'] .hf-gate__card:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 6px;
+  box-shadow: none;
+}
+
+html[data-experience='haunted'] .hf-gate__emblem {
+  width: 4rem;
+  height: 6.2rem;
+  margin-bottom: 0.4rem;
+  filter: drop-shadow(0 0 12px rgba(255, 170, 70, 0.55));
+}
+html[data-experience='haunted'] .hf-gate__card--soul .hf-gate__emblem {
+  filter: drop-shadow(0 0 12px rgba(235, 40, 56, 0.75));
+}
+html[data-experience='haunted'] .hf-gate__card-title {
+  margin: 0;
+  font-family: var(--hf-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 1.95rem;
+  line-height: 1.05;
+  color: #f4e8d6;
+}
+html[data-experience='haunted'] .hf-gate__card--soul .hf-gate__card-title {
+  color: #ec1523;
+  text-shadow: 0 0 18px rgba(227, 20, 31, 0.65);
+}
+html[data-experience='haunted'] .hf-gate__card-rule {
+  width: 7rem;
+  height: 1px;
+  margin: 0.85rem 0;
+  background: linear-gradient(90deg, transparent, rgba(240, 217, 192, 0.85), transparent);
+}
+html[data-experience='haunted'] .hf-gate__card--soul .hf-gate__card-rule {
+  background: linear-gradient(90deg, transparent, rgba(236, 60, 74, 0.9), transparent);
+}
+html[data-experience='haunted'] .hf-gate__card-text {
+  margin: 0;
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--hf-cream-dim);
+  margin-bottom: 1.1rem;
+}
+html[data-experience='haunted'] .hf-gate__go {
+  display: grid;
+  place-items: center;
+  width: 5.4rem;
+  height: 2.1rem;
+  margin-top: auto;
+  border: 1px solid rgba(240, 217, 192, 0.85);
+  border-radius: 0.6rem;
+  background: rgba(8, 4, 5, 0.7);
+  color: #f4e8d6;
+}
+html[data-experience='haunted'] .hf-gate__card--soul .hf-gate__go {
+  border-color: #ec2a3a;
+  background: rgba(60, 4, 12, 0.85);
+  color: #ffd9d9;
+  box-shadow: 0 0 12px rgba(226, 26, 44, 0.6);
+}
+html[data-experience='haunted'] .hf-gate__go svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+html[data-experience='haunted'] .hf-gate__card-text + .hf-gate__go {
+  margin-top: auto;
+}
+
+
+/* ---------- Sign-in, sign-up and password forms: the same design as the gate ---- */
+
+html[data-experience='haunted'] .hf-auth__column {
+  align-items: center;
+  text-align: center;
+}
+html[data-experience='haunted'] .hf-auth .hf-auth__card {
+  --n: 14px;
+  --t: 12px;
+  position: relative;
+  isolation: isolate;
+  margin-top: 0.4rem;
+  padding: 2.5rem 2.1rem 2.2rem;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--hf-cream);
+  text-align: left;
+}
+/* the card's gilded frame: the glass inside is translucent, so the video shows through */
+html[data-experience='haunted'] .hf-auth .hf-auth__card::after {
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+}
+html[data-experience='haunted'] .hf-auth .hf-auth__card[data-tone='companion'] {
+  --fill: radial-gradient(ellipse at 50% 0%, rgba(150, 90, 30, 0.3), transparent 60%), linear-gradient(180deg, rgba(20, 12, 10, 0.88), rgba(10, 6, 6, 0.9));
+}
+html[data-experience='haunted'] .hf-auth .hf-auth__card[data-tone='soul'] {
+  --fill: radial-gradient(ellipse at 50% 0%, rgba(210, 22, 40, 0.38), transparent 62%), linear-gradient(180deg, rgba(44, 5, 9, 0.88), rgba(18, 3, 10, 0.9));
+}
+
+html[data-experience='haunted'] .hf-auth__card h3 {
+  text-align: center;
+  font-family: var(--hf-serif);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 2.15rem;
+  line-height: 1.1;
+  color: #f4e8d6;
+  text-shadow: 0 0 20px rgba(255, 214, 170, 0.28);
+}
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] h3 {
+  color: #ec1523;
+  text-shadow: 0 0 18px rgba(227, 20, 31, 0.65);
+}
+html[data-experience='haunted'] .hf-auth__card h3 + p {
+  text-align: center;
+  font-family: var(--hf-serif);
+  font-style: italic;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--hf-cream-dim);
+}
+html[data-experience='haunted'] .hf-auth__card label {
+  font-family: var(--hf-serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #f1e5d4;
+}
+html[data-experience='haunted'] .hf-auth__card input {
+  border-radius: 0.3rem;
+  border: 1px solid rgba(214, 190, 150, 0.45);
+  background-color: rgba(8, 4, 5, 0.72);
+  color: #f4e8d6;
+}
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] input {
+  border-color: rgba(226, 60, 76, 0.5);
+}
+html[data-experience='haunted'] .hf-auth__card input:focus {
+  border-color: #f0d9a8;
+  box-shadow: 0 0 0 1px rgba(240, 217, 168, 0.6), 0 0 14px rgba(240, 190, 110, 0.35);
+  outline: none;
+}
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] input:focus {
+  border-color: #ff5a68;
+  box-shadow: 0 0 0 1px rgba(255, 90, 104, 0.7), 0 0 14px rgba(226, 26, 44, 0.5);
+}
+html[data-experience='haunted'] .hf-auth__card a,
+html[data-experience='haunted'] .hf-auth__back {
+  font-family: var(--hf-serif);
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+html[data-experience='haunted'] .hf-auth__card p {
+  font-family: var(--hf-serif);
+  font-size: 1.08rem;
+}
+html[data-experience='haunted'] .hf-auth__back {
+  cursor: pointer;
+  background: none;
+  border: 0;
+  font-style: italic;
+}
+/* The theme's sage accent is off-palette here: links take the frame's own colour. */
+html[data-experience='haunted'] .hf-auth__card[data-tone='companion'] a,
+html[data-experience='haunted'] .hf-auth__card[data-tone='companion'] .hf-auth__back {
+  color: #e8cf9c;
+}
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] a,
+html[data-experience='haunted'] .hf-auth__card[data-tone='soul'] .hf-auth__back {
+  color: #ff8d97;
+}
+html[data-experience='haunted'] .hf-auth__card a:hover,
+html[data-experience='haunted'] .hf-auth__card .hf-auth__back:hover {
+  color: #fff3dc;
+}
+
+/* buttons in the forms use the landing page's crimson style */
+html[data-experience='haunted'] .hf-auth__card .hf-ui-button {
+  border-radius: 0.2rem;
+  font-family: var(--hf-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  color: #f6ebdd;
+}
+html[data-experience='haunted'] .hf-auth__card .hf-ui-button[data-variant='primary'] {
+  border: 1px solid #e0283a;
+  background: linear-gradient(to bottom, #7a0c19, #3d0510 70%, #330410);
+  box-shadow:
+    inset 0 0 0 3px #3a0510,
+    inset 0 0 0 4px rgba(226, 70, 84, 0.65),
+    0 0 16px rgba(214, 20, 36, 0.6);
+}
+html[data-experience='haunted'] .hf-auth__card .hf-ui-button[data-variant='primary']:hover:not(:disabled) {
+  background: linear-gradient(to bottom, #96101f, #4d0714 70%, #3f0612);
+  box-shadow:
+    inset 0 0 0 3px #4d0714,
+    inset 0 0 0 4px rgba(240, 100, 112, 0.85),
+    0 0 26px rgba(236, 28, 46, 0.85);
+}
+html[data-experience='haunted'] .hf-auth__card .hf-ui-button[data-variant='secondary'] {
+  border: 1px solid rgba(225, 205, 180, 0.7);
+  background: rgba(12, 7, 8, 0.72);
+  color: #f1e4d3;
+  box-shadow: inset 0 0 0 3px rgba(12, 7, 8, 0.72), inset 0 0 0 4px rgba(225, 205, 180, 0.4);
+}
+html[data-experience='haunted'] .hf-auth__card .hf-ui-button[data-variant='secondary']:hover:not(:disabled) {
+  background: rgba(40, 14, 18, 0.85);
+  border-color: #e0283a;
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  html[data-experience='haunted'] .hf-auth .hf-auth__card {
+    padding: 2.2rem 1.4rem 2rem;
+  }
+}

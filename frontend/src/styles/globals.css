@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Color Palette */
+    --midnight-navy: #0A1128;
+    --deep-purple: #1C0B33;
+    --warm-amber: #D4A574;
+    --ivory: #F5F1E8;
+    --gold-accent: #C9A961;
+    
+    /* Semantic Colors */
+    --success: #4CAF50;
+    --error: #EF4444;
+    --warning: #FFA726;
+    --info: #2196F3;
+    
+    /* Haunted Palette */
+    --ghost-white: rgba(255, 255, 255, 0.9);
+    --mist-overlay: rgba(200, 200, 255, 0.1);
+    --shadow-dark: rgba(0, 0, 0, 0.6);
+    --glow-amber: rgba(212, 165, 116, 0.4);
+    --ethereal-purple: rgba(147, 112, 219, 0.3);
+
+    /* Headings: the Scandinavian Dreams serif in Elegant, the gothic serif in Haunted */
+    --font-heading: 'Newsreader', Georgia, 'Times New Roman', serif;
+  }
+
+  html[data-experience='haunted'] {
+    --font-heading: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  }
+
+  * {
+    @apply border-navy-700;
+  }
+
+  body {
+    @apply bg-navy-900 text-ivory font-body;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer components {
+  /* Screen reader only */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap;
+    clip: rect(0, 0, 0, 0);
+    border-width: 0;
+  }
+
+  /* Focus visible styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-amber-500 ring-offset-2 ring-offset-navy-900;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-navy-800;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-amber-600 rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-amber-500;
+  }
+}
+
+@layer utilities {
+  /* Gradient backgrounds */
+  .gradient-hero {
+    background: linear-gradient(135deg, rgb(var(--c-navy-900)) 0%, rgb(var(--c-purple-900)) 50%, rgb(var(--c-navy-900)) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(to bottom, rgb(var(--c-ivory) / 0.05) 0%, rgb(var(--c-ivory) / 0.02) 100%);
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, rgb(var(--c-amber-600)) 0%, rgb(var(--c-accent)) 100%);
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-ivory/5 backdrop-blur-md border border-ivory/10;
+  }
+
+  /* Haunted effects */
+  .haunted-glow {
+    box-shadow: 0 0 20px rgb(var(--c-amber-600) / 0.4);
+  }
+
+  .haunted-mist {
+    background: radial-gradient(ellipse at center, var(--mist-overlay) 0%, transparent 70%);
+  }
+}
+
+/* Animation utilities */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    @apply bg-white text-black;
+  }
+
+  .no-print {
+    @apply hidden;
+  }
+}
