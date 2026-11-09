@@ -21,8 +21,9 @@ the steps in any order and check each one as you go.
    and press **Run**. It creates the `designs` table, a private `designs` storage bucket, and the rules that
    let each person see only their own rows and files.
 3. Open **Authentication → Sign In / Providers → Email** and decide how sign-up works:
-   - **Easiest (recommended for a demo or a hackathon):** switch **Confirm email** off. People can sign up and
-     use the studio straight away, and judges can make an account in seconds.
+   - **Easiest (recommended for a demo or a hackathon):** switch **Confirm email** off and press **Save**. People can
+     sign up and use the studio straight away, and judges can make an account in seconds. Leave **Enable Email
+     provider** switched **on**: turning that off instead makes every sign-up fail with "Email signups are disabled".
    - **With email confirmation:** leave it on, then open **Authentication → Email Templates** and add the code
      `{{ .Token }}` to the *Confirm signup* and *Reset password* templates, because the site asks people to type
      the code. Supabase's built-in mailer only sends a few emails an hour, so connect your own SMTP service for
@@ -145,7 +146,9 @@ Without the key nothing breaks: the panel says live prices are not available and
    **Storage → designs** should now show the row and the two images.
 4. In the furniture tab press **Find furniture in my design** (it downloads a small model the first time).
 
-From your computer, `cd frontend && npm run smoke:live -- path/to/room.jpg` checks the AI service on its own.
+From your computer, `cd frontend && npm run smoke:live -- path/to/room.jpg` checks the AI service on its own, and
+`npm run check:supabase` checks that your Supabase project keeps every person's designs and photos private (it makes two
+throwaway accounts, tries to read one from the other, cleans up, and tells you which users to delete in the dashboard).
 
 ## 4. The free AI allowance, and what visitors see
 
