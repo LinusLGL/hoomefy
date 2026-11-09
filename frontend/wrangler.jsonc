@@ -1,0 +1,20 @@
+{
+  // Cloudflare Workers config. Cloudflare reads this on every deploy.
+  // "name" must match the Worker's name in the Cloudflare dashboard (it is part of the site address).
+  "name": "hoomefy",
+  "compatibility_date": "2025-09-01",
+
+  // Handles /api/furniture-search only; every other request is served straight from the built site.
+  "main": "worker/index.ts",
+
+  "assets": {
+    // The output of `npm run build`. Never the project folder itself.
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Unknown paths such as /studio or /gallery get index.html so the React router can handle them.
+    "not_found_handling": "single-page-application",
+    // Run the worker first for the API and for media (it adds Range support, see worker/index.ts).
+    // Every other static file skips the worker, which keeps them free and unlimited.
+    "run_worker_first": ["/api/*", "/video/*", "/audio/*"]
+  }
+}

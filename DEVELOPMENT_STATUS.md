@@ -374,7 +374,7 @@ Limits:
 
 ## Design studio rebuilt as a working product (Nov 2026)
 
-Replaced the mocked studio and the AWS plan with a free, working stack: Cloudflare Pages, Supabase and Hugging Face. Details in `.kiro/specs/design-studio` and `docs/DEPLOY.md`.
+Replaced the mocked studio and the AWS plan with a free, working stack: Cloudflare, Supabase and Hugging Face. Details in `.kiro/specs/design-studio` and `docs/DEPLOY.md`.
 
 - **Themes and prompt:** Scandinavian, Japandi, Modern Luxury, Minimalist, Halloween and a custom text style replace the old ten styles. The theme, palette, intensity, extra instructions and custom text all go into the prompt, which tells the model to keep the layout, windows, doors, camera and furniture positions.
 - **Photo pipeline:** real file-type check by first bytes, 10 MB and 512 px limits, EXIF rotation, metadata stripped by re-encoding, a 1024 px copy for the AI and a 2048 px copy for display, the original kept separately and never sent. The EXIF removal is tested in a real browser.
@@ -383,7 +383,17 @@ Replaced the mocked studio and the AWS plan with a free, working stack: Cloudfla
 - **Furniture:** suggestions per room with price estimates, on-device detection with OWL-ViT (boxes over the picture), shop links, optional live prices through `functions/api/furniture-search.ts`, shopping list with a budget bar.
 - **Accounts and saving:** Supabase sign-up and sign-in, a `designs` table with row-level security, a private storage bucket, 50 designs per person, a gallery to open, download and delete. Saving needs an explicit checkbox.
 - **Layout:** three panels on desktop (side panels stay in view), collapsible controls on a tablet, a bottom bar on a phone. In Haunted mode the ghost and the settings buttons sit above the bar.
-- **Cloudflare Pages:** security headers and CSP in `public/_headers`, the product-search function. There is deliberately no `wrangler.toml`: with one, Cloudflare treats it as the source of truth and the dashboard can no longer edit the build variables. The production build was served locally with `wrangler pages dev` and run against the real model with no console errors. The detector library loads from a pinned CDN because its WebAssembly runtime is larger than Pages' 25 MiB file limit.
+- **Cloudflare:** security headers and CSP in `public/_headers`, the product-search function. Deployed as a Cloudflare Worker with static assets (see the Nov 5 hosting fix below). The production build was served locally with `wrangler dev` and run against the real model with no console errors. The detector library loads from a pinned CDN because its WebAssembly runtime is larger than Pages' 25 MiB file limit.
 - **Not done or not checked:** no real Supabase project was available here, so sign-up, saving and the storage rules are tested against the in-memory fallback and by unit tests, not against Supabase itself. Run `supabase/migrations/0001_init.sql` and follow `docs/DEPLOY.md` before relying on them. Live product prices need a `SERPER_API_KEY` and were not exercised against Serper. The WebGPU path was not tested (no GPU adapter here); the detector runs on WebAssembly. Chrome only.
 - **Fixed on the way:** `haunted-holywater.css` was overwritten by a mistake and rebuilt from the last production bundle; the stylesheet tests pass and screenshots match the earlier ones.
 - **Test results:** type check and lint clean, 457 unit and component tests, 140 Playwright tests (desktop and mobile), production build ok.
+
+## Hosting fix: blank page on workers.dev (Nov 5, 2026)
+
+The first Git-connected deploy showed a blank page. Cloudflare had created a **Worker** (`hoomefy.<account>.workers.dev`), not a Pages project, and with no `wrangler.jsonc` it uploaded the whole `frontend/` folder as static files. The address served the unbuilt `index.html` (pointing at `/src/main.tsx`) and even `package.json`; nothing could run.
+
+- **Fix:** `frontend/wrangler.jsonc` points the assets at `./dist`, turns on the single-page-app fallback, and runs `worker/index.ts` first for `/api/*`, `/video/*` and `/audio/*`. The earlier "no wrangler config" decision was right for Pages and wrong for Workers.
+- **Worker:** `/api/furniture-search` calls the existing handler; other `/api/*` paths answer 404 JSON; video and audio get HTTP Range support (206/416), because Workers static assets answer a Range request with the whole file and Safari will not play that. A missing media file is a real 404, not the app's HTML.
+- **Scripts:** `pages:dev` is now `workers:dev` (`wrangler dev`); `deploy` runs `wrangler deploy`.
+- **Verified locally** with `wrangler dev` (the Workers runtime): home, deep links (`/studio`, `/gallery`) fall back to the app, `/src/main.tsx`, `/package.json` and `/functions/*` are no longer public, security headers and the immutable cache on `/assets/*` apply, API 200/400/404/405, media 200/206/416/404, Chrome loads the Haunted backdrop video with a 206 and no console or CSP errors.
+- **Not verified:** the deploy on Cloudflare itself (the dashboard build settings are the user's), Safari playback, and `wrangler deploy` from Cloudflare's builder. Build variables (`VITE_*`) must be set as **Build** variables in the Worker's settings, not only as runtime variables.

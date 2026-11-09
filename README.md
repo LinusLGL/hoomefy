@@ -45,8 +45,9 @@ Browser (React + TypeScript + Vite + Tailwind + Zustand)
  ├── furniture detector        OWL-ViT in the browser (WebAssembly), loaded only when asked for
  └── Supabase client  ──────►  Supabase: Auth, a `designs` table and a private `designs` storage bucket (row-level security)
 
-Cloudflare Pages
- ├── the built site (static)
+Cloudflare Workers (static assets)
+ ├── the built site (static, from wrangler.jsonc)
+ ├── worker/index.ts                     routes /api, and serves video and audio with Range support
  └── functions/api/furniture-search.ts   optional live product prices; keeps the search key off the device
 ```
 
@@ -80,7 +81,7 @@ npm run test:e2e     # Playwright, desktop and mobile (uses the demo renderer)
 
 ## Deploy
 
-Free, no card needed for the main path: **Cloudflare Pages** + **Supabase**. Step by step in
+Free, no card needed for the main path: **Cloudflare Workers** + **Supabase**. Step by step in
 [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Project structure
@@ -94,7 +95,8 @@ frontend/
     features/furniture/             taxonomy, on-device detection, product search, shopping list
     features/haunting/ mansion/ holywater/   the haunted experience
     services/                       auth and saved designs (Supabase, with a local fallback)
-  functions/api/                    Cloudflare Pages Function for product search
+  worker/index.ts, wrangler.jsonc   Cloudflare Worker entry and deploy config
+  functions/api/                    product search handler used by the worker
   scripts/live-smoke.mjs            one-off check of the real AI service
 supabase/migrations/0001_init.sql   database table, storage bucket and security rules
 docs/DEPLOY.md                      free deployment guide

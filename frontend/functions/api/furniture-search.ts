@@ -1,12 +1,12 @@
 /**
- * Cloudflare Pages Function: GET /api/furniture-search?q=<words>
+ * Product search handler: GET /api/furniture-search?q=<words> (routed by worker/index.ts)
  *
  * Looks up similar products for the studio's furniture panel. It exists only to keep the search
  * service's API key off the visitor's device. With no key configured it answers `{ live: false }` and
  * the studio falls back to plain shop links, so nothing breaks.
  *
  * Environment (Pages project settings, all optional):
- *   SERPER_API_KEY   a serper.dev key; uses its Google Shopping results
+ *   SERPER_API_KEY   a serper.dev key (set as a Secret on the Worker); uses its Google Shopping results
  *
  * Results are cached for a day at the edge, and the query is limited in length and shape so the
  * function cannot be used as a general-purpose search proxy.

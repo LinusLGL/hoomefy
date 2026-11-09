@@ -17,8 +17,8 @@
     "test:e2e": "playwright test",
     "smoke:live": "node scripts/live-smoke.mjs",
     "check:supabase": "node scripts/supabase-check.mjs",
-    "pages:dev": "npm run build && npx wrangler pages dev dist",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name hoomefy"
+    "workers:dev": "npm run build && npx wrangler dev",
+    "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
     "@gradio/client": "^2.7.2",

@@ -43,6 +43,9 @@ export default defineConfig({
     exclude: ['node_modules/**', 'tests/e2e/**', 'dist/**'],
     // The haunting integration tests drive a real GSAP timeline, so allow more than the 5 s default.
     testTimeout: 20_000,
+    // Tests run in the self-contained mode (simulated sign-in, designs kept in memory). Blank the Supabase
+    // settings so a developer's real keys in .env.local cannot switch the tests to a live project.
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

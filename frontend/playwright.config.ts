@@ -43,6 +43,9 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
+    // Stop the tests from picking up real Supabase keys in .env.local: they use the simulated sign-in.
+    // (A dev server you already started yourself on :5173 is reused as it is, so start it without keys.)
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
     reuseExistingServer: true,
     timeout: 60_000,
   },

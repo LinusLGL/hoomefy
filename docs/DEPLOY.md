@@ -4,7 +4,7 @@ Hoomefy runs on three free services. You need an account on each, and no credit 
 
 | Part | Service | What it does |
 |---|---|---|
-| The website | **Cloudflare Pages** | Hosts the site and one small function for product search |
+| The website | **Cloudflare Workers** (static assets) | Hosts the site and one small function for product search |
 | Accounts, saved designs, images | **Supabase** | Sign-up and sign-in, a table of designs, private image storage |
 | The AI image model | **Hugging Face Spaces** | FLUX.2 klein 4B, called from the visitor's browser. Nothing to set up |
 
@@ -29,7 +29,7 @@ the steps in any order and check each one as you go.
      the code. Supabase's built-in mailer only sends a few emails an hour, so connect your own SMTP service for
      real use.
 4. Open **Authentication → URL Configuration** and set **Site URL** to your Cloudflare address once you have it
-   (step 2 below), for example `https://hoomefy.pages.dev`.
+   (step 2 below), for example `https://hoomefy.your-name.workers.dev`.
 5. Open **Project Settings → API** and copy two values:
    - **Project URL** (looks like `https://abcd1234.supabase.co`)
    - **anon public** key
@@ -41,7 +41,7 @@ the current numbers on Supabase's pricing page). Each person can keep up to 50 d
 which keeps storage use small. Free Supabase projects may be paused after a period without activity; if that
 happens press **Restore** in the dashboard.
 
-## 2. GitHub, then Cloudflare Pages (the website) — about 15 minutes
+## 2. GitHub, then Cloudflare (the website) — about 15 minutes
 
 ### 2a. Put the code on GitHub
 
@@ -68,33 +68,45 @@ over locked files. If git ever reports a lock or corrupt-file error, right-click
 choose *Always keep on this device*, or move the project to a folder outside OneDrive (for example
 `C:\dev\hoomefy`) and clone it again from GitHub.
 
-### 2b. Connect Cloudflare Pages to the repository
+### 2b. Connect Cloudflare to the repository
 
-1. In the Cloudflare dashboard open **Workers & Pages → Create → Pages → Connect to Git**.
+Cloudflare now creates new Git-connected sites as **Workers** (the address ends in `.workers.dev`). The repository
+already contains `frontend/wrangler.jsonc`, which tells Cloudflare that the site is the built `dist` folder and
+that `/api/*` goes to a small worker. You do not set an output directory in the dashboard.
+
+1. In the Cloudflare dashboard open **Workers & Pages → Create application → Import a repository** (Connect to Git).
 2. Press **Connect GitHub**, sign in, and allow Cloudflare to see the `hoomefy` repository (choose *Only select
-   repositories* if you prefer). Then select it and press **Begin setup**.
-3. Use these build settings:
+   repositories* if you prefer). Select it.
+3. Set the project name to `hoomefy`. It must match `"name"` in `frontend/wrangler.jsonc`, otherwise the build stops
+   with a name mismatch.
+4. Use these build settings (after creating the project they are under **Settings → Build**):
    - **Root directory:** `frontend`
    - **Build command:** `npm run build`
-   - **Build output directory:** `dist`
-   - **Node version:** set the environment variable `NODE_VERSION` to `20`
-4. Under **Environment variables (advanced)** add:
+   - **Deploy command:** `npx wrangler deploy`
+5. Add these as **Build** variables (**Settings → Build → Variables and secrets**), not only as the Worker's
+   runtime variables. The `VITE_` values are written into the site while it is built, so a runtime variable does not reach it:
 
    | Name | Value |
    |---|---|
    | `VITE_SUPABASE_URL` | the Project URL from Supabase |
    | `VITE_SUPABASE_ANON_KEY` | the anon public key from Supabase |
    | `VITE_ALLOW_GUESTS` | `true` if visitors should use the studio without an account (optional) |
+   | `NODE_VERSION` | `20` (optional; the build also works on newer versions) |
 
    `VITE_AI_PROVIDER` is not needed: production builds use the real AI model by default.
-5. Press **Save and Deploy**. When it finishes, copy the `*.pages.dev` address into Supabase's **Site URL** (step 1.4).
+6. Press **Save and Deploy**. When it finishes, copy the `*.workers.dev` address into Supabase's **Site URL** (step 1.4).
 
 From now on every `git push` to `main` rebuilds and publishes the site by itself, and every other branch gets its own preview address.
+After you change a build variable, open the **Deployments** or **Builds** tab and retry the build, or push a commit.
+
+**A blank page that serves files like `/package.json` or `/src/main.tsx` means Cloudflare uploaded the project
+folder instead of the built site.** Check that `frontend/wrangler.jsonc` is in the repository, that the root
+directory is `frontend`, and that the deploy command is exactly `npx wrangler deploy` with no `--assets` option.
 
 ### Option B: no GitHub at all (deploy from your own computer)
 
-GitHub is only one way to feed Cloudflare Pages. You can also build the site on your computer and upload it
-("Direct Upload"). Do this part after step 1, because the build needs the two Supabase values.
+GitHub is only one way to feed Cloudflare. You can also build the site on your computer and upload it with
+`wrangler`. Do this part after step 1, because the build needs the two Supabase values.
 
 1. Create `frontend/.env.production.local` (it is ignored by git, so it never gets published) with:
 
@@ -107,23 +119,24 @@ GitHub is only one way to feed Cloudflare Pages. You can also build the site on 
    `VITE_ALLOW_GUESTS` is optional. These values are baked into the site when it is built, so they must exist
    *before* you build. Setting them in the Cloudflare dashboard has no effect on a site you build yourself.
 2. In a terminal: `cd frontend`, then `npx wrangler login` (a browser window opens; approve it).
-3. Run `npm run deploy`. The first time it asks for a project name (use `hoomefy`) and a production branch
-   (press Enter for `main`). It builds the site and uploads it, and prints your `https://hoomefy.pages.dev` address.
+3. Run `npm run deploy`. It builds the site, uploads it with the settings in `frontend/wrangler.jsonc`, and prints your
+   `https://hoomefy.<your-account>.workers.dev` address.
 4. Run `npm run deploy` again after every change.
 
-Use `wrangler` rather than the dashboard's drag-and-drop box: drag-and-drop does not upload the `functions`
-folder, so the optional product-search function would be missing. The one environment variable the function
-needs, `SERPER_API_KEY`, is always set in the Cloudflare dashboard under **Settings → Environment variables**,
-whichever way you deploy.
+To try the finished build on your own computer first, run `npm run workers:dev` and open the address it prints. It runs the
+same Workers runtime Cloudflare uses, including the security headers and the `/api` route.
+
+The one environment variable the worker needs, `SERPER_API_KEY`, is always set in the Cloudflare dashboard under
+**Settings → Variables and secrets**, whichever way you deploy.
 
 Hackathons such as Kiroween still ask for a public GitHub repository to judge the code. That is separate from
-hosting: you can host with Direct Upload and publish the code on GitHub, or connect the two later.
+hosting: you can deploy from your computer and publish the code on GitHub, or connect the two later.
 
 ### How Cloudflare and Supabase fit together
 
 They are not linked inside either dashboard. The site simply holds Supabase's public address and anon key (the
 two `VITE_SUPABASE_*` values) and talks to Supabase directly from the browser. So the order is: set up Supabase
-first (step 1), then build and deploy with its values, then paste the finished `pages.dev` address back into
+first (step 1), then build and deploy with its values, then paste the finished `workers.dev` address back into
 Supabase's **Site URL** (step 1.4).
 
 ### Optional: live product prices
@@ -132,14 +145,14 @@ The furniture panel always shows search links for IKEA, Wayfair, Target, Amazon,
 To also show live products with prices:
 
 1. Create a free key at <https://serper.dev>.
-2. In Cloudflare Pages open **Settings → Environment variables** and add `SERPER_API_KEY` (mark it **Encrypted**).
+2. In Cloudflare open your Worker's **Settings → Variables and secrets** and add `SERPER_API_KEY` as a **Secret**.
 3. Redeploy. The key stays on Cloudflare's servers; the browser never sees it.
 
 Without the key nothing breaks: the panel says live prices are not available and the shop links still work.
 
 ## 3. Check that everything works
 
-1. Open your `*.pages.dev` address and press **Design My Room**, then create an account.
+1. Open your `*.workers.dev` address and press **Design My Room**, then create an account.
 2. Upload a room photo, pick a room type and a theme, and press **Generate Design**. You should see the consent
    message, then a redesigned room in 10 to 30 seconds.
 3. Press **Save design**, tick the box, then open **My Designs**. In Supabase, **Table Editor → designs** and
@@ -179,8 +192,9 @@ example `VITE_AI_SPACES=your-name/FLUX.2-klein-4B,black-forest-labs/FLUX.2-klein
 
 | Thing | Limit |
 |---|---|
-| Cloudflare Pages | Free forever; 500 builds a month; single files up to 25 MiB (the biggest file here is about 2 MB) |
-| Cloudflare Functions (product search) | 100,000 requests a day on the free plan; results are cached for a day |
+| Cloudflare static files | Requests for the site's own files are free and unlimited; single files up to 25 MiB (the biggest file here is about 2 MB) |
+| Cloudflare builds | 3,000 build minutes a month on the free plan, one build at a time |
+| Cloudflare Worker (product search, video and audio) | 100,000 requests a day on the free plan. Over that, those paths answer 429 until the next day; results of product search are cached for a day |
 | Supabase | 50,000 monthly active users on the free plan; storage and database sizes are small, see their pricing page |
 | Photos | JPEG, PNG or WebP up to 10 MB, at least 512×512 pixels. The AI sees a copy at 1024 pixels on the long side |
 | Hugging Face | Daily GPU allowance per visitor, as above; the queue can be busy at peak times |
