@@ -107,6 +107,8 @@ export function createGradioProvider(options: GradioProviderOptions = {}): Image
     id: `hf:${space}`,
     label: 'FLUX.2 klein 4B (Hugging Face)',
     sendsPhoto: true,
+    // Every ZeroGPU Space draws on the same per-visitor GPU time.
+    quotaGroup: 'huggingface',
 
     async edit(request: EditRequest): Promise<EditResult> {
       if (request.signal?.aborted) throw new AiError('aborted', 'Cancelled.');

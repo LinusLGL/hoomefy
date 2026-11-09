@@ -6,15 +6,18 @@
 import { ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { isBackupAiEnabled } from '@/features/studio/ai';
 
 interface ConsentDialogProps {
   open: boolean;
   onAccept: () => void;
   onDemo: () => void;
   onCancel: () => void;
+  /** Whether the photo may also go to the Cloudflare backup source. Defaults to what this site is set up to do. */
+  backup?: boolean;
 }
 
-export function ConsentDialog({ open, onAccept, onDemo, onCancel }: ConsentDialogProps) {
+export function ConsentDialog({ open, onAccept, onDemo, onCancel, backup = isBackupAiEnabled() }: ConsentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
       <DialogContent aria-labelledby="consent-title" aria-describedby="consent-body" data-testid="consent-dialog">
@@ -32,11 +35,24 @@ export function ConsentDialog({ open, onAccept, onDemo, onCancel }: ConsentDialo
             <li>Location and camera details are removed first.</li>
             <li>Hoomefy does not store your photo. It is only saved to your account if you press Save design and agree.</li>
             <li>Hugging Face handles the photo under its own privacy policy.</li>
+            {backup && (
+              <li data-testid="consent-backup">
+                If Hugging Face has no free time left and you are signed in, the same model on Cloudflare Workers AI, which hosts this site, is used instead. Cloudflare&apos;s model page lists it as zero data retention.
+              </li>
+            )}
           </ul>
           <p>
             <a href="https://huggingface.co/privacy" target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-4 hover:underline">
               Hugging Face privacy policy
             </a>
+            {backup && (
+              <>
+                {' · '}
+                <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-4 hover:underline">
+                  Cloudflare privacy policy
+                </a>
+              </>
+            )}
           </p>
         </div>
         <DialogDescription className="sr-only">Choose whether to send your photo to the AI service.</DialogDescription>

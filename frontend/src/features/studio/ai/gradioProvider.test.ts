@@ -199,25 +199,59 @@ describe('classifyGradioError', () => {
 });
 
 describe('createChainProvider', () => {
-  const failing = (code: 'unavailable' | 'quota') => ({
-    id: code,
-    label: code,
+  const failing = (code: 'unavailable' | 'quota' | 'busy' | 'invalid', id: string = code, quotaGroup?: string) => ({
+    id,
+    label: id,
     sendsPhoto: true,
+    quotaGroup,
     edit: vi.fn(async () => {
-      throw new AiError(code, code);
+      throw new AiError(code, `${id} failed`);
     }),
   });
-  const working = { id: 'ok', label: 'ok', sendsPhoto: true, edit: vi.fn(async () => ({ blob: image, providerId: 'ok', demo: false })) };
+  const workingAs = (id: string, quotaGroup?: string) => ({
+    id,
+    label: id,
+    sendsPhoto: true,
+    quotaGroup,
+    edit: vi.fn(async () => ({ blob: image, providerId: id, demo: false })),
+  });
+  const working = workingAs('ok');
 
   it('moves on to the next service when one is down', async () => {
     const chain = createChainProvider([failing('unavailable'), working]);
     expect((await chain.edit(baseRequest())).providerId).toBe('ok');
   });
 
-  it('stops when the free GPU time is used up, because every service shares it', async () => {
-    const next = { ...working, edit: vi.fn(working.edit) };
-    const chain = createChainProvider([failing('quota'), next]);
+  it('moves on when a service is busy', async () => {
+    const chain = createChainProvider([failing('busy'), workingAs('second')]);
+    expect((await chain.edit(baseRequest())).providerId).toBe('second');
+  });
+
+  it('skips services that share the used-up allowance but tries one with its own', async () => {
+    const hfOne = failing('quota', 'hf-one', 'huggingface');
+    const hfTwo = workingAs('hf-two', 'huggingface');
+    const cloudflare = workingAs('cf', 'cloudflare');
+    const chain = createChainProvider([hfOne, hfTwo, cloudflare]);
+    expect((await chain.edit(baseRequest())).providerId).toBe('cf');
+    expect(hfTwo.edit).not.toHaveBeenCalled();
+  });
+
+  it('reports the used-up message when every source is out of time, even if another source failed in a different way', async () => {
+    const chain = createChainProvider([failing('quota', 'hf', 'huggingface'), failing('unavailable', 'cf', 'cloudflare')]);
     await expect(chain.edit(baseRequest())).rejects.toMatchObject({ code: 'quota' });
+    const reversed = createChainProvider([failing('unavailable', 'a', 'a'), failing('quota', 'b', 'b')]);
+    await expect(reversed.edit(baseRequest())).rejects.toMatchObject({ code: 'quota' });
+  });
+
+  it('reports the first failure when nothing was out of time', async () => {
+    const chain = createChainProvider([failing('unavailable', 'first'), failing('busy', 'second')]);
+    await expect(chain.edit(baseRequest())).rejects.toMatchObject({ code: 'unavailable', message: 'first failed' });
+  });
+
+  it('does not try another source after a refusal, so a declined photo is not sent twice', async () => {
+    const next = workingAs('next');
+    const chain = createChainProvider([failing('invalid'), next]);
+    await expect(chain.edit(baseRequest())).rejects.toMatchObject({ code: 'invalid' });
     expect(next.edit).not.toHaveBeenCalled();
   });
 

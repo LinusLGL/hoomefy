@@ -16,5 +16,15 @@
     // Run the worker first for the API and for media (it adds Range support, see worker/index.ts).
     // Every other static file skips the worker, which keeps them free and unlimited.
     "run_worker_first": ["/api/*", "/video/*", "/audio/*"]
-  }
+  },
+
+  // Backup AI source (worker/redesign.ts): the same FLUX.2 klein model on Workers AI, free up to 10,000 neurons a day.
+  "ai": { "binding": "AI" },
+
+  // The site's Supabase project. Public (it is also in the built site); used only to check that a caller is signed in.
+  // If you fork this project, replace it with your own project's URL.
+  "vars": { "SUPABASE_URL": "https://gzidmlexfenyczrpydko.supabase.co" },
+
+  // At most 4 designs a minute per signed-in user on the backup source.
+  "ratelimits": [{ "name": "REDESIGN_LIMITER", "namespace_id": "1001", "simple": { "limit": 4, "period": 60 } }]
 }

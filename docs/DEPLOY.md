@@ -170,7 +170,31 @@ site needs no GPU and no key of its own. Hugging Face currently gives about 2 mi
 visitor without an account (enough for several designs at roughly 5 to 15 seconds each) and about 5 minutes
 to one with a free account.
 
-When the allowance runs out the studio says so in plain words and offers:
+### The backup source (Cloudflare Workers AI)
+
+Hugging Face's GPU time is one allowance per visitor, shared by every GPU Space, so a second Hugging Face Space
+cannot act as a backup. Instead, when a signed-in visitor's Hugging Face time is used up, the studio automatically
+sends the design to **the same model (FLUX.2 klein 4B) on Cloudflare Workers AI**, through the site's own
+`/api/redesign` route (`frontend/worker/redesign.ts`).
+
+- **Free, with no card:** Workers AI includes 10,000 "neurons" a day on the Workers Free plan, shared by the whole site
+  and renewed at 00:00 UTC. At Cloudflare's listed price for this model (about 80 neurons for a 1024×768 design with a
+  small reference photo) that is roughly 100 designs a day. On the Free plan nothing is billed: when the allowance is
+  gone the call fails and the studio shows its normal "free time used up" message. Check your usage on the Cloudflare
+  dashboard under **Workers AI**. (If you move the account to Workers Paid, usage above the free 10,000 is billed at $0.011 per 1,000 neurons.)
+- **Nothing to set up:** `frontend/wrangler.jsonc` declares the AI binding, a rate limit (4 designs a minute per user)
+  and the public Supabase address that the route uses to check a caller is signed in. Fork owners must change that
+  `SUPABASE_URL` to their own project's.
+- **Signed-in visitors only**, so strangers and scripts cannot empty the day's allowance. Guests (when
+  `VITE_ALLOW_GUESTS=true`) only get Hugging Face and then the demo rendering.
+- **The photo:** the model accepts reference images under 512 pixels, so the browser shrinks the photo to 480 pixels
+  first. The finished design is still made at the full requested size. Cloudflare lists this model as zero data retention.
+  The consent dialog and privacy note name both services.
+- **Turn it off** with the build variable `VITE_AI_FALLBACK=off`.
+- **Local runs:** `npm run workers:dev` needs `npx wrangler login` first, because Workers AI always runs on Cloudflare.
+  `npm run dev` does not use it (the studio uses the demo renderer there).
+
+When the allowance runs out on every source the studio says so in plain words and offers:
 
 - **More free AI time** (left panel): paste a free Hugging Face token to use your own, larger allowance.
 - **Try again** later, or **Show a demo rendering instead**, a colour-graded preview that is clearly labelled.

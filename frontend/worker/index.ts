@@ -1,7 +1,8 @@
 /**
  * Cloudflare Worker entry. Most files (the built site in `dist`) are served by Cloudflare itself;
  * this code only runs for the paths listed in `run_worker_first` in wrangler.jsonc:
- *   /api/*             the product search
+ *   /api/furniture-search   the product search
+ *   /api/redesign           the backup AI source (see redesign.ts)
  *   /video/*, /audio/* media, because Workers static assets ignore HTTP Range requests and Safari
  *                      refuses to play a video that answers a Range request with the whole file
  *
@@ -9,8 +10,9 @@
  *   SERPER_API_KEY   a serper.dev key for live product prices (add it as a Secret)
  */
 import { onRequestGet } from '../functions/api/furniture-search';
+import { handleRedesign, type RedesignEnv } from './redesign';
 
-interface Env {
+interface Env extends RedesignEnv {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
   SERPER_API_KEY?: string;
 }
@@ -86,6 +88,8 @@ export default {
       if (request.method !== 'GET') return json({ error: 'Method not allowed.' }, 405, { Allow: 'GET' });
       return onRequestGet({ request, env, waitUntil: (p) => ctx.waitUntil(p) });
     }
+
+    if (pathname === '/api/redesign') return handleRedesign(request, env);
 
     // An unknown API path is an error, not the single-page app.
     if (pathname.startsWith('/api/')) return json({ error: 'Not found.' }, 404);

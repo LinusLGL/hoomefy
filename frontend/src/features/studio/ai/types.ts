@@ -63,5 +63,10 @@ export interface ImageEditProvider {
   label: string;
   /** True when the photograph leaves the device, so the visitor must be told first. */
   sendsPhoto: boolean;
+  /**
+   * Providers that draw on the same free allowance share a group. When one reports that the allowance is
+   * used up, the others in its group are skipped; providers in other groups are still tried.
+   */
+  quotaGroup?: string;
   edit(request: EditRequest): Promise<EditResult>;
 }

@@ -135,6 +135,18 @@ describe('ConsentDialog', () => {
     render(<ConsentDialog open={false} onAccept={() => undefined} onDemo={() => undefined} onCancel={() => undefined} />);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  it('names Cloudflare as a second place the photo can go when the backup source is on', () => {
+    const noop = () => undefined;
+    const { rerender } = render(<ConsentDialog open backup onAccept={noop} onDemo={noop} onCancel={noop} />);
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByTestId('consent-backup')).toHaveTextContent(/Cloudflare Workers AI/);
+    expect(within(dialog).getByRole('link', { name: 'Cloudflare privacy policy' })).toHaveAttribute('href', 'https://www.cloudflare.com/privacypolicy/');
+
+    rerender(<ConsentDialog open backup={false} onAccept={noop} onDemo={noop} onCancel={noop} />);
+    expect(screen.queryByTestId('consent-backup')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Cloudflare/)).not.toBeInTheDocument();
+  });
 });
 
 describe('SidePanel', () => {

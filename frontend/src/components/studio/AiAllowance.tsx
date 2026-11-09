@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getHfToken, getProviderMode, isValidHfToken, setHfToken } from '@/features/studio/ai';
+import { getHfToken, getProviderMode, isBackupAiEnabled, isValidHfToken, setHfToken } from '@/features/studio/ai';
 import { useToast } from '@/hooks/useToast';
 
 export function AiAllowance() {
@@ -44,6 +44,11 @@ export function AiAllowance() {
         <p>
           The AI runs on Hugging Face&apos;s free GPUs. You get about 2 minutes a day without an account, enough for many designs. A free Hugging Face account gets about 5 minutes.
         </p>
+        {isBackupAiEnabled() && (
+          <p data-testid="ai-backup-note">
+            When that runs out, signed-in visitors automatically use a backup source: the same model on Cloudflare. Its free allowance is shared by everyone using the site and renews every day at midnight UTC.
+          </p>
+        )}
         <p>
           Create a free token at{' '}
           <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="text-accent underline-offset-4 hover:underline">
