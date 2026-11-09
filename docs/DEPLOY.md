@@ -190,6 +190,10 @@ sends the design to **the same model (FLUX.2 klein 4B) on Cloudflare Workers AI*
 - **The photo:** the model accepts reference images under 512 pixels, so the browser shrinks the photo to 480 pixels
   first. The finished design is still made at the full requested size. Cloudflare lists this model as zero data retention.
   The consent dialog and privacy note name both services.
+- **Quality:** the same model, but it sees a much smaller reference than the Hugging Face path, so it keeps the layout
+  more loosely. In testing the sofa, the main window and the fireplace stayed in place every time, while an arched window
+  sometimes became square or an extra window or door appeared. **Regenerate** draws a new sample. Rewording the prompt
+  or using a 512-pixel reference did not improve this.
 - **Turn it off** with the build variable `VITE_AI_FALLBACK=off`.
 - **Local runs:** `npm run workers:dev` needs `npx wrangler login` first, because Workers AI always runs on Cloudflare.
   `npm run dev` does not use it (the studio uses the demo renderer there).
