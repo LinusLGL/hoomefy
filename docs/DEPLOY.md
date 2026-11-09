@@ -180,6 +180,10 @@ official public Space `black-forest-labs/FLUX.2-klein-4B`. If you would rather n
 Space, duplicate it into your own free Hugging Face account and set `VITE_AI_SPACES` to your copy first, for
 example `VITE_AI_SPACES=your-name/FLUX.2-klein-4B,black-forest-labs/FLUX.2-klein-4B`.
 
+**"Space metadata could not be loaded":** Hugging Face's API refuses browser requests whose `Referer` is a
+`*.workers.dev` address. The site therefore sends no referrer to other sites (`Referrer-Policy: same-origin` in
+`public/_headers` and a matching `<meta name="referrer">` in `index.html`). Keep both if you edit the security headers.
+
 ## 5. For hackathon judges
 
 - Keep the site and the Supabase project running until judging ends.

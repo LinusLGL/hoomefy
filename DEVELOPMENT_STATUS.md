@@ -397,3 +397,11 @@ The first Git-connected deploy showed a blank page. Cloudflare had created a **W
 - **Scripts:** `pages:dev` is now `workers:dev` (`wrangler dev`); `deploy` runs `wrangler deploy`.
 - **Verified locally** with `wrangler dev` (the Workers runtime): home, deep links (`/studio`, `/gallery`) fall back to the app, `/src/main.tsx`, `/package.json` and `/functions/*` are no longer public, security headers and the immutable cache on `/assets/*` apply, API 200/400/404/405, media 200/206/416/404, Chrome loads the Haunted backdrop video with a 206 and no console or CSP errors.
 - **Not verified:** the deploy on Cloudflare itself (the dashboard build settings are the user's), Safari playback, and `wrangler deploy` from Cloudflare's builder. Build variables (`VITE_*`) must be set as **Build** variables in the Worker's settings, not only as runtime variables.
+
+## "Space metadata could not be loaded" on the live site (Nov 2026)
+
+On `*.workers.dev` the AI step failed with "The AI service could not finish this design: Space metadata could not be loaded." The Space was healthy. The Gradio client asks `https://huggingface.co/api/spaces/<space>/host` from the browser, and Hugging Face answers **404 with no CORS header** when that request carries a `Referer` from a `*.workers.dev` address (`pages.dev`, `github.io`, `example.com` and `localhost` are fine, which is why local runs and `wrangler dev` never showed it). The site's `Referrer-Policy: strict-origin-when-cross-origin` sent exactly that Referer.
+
+- **Found by:** reproducing in Chrome on the live origin (Failed to fetch, CORS error), then replaying the request with curl one header at a time (`Origin` alone: 200; `Referer` alone: 404), then trying referrer policies from the live page (`same-origin` and `no-referrer`: 200).
+- **Fix:** `Referrer-Policy: same-origin` in `public/_headers` and `<meta name="referrer" content="same-origin">` in `index.html`. Other sites, Hugging Face included, no longer receive the page address. Do not change this back to `strict-origin-when-cross-origin`.
+- **Also covered:** the in-browser furniture detector downloads its model from `huggingface.co`, which the same Referer rule would have broken.

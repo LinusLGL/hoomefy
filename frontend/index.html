@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Hoomefy - AI-powered interior design. Upload a photo of your room and see it redesigned in the style you choose." />
     <meta name="theme-color" content="#F0EEEB" />
+    <!-- Send no Referer to other sites. Hugging Face's API answers 404 to browser requests whose Referer is a
+         *.workers.dev address, which broke the AI step ("Space metadata could not be loaded"). Also set in public/_headers. -->
+    <meta name="referrer" content="same-origin" />
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
