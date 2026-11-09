@@ -40,16 +40,44 @@ the current numbers on Supabase's pricing page). Each person can keep up to 50 d
 which keeps storage use small. Free Supabase projects may be paused after a period without activity; if that
 happens press **Restore** in the dashboard.
 
-## 2. Cloudflare Pages (the website) — about 10 minutes
+## 2. GitHub, then Cloudflare Pages (the website) — about 15 minutes
 
-1. Put this project on GitHub (public, with the `LICENSE` file and the `.kiro` folder).
-2. In the Cloudflare dashboard open **Workers & Pages → Create → Pages → Connect to Git** and pick the repository.
+### 2a. Put the code on GitHub
+
+The project is already a git repository with its first commit. You only need an empty place on GitHub to send it to.
+
+1. Sign in at <https://github.com> and open <https://github.com/new>.
+2. Repository name: `hoomefy`. Choose **Public** (Kiroween requires a public repository). **Do not** tick *Add a README*,
+   *Add .gitignore* or *Choose a license*; the project already has them and the first push would clash.
+3. Press **Create repository**, then copy the address it shows, like `https://github.com/your-name/hoomefy.git`.
+4. In a terminal in the project folder (the one that contains `frontend`, `docs` and `.kiro`):
+
+   ```
+   git remote add origin https://github.com/your-name/hoomefy.git
+   git push -u origin main
+   ```
+
+   The first push opens a browser window asking you to sign in to GitHub; approve it.
+5. Refresh the repository page. You should see `frontend`, `docs`, `supabase` and `.kiro`, and a MIT licence badge.
+
+Check that `.kiro` is there: Kiroween disqualifies a repository that leaves it out.
+
+A note for Windows: this folder lives inside OneDrive. OneDrive and git's hidden `.git` folder sometimes fight
+over locked files. If git ever reports a lock or corrupt-file error, right-click the folder in OneDrive and
+choose *Always keep on this device*, or move the project to a folder outside OneDrive (for example
+`C:\dev\hoomefy`) and clone it again from GitHub.
+
+### 2b. Connect Cloudflare Pages to the repository
+
+1. In the Cloudflare dashboard open **Workers & Pages → Create → Pages → Connect to Git**.
+2. Press **Connect GitHub**, sign in, and allow Cloudflare to see the `hoomefy` repository (choose *Only select
+   repositories* if you prefer). Then select it and press **Begin setup**.
 3. Use these build settings:
    - **Root directory:** `frontend`
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
    - **Node version:** set the environment variable `NODE_VERSION` to `20`
-4. Under **Environment variables** add:
+4. Under **Environment variables (advanced)** add:
 
    | Name | Value |
    |---|---|
@@ -59,6 +87,8 @@ happens press **Restore** in the dashboard.
 
    `VITE_AI_PROVIDER` is not needed: production builds use the real AI model by default.
 5. Press **Save and Deploy**. When it finishes, copy the `*.pages.dev` address into Supabase's **Site URL** (step 1.4).
+
+From now on every `git push` to `main` rebuilds and publishes the site by itself, and every other branch gets its own preview address.
 
 ### Option B: no GitHub at all (deploy from your own computer)
 
