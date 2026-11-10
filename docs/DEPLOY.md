@@ -163,6 +163,12 @@ why and offers **Try again** and a finder that runs on the visitor's own device 
 2. In Cloudflare open your Worker's **Settings → Variables and secrets** and add `SERPER_API_KEY` as a **Secret**.
 3. Redeploy. The key stays on Cloudflare's servers; the browser never sees it.
 
+Put it under the Worker's own **Settings → Variables and secrets**, not under **Settings → Build → Variables and secrets**.
+The build section (where the `VITE_*` values go) is only read while the site is being built; the search route runs later, on
+the Worker, and cannot see those. To check, sign in and open the Furniture tab after a design; or look at a search answer in
+the browser's network tab: `"reason":"not_configured"` means the Worker has no key, `"reason":"rejected"` means serper.dev
+refused it (`upstream` is the status, usually 401 or 403), and `"live":true` means it works.
+
 Without the key nothing breaks: the pieces are still found, each carries a typical price for the chosen style marked `est.`,
 and the shop links (IKEA, Wayfair, Target, Amazon, Etsy, Google Shopping) still work.
 

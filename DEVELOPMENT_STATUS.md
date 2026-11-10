@@ -509,3 +509,10 @@ Spec: `.kiro/specs/studio-items/`.
   its dimmest in about 7 s instead of about 30 s. The floor is unchanged (12%). The jumpscare still follows 12 s after the floor.
 - **Elegant style cards use photographs** from `Resource/Clean`: Scandinavian (bright kitchen), Japandi (rooftop tea terrace) and
   Modern Classic (living room), built to 960 x 540 WebP by `scripts/build-style-images.mjs` into `public/images/styles/`.
+- **Checks:** type check, lint, 684 unit tests, the build and the full Playwright suite (169 tests) pass.
+- **Live check (commit e8da7f9, throwaway accounts):** the three style photographs load (960 px wide). On a browser that had already
+  seen the reveal, one press of the mirror switched the site to Haunted; one press of the mirror in Haunted played
+  `/video/jumpscare.mp4` full-screen, and a second press played it again. No page errors. The shop search still answered
+  `live=false` with `reason=not_configured` for every piece: the deployed Worker does not have `SERPER_API_KEY`. The usual cause is
+  adding it under Settings → Build → Variables and secrets (build time only) instead of the Worker's own Settings → Variables and
+  secrets. Until it is added, every price is a typical price marked "est.".
