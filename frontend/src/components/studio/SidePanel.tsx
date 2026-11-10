@@ -38,7 +38,7 @@ export function SidePanel({ tab, onTabChange, tips }: SidePanelProps) {
   };
 
   return (
-    <section className="rounded-xl border border-navy-700 bg-navy-800 lg:flex lg:min-h-[10rem] lg:flex-1 lg:flex-col lg:overflow-hidden" aria-label="Design assistant and furniture">
+    <section className="rounded-xl border border-navy-700 bg-navy-800 lg:flex lg:min-h-[8.5rem] lg:flex-1 lg:flex-col lg:overflow-hidden" aria-label="Design assistant and furniture">
       <div role="tablist" aria-label="Design assistant" className="flex border-b border-navy-700 lg:shrink-0">
         {TABS.map((t, i) => (
           <button

@@ -35,7 +35,7 @@ export function AiAllowance() {
   };
 
   return (
-    <details className="rounded-lg border border-navy-700 bg-navy-900 p-4 text-sm" data-testid="ai-allowance">
+    <details className="rounded-lg border border-navy-700 bg-navy-900 p-4 text-sm lg:p-2.5" data-testid="ai-allowance">
       <summary className="flex cursor-pointer items-center gap-2 font-medium text-ivory">
         <KeyRound className="h-4 w-4 text-accent" aria-hidden="true" />
         More free AI time
