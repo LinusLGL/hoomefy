@@ -8,7 +8,6 @@ const version = (id: string): DesignVersion => ({
   blob: new Blob([id]),
   createdAt: new Date().toISOString(),
   style: 'japandi',
-  roomType: 'bedroom',
   prompt: 'p',
   providerId: 'demo',
   demo: true,
@@ -77,16 +76,15 @@ describe('studio history', () => {
 
   it('reset clears the choices too', () => {
     useStudioStore.getState().setStyle('halloween');
-    useStudioStore.getState().setRoomType('kitchen');
     useStudioStore.getState().reset();
     const s = useStudioStore.getState();
     expect(s.selectedStyle).toBeNull();
-    expect(s.roomType).toBeNull();
+    expect(s.preferences.customInstructions).toBeUndefined();
   });
 });
 
 describe('persisted choices', () => {
-  it('remembers the room, theme and preferences but never the photograph or designs', () => {
+  it('remembers the theme and preferences but never the photograph or designs', () => {
     useStudioStore.getState().setStyle('minimalist');
     useStudioStore.getState().setPreferences({ budget: 2500, customStyle: 'cozy cabin' });
     useStudioStore.getState().setUploadedImage(image('a.jpg'));
@@ -101,18 +99,21 @@ describe('persisted choices', () => {
   it('drops a style from the old ten-style list when loading older saved data', async () => {
     localStorage.setItem(
       STORAGE_KEYS.studioState,
-      JSON.stringify({ state: { roomType: 'bedroom', selectedStyle: 'haunted-chic', preferences: { colorPalette: 'warm' } }, version: 1 })
+      JSON.stringify({ state: { roomType: 'bedroom', selectedStyle: 'haunted-chic', preferences: { colorPalette: 'warm', replaceFurniture: ['bed'], budget: 900 } }, version: 1 })
     );
     await useStudioStore.persist.rehydrate();
     const s = useStudioStore.getState();
     expect(s.selectedStyle).toBeNull();
-    expect(s.roomType).toBe('bedroom');
-    expect(s.preferences.colorPalette).toBe('warm');
+    // The room type, the colour palette and the furniture to replace were removed, so older data cannot bring them back.
+    expect('roomType' in s).toBe(false);
+    expect(s.preferences).not.toHaveProperty('colorPalette');
+    expect(s.preferences).not.toHaveProperty('replaceFurniture');
+    expect(s.preferences.budget).toBe(900);
     expect(s.preferences.intensity).toBe(0.7);
   });
 
   it('keeps a style that is still offered', async () => {
-    localStorage.setItem(STORAGE_KEYS.studioState, JSON.stringify({ state: { roomType: null, selectedStyle: 'japandi', preferences: {} }, version: 1 }));
+    localStorage.setItem(STORAGE_KEYS.studioState, JSON.stringify({ state: { selectedStyle: 'japandi', preferences: {} }, version: 1 }));
     await useStudioStore.persist.rehydrate();
     expect(useStudioStore.getState().selectedStyle).toBe('japandi');
   });

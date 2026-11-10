@@ -6,26 +6,29 @@
  * spirits left is cleared; a house with every room cleared is built.
  */
 
-import type { FurnitureKey, RoomType } from '@/types';
 import { seeded } from '@/features/haunting/env';
+
+/** The seven rooms of a haunted house. (The studio no longer asks for a room type; these belong to the house.) */
+export type RoomType = 'living-room' | 'bedroom' | 'kitchen' | 'dining-room' | 'office' | 'bathroom' | 'other';
+
+/** Categories of furniture a spirit can be bound to. */
+export type FurnitureKey = 'seating' | 'bed' | 'tables' | 'lighting' | 'storage' | 'rugs' | 'decor';
 
 export interface FurnitureInfo {
   key: FurnitureKey;
   label: string;
   /** What the lingering spirit is called. */
   spirit: string;
-  /** Used in the generation instruction sentence. */
-  phrase: string;
 }
 
 export const FURNITURE: readonly FurnitureInfo[] = [
-  { key: 'seating', label: 'Sofas & seating', spirit: 'The Lady on the Settee', phrase: 'sofas and seating' },
-  { key: 'bed', label: 'Bed & bedding', spirit: 'The Sleeper', phrase: 'the bed and bedding' },
-  { key: 'tables', label: 'Tables', spirit: 'The Dinner Guest', phrase: 'tables' },
-  { key: 'lighting', label: 'Lamps & lighting', spirit: 'The Lamplighter', phrase: 'lamps and lighting' },
-  { key: 'storage', label: 'Cabinets & shelves', spirit: 'The Keeper of Keys', phrase: 'cabinets and shelves' },
-  { key: 'rugs', label: 'Rugs & curtains', spirit: 'The Watcher at the Curtain', phrase: 'rugs and curtains' },
-  { key: 'decor', label: 'Mirrors & art', spirit: 'The Face in the Glass', phrase: 'mirrors and wall art' },
+  { key: 'seating', label: 'Sofas & seating', spirit: 'The Lady on the Settee' },
+  { key: 'bed', label: 'Bed & bedding', spirit: 'The Sleeper' },
+  { key: 'tables', label: 'Tables', spirit: 'The Dinner Guest' },
+  { key: 'lighting', label: 'Lamps & lighting', spirit: 'The Lamplighter' },
+  { key: 'storage', label: 'Cabinets & shelves', spirit: 'The Keeper of Keys' },
+  { key: 'rugs', label: 'Rugs & curtains', spirit: 'The Watcher at the Curtain' },
+  { key: 'decor', label: 'Mirrors & art', spirit: 'The Face in the Glass' },
 ];
 
 export const furnitureInfo = (key: FurnitureKey): FurnitureInfo => FURNITURE.find((f) => f.key === key) as FurnitureInfo;
@@ -78,24 +81,6 @@ export function applyReplacement(spirits: readonly FurnitureKey[], replaced: rea
     driven: spirits.filter((s) => set.has(s)),
     remaining: spirits.filter((s) => !set.has(s)),
   };
-}
-
-/** Maximum custom-instruction length accepted by the generation API. */
-export const MAX_INSTRUCTIONS = 500;
-
-/**
- * Append the furniture request to the user's own instructions without ever
- * exceeding the API limit. The furniture sentence is kept whole; the user's text is
- * trimmed if necessary.
- */
-export function composeInstructions(base: string | undefined, replaced: readonly FurnitureKey[]): string | undefined {
-  const user = (base ?? '').trim();
-  if (replaced.length === 0) return user || undefined;
-  const sentence = `Replace the existing ${replaced.map((k) => furnitureInfo(k).phrase).join(', ')} with pieces that suit the chosen style.`;
-  if (!user) return sentence.slice(0, MAX_INSTRUCTIONS);
-  const room = MAX_INSTRUCTIONS - sentence.length - 1;
-  if (room <= 0) return sentence.slice(0, MAX_INSTRUCTIONS);
-  return `${user.slice(0, room).trimEnd()} ${sentence}`;
 }
 
 /** Floating ghosts: one per uncleared room (max 3), and always at least one. */

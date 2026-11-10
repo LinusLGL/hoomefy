@@ -4,7 +4,7 @@
 
 import { useStudioStore } from '@/stores/studioStore';
 import { useShoppingStore } from '@/features/furniture/shoppingStore';
-import { useFurnitureStore } from '@/features/furniture/furnitureStore';
+import { resetScan } from '@/features/furniture/scan';
 import type { SavedDesign } from '@/services/designsService';
 import { fitToModelSize } from './dimensions';
 
@@ -41,7 +41,6 @@ export async function openDesignInStudio(design: SavedDesign): Promise<void> {
     originalWidth: size.width,
     originalHeight: size.height,
   });
-  if (design.roomType) store.setRoomType(design.roomType);
   store.setStyle(design.style);
   store.setPreferences(design.preferences);
   store.addVersion({
@@ -50,12 +49,11 @@ export async function openDesignInStudio(design: SavedDesign): Promise<void> {
     blob: generated,
     createdAt: design.createdAt,
     style: design.style,
-    roomType: design.roomType,
     prompt: design.prompt,
     providerId: 'saved',
     demo: false,
   });
 
   useShoppingStore.setState({ items: design.shopping });
-  useFurnitureStore.getState().reset();
+  resetScan();
 }

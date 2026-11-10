@@ -38,7 +38,7 @@ export interface FormLike {
 
 export type ImageMime = 'image/jpeg' | 'image/png' | 'image/webp';
 
-interface Failure {
+export interface Failure {
   status: number;
   code: string;
   message: string;
@@ -51,7 +51,7 @@ const JSON_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
 };
 
-function failure(f: Failure): Response {
+export function failure(f: Failure): Response {
   return new Response(JSON.stringify({ error: { code: f.code, message: f.message } }), {
     status: f.status,
     headers: { ...JSON_HEADERS, ...f.headers },

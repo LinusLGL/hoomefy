@@ -37,6 +37,11 @@ chequered marble floor, crimson mist; headline "Your Dream Home Has *Secrets.*")
 4. Mobile: at most 2. Reduced motion: static and fainter. Hidden in Elegant mode and when horror is off.
 
 ## M4 — Build the house, replace the furniture, clear the ghosts  *(interpretation)*
+> **Superseded (November 2026).** The studio no longer asks for a room type or for furniture to replace (see
+> `studio-items`), so items 3, 4, 5 and 7 below are gone from the product: the picker, the haunting report, the outcome
+> banner and the spirit overlay were deleted. The house, the spirits store and the floating ghosts remain, but nothing in the
+> studio clears a room any more. Items 1, 2, 6 and 8 describe code that is still there.
+
 The brief says users must build houses and replace furniture to clear the ghosts away. Interpretation:
 
 1. A **house** has one slot per room type (7). Every room starts **haunted**. A house is **built** when all

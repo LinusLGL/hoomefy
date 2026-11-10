@@ -10,9 +10,9 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import type { DesignPreferences, DesignStyle, GenerationJob, RoomType } from '@/types';
+import type { DesignPreferences, DesignStyle, GenerationJob } from '@/types';
 import { useStudioStore } from '@/stores/studioStore';
-import { buildEditPrompt } from '@/features/studio/prompt';
+import { buildEditPrompt, cleanText } from '@/features/studio/prompt';
 import { toJpeg } from '@/features/studio/image/toJpeg';
 import { AiError, getDemoProvider, getImageProvider, type AiErrorCode, type EditStatus } from '@/features/studio/ai';
 import { useToast } from './useToast';
@@ -22,7 +22,6 @@ export interface GenerateInput {
   image: Blob;
   width: number;
   height: number;
-  roomType: RoomType;
   style: DesignStyle;
   preferences: DesignPreferences;
   /** Use the demo renderer even when the real model is configured. */
@@ -68,10 +67,8 @@ export function useGeneration(): UseGenerationResult {
       setIsGenerating(true);
 
       const prompt = buildEditPrompt({
-        roomType: input.roomType,
         style: input.style,
         customStyle: input.preferences.customStyle,
-        palette: input.preferences.colorPalette,
         intensity: input.preferences.intensity,
         instructions: input.preferences.customInstructions,
       });
@@ -83,7 +80,6 @@ export function useGeneration(): UseGenerationResult {
         status: 'pending',
         originalImageKey: '',
         generatedImageKey: null,
-        roomType: input.roomType,
         style: input.style,
         preferences: input.preferences,
         errorMessage: null,
@@ -120,7 +116,6 @@ export function useGeneration(): UseGenerationResult {
           blob,
           createdAt: new Date().toISOString(),
           style: input.style,
-          roomType: input.roomType,
           prompt,
           seed: result.seed,
           providerId: result.providerId,
@@ -135,7 +130,13 @@ export function useGeneration(): UseGenerationResult {
           completedAt: new Date().toISOString(),
         };
         setCurrentJob(done);
-        if (result.demo) toast.info('Demo rendering ready', 'This is a colour-graded preview, not an AI redesign.');
+        if (result.demo) {
+          const hasWishes = cleanText(input.preferences.customInstructions).length > 0;
+          toast.info(
+            'Demo rendering ready',
+            hasWishes ? 'This is a colour-graded preview. Only the real AI can follow your wishes.' : 'This is a colour-graded preview, not an AI redesign.'
+          );
+        }
         else toast.success('Your design is ready!', 'Compare the before and after below.');
         return done;
       } catch (err) {

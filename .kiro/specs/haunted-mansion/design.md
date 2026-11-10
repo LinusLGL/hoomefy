@@ -34,10 +34,10 @@ Count from `mansionStore` via `ghostCount(unclearedRooms)`.
 ## Mansion gameplay (`features/mansion/`)
 - `spirits.ts` — pure: furniture catalogue, per-room candidates, `seedSpirits`, `applyReplacement`.
 - `mansionStore.ts` — houses, active house, `registerRoom`, `applyJob(jobId, …)` (idempotent), `buildNextHouse`.
-- UI: `FurniturePicker` (both experiences), `SpiritReport`, `SpiritOverlay`
-  (spirits leave the result image), outcome banner in `ResultPanel`. (`MansionProgress`, the "Your mansion"
-  panel, was removed from the Studio and Gallery pages; `buildNextHouse` stays in the store but has no UI.)
-- Flow: upload + room type → `registerRoom` → pick furniture → generate → on `completed` → `applyJob`.
+- UI: removed in November 2026 (`FurniturePicker`, `SpiritReport`, `SpiritOverlay`, the outcome banner), because the
+  studio no longer has a room type or furniture to replace. (`MansionProgress`, the "Your mansion" panel, was removed
+  earlier; `buildNextHouse` stays in the store but has no UI.) `FloatingGhosts` and the candle-lift code still read the store.
+- Flow: none from the studio. `registerRoom` and `applyJob` are still in the store (and tested) but nothing calls them.
 
 ## Takeover changes
 Only copy and scene names: `flashScene('abandoned'|'mansion')`, reveal headline, third whisper.

@@ -15,7 +15,6 @@ export interface StudioCopy {
   stages: { queued: string; developing: string; ready: string; failed: string };
   messages: {
     welcome: string;
-    selectRoom: string;
     selectStyle: string;
     ready: string;
     generating: string;
@@ -23,8 +22,6 @@ export interface StudioCopy {
   };
   resultTitle: string;
   resultCaption: string;
-  furnitureTitle: string;
-  furnitureHint: string;
 }
 
 export const ELEGANT_COPY: StudioCopy = {
@@ -44,7 +41,6 @@ export const ELEGANT_COPY: StudioCopy = {
   },
   messages: {
     welcome: 'Start with a clear, well-lit photo of the room you would like to redesign.',
-    selectRoom: 'Tell us which kind of room this is so the layout suggestions fit.',
     selectStyle: 'Choose the style you would like to see in your space.',
     ready: 'Everything is set. Generate your design when you are ready.',
     generating: 'Your design is being prepared. This usually takes under a minute.',
@@ -52,8 +48,6 @@ export const ELEGANT_COPY: StudioCopy = {
   },
   resultTitle: 'Your redesigned room',
   resultCaption: 'Drag the handle to compare.',
-  furnitureTitle: 'Furniture to replace',
-  furnitureHint: 'Choose the pieces you would like swapped for ones in your chosen style.',
 };
 
 export const HAUNTED_COPY: StudioCopy = {
@@ -73,7 +67,6 @@ export const HAUNTED_COPY: StudioCopy = {
   },
   messages: {
     welcome: 'Lay a photograph of the room on the table. Do not look too long at the corners.',
-    selectRoom: 'Which room is it? Rooms remember what happened in them.',
     selectStyle: 'Choose a style. Some of them were here before you.',
     ready: 'The photograph is ready to develop. Are you?',
     generating: 'Stay where you are. It is nearly done.',
@@ -81,8 +74,6 @@ export const HAUNTED_COPY: StudioCopy = {
   },
   resultTitle: 'What developed',
   resultCaption: 'Drag the handle between then and now.',
-  furnitureTitle: 'Furniture to replace',
-  furnitureHint: 'Spirits cling to old furniture. Replace the right pieces and they must leave.',
 };
 
 export const getStudioCopy = (haunted: boolean): StudioCopy => (haunted ? HAUNTED_COPY : ELEGANT_COPY);

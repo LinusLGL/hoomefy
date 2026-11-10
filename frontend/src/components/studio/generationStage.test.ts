@@ -9,7 +9,6 @@ const job = (status: JobStatus): GenerationJob => ({
   status,
   originalImageKey: 'k',
   generatedImageKey: null,
-  roomType: 'bedroom',
   style: 'japandi',
   preferences: {},
   errorMessage: null,

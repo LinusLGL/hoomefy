@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { RoomType, DesignStyle, DesignPreferences, UploadedImage } from '@/types';
+import type { DesignStyle, DesignPreferences, UploadedImage } from '@/types';
 import { STORAGE_KEYS, GENERATION_CONSTRAINTS } from '@/utils/constants';
 import { isDesignStyle } from '@/features/studio/styles';
+import { cleanPreferences } from '@/features/studio/preferences';
 
 /** One finished design. Kept in memory for this visit; saving it to an account is a separate, explicit step. */
 export interface DesignVersion {
@@ -12,7 +13,6 @@ export interface DesignVersion {
   blob: Blob;
   createdAt: string;
   style: DesignStyle;
-  roomType: RoomType | null;
   prompt: string;
   seed?: number;
   providerId: string;
@@ -28,7 +28,6 @@ interface StudioState {
   generatedImageUrl: string | null;
 
   // Design Configuration
-  roomType: RoomType | null;
   selectedStyle: DesignStyle | null;
   preferences: DesignPreferences;
 
@@ -45,7 +44,6 @@ interface StudioState {
   // Actions
   setUploadedImage: (image: UploadedImage | null) => void;
   setGeneratedImageUrl: (url: string | null) => void;
-  setRoomType: (type: RoomType) => void;
   setStyle: (style: DesignStyle) => void;
   setPreferences: (preferences: Partial<DesignPreferences>) => void;
   addVersion: (version: DesignVersion) => void;
@@ -75,7 +73,6 @@ export const useStudioStore = create<StudioState>()(
       // Initial State
       uploadedImage: null,
       generatedImageUrl: null,
-      roomType: null,
       selectedStyle: null,
       preferences: initialPreferences,
       history: [],
@@ -106,8 +103,6 @@ export const useStudioStore = create<StudioState>()(
           isGenerating: false,
           generationProgress: 100,
         }),
-
-      setRoomType: (type) => set({ roomType: type }),
 
       setStyle: (style) => set({ selectedStyle: style }),
 
@@ -171,7 +166,6 @@ export const useStudioStore = create<StudioState>()(
         set({
           uploadedImage: null,
           generatedImageUrl: null,
-          roomType: null,
           selectedStyle: null,
           preferences: initialPreferences,
           history: [],
@@ -185,19 +179,17 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: STORAGE_KEYS.studioState,
-      version: 2,
+      version: 3,
       partialize: (state) => ({
-        roomType: state.roomType,
         selectedStyle: state.selectedStyle,
         preferences: state.preferences,
       }),
-      // Version 1 stored the old ten style names; anything that is no longer a theme is dropped.
+      // Version 1 stored the old ten style names; anything that is no longer a theme is dropped. Version 3 dropped the room type,\r\n      // the colour palette and the furniture to replace, so they are ignored when older data is loaded.
       migrate: (persisted) => {
-        const p = (persisted ?? {}) as Partial<Pick<StudioState, 'roomType' | 'selectedStyle' | 'preferences'>>;
+        const p = (persisted ?? {}) as Partial<Pick<StudioState, 'selectedStyle' | 'preferences'>>;
         return {
-          roomType: p.roomType ?? null,
           selectedStyle: isDesignStyle(p.selectedStyle) ? p.selectedStyle : null,
-          preferences: { ...initialPreferences, ...(p.preferences ?? {}) },
+          preferences: { ...initialPreferences, ...cleanPreferences(p.preferences) },
         } as StudioState;
       },
     }
@@ -206,7 +198,6 @@ export const useStudioStore = create<StudioState>()(
 
 // Selectors
 export const useUploadedImage = () => useStudioStore((state) => state.uploadedImage);
-export const useRoomType = () => useStudioStore((state) => state.roomType);
 export const useSelectedStyle = () => useStudioStore((state) => state.selectedStyle);
 export const usePreferences = () => useStudioStore((state) => state.preferences);
 export const useIsGenerating = () => useStudioStore((state) => state.isGenerating);
@@ -217,7 +208,6 @@ export const useCanGenerate = () =>
   useStudioStore((state) => {
     return (
       state.uploadedImage !== null &&
-      state.roomType !== null &&
       state.selectedStyle !== null &&
       !state.isGenerating
     );

@@ -8,8 +8,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { FurnitureKey, RoomType } from '@/types';
-import { ROOM_FURNITURE, ROOM_SLOTS, applyReplacement, seedSpirits } from './spirits';
+import { ROOM_FURNITURE, ROOM_SLOTS, applyReplacement, seedSpirits, type FurnitureKey, type RoomType } from './spirits';
 
 export interface RoomState {
   /** Spirits still lingering (bound to these furniture categories). */

@@ -433,7 +433,7 @@ Removed the Haunted-only "Your mansion" panel (`MansionProgress`: house name, "0
 On laptop and desktop screens (1024px wide and up) the Design Studio is now one fixed screen: the page never scrolls, the footer is hidden there, and none of the three columns needs to scroll. Before, the page scrolled by about 400 to 660px at every size tested (1366x768, 1440x900, 1920x1080) and the left column was 1,200 to 1,800px too tall for its space.
 
 - **Frame:** `PageLayout fit` makes the page exactly `100dvh` on `lg+` and drops the footer there; `data-studio-fit` (set by `StudioPage`) locks page scroll in `globals.css`, because the Haunted background layers (mist, grain, drifting ghosts) extend past the bottom and would add a scrollbar.
-- **Layout (`lg`):** columns of 260/280px (300/340px at `xl`) around a flexible canvas. Left: photo, room type, style, and the furniture picker (with the Haunted haunting report inside its card). Right: assistant, preferences, then the Summary / Furniture / Shopping tabs, which scroll inside their own panel. The toolbar is one slim row with Reset next to Generate.
+- **Layout (`lg`):** columns of 260/280px (300/340px at `xl`) around a flexible canvas. Left: photo, style, then preferences (the wishes box, intensity, budget). Right: assistant, then the Summary / Furniture / Shopping tabs, which scroll inside their own panel. The toolbar is one slim row with Reset next to Generate.
 - **Compact controls:** every shared control gets `lg:` variants only, so tablet and phone layouts are unchanged: room chips wrap instead of a 2-column grid of cards, style tiles are 3 across with the tagline kept for screen readers, palette chips sit in one row, the notes box is two lines, the photo row is one line with icon-only Replace and Remove, and the spirit list is names on one line.
 - **Canvas:** upload, preview, progress and result fill the available height and show the whole photo (`object-contain`) instead of a cropped 16:9 frame (`BeforeAfterSlider fitHeight`). The tools, version thumbnails and demo note share rows.
 - **Placement:** a few controls live in different columns by screen size (preferences, AI allowance, reset, the haunting report). They are rendered once, chosen by `useMediaQuery('(min-width: 1024px)')`, because two copies would duplicate ids and labels.
@@ -474,3 +474,23 @@ In Haunted the Design Studio is now a spirit board. The photo goes on a blank po
 - Second line uses `script2.1.mp3`; the chamber waits for the design, then shows the result; `firesound.mp3` plays (1.4 s) on every Haunted click; candle light dims every 3.3 s to 12 %.
 - Checks: tsc, eslint, 608 unit tests, build, 92 desktop e2e (ritual, holywater, mansion, studio-fit) pass. Not yet live-verified.
 
+
+## Studio: wishes, found items and prices (Nov 5, 2026)
+
+Spec: .kiro/specs/studio-items/.
+
+- **Wishes steer the picture.** The wishes box ("Extra instructions"; "Whisper your wishes" in Haunted) moved to the left
+  panel, under the style, and the prompt now sends its words first, as the priority, with the style filling in the rest.
+  The "keep the layout" rule gives way to what is asked. The demo renderer cannot follow wishes and says so.
+- **Removed:** the room type, the colour palette and "furniture to replace" (screen, store, prompt, saved designs, copy, the
+  ritual gate). Stored data that still has them is read and they are ignored (studioStore persist version 3).
+  The spirit report, outcome banner and spirit overlay went with them; the house, floating ghosts and candle lift remain,
+  but designing no longer clears a room.
+- **Items found by themselves.** When a design is ready, scanDesign posts a small copy to /api/detect-items
+  (worker/detect.ts, Llama 4 Scout on Workers AI, Gemma 4 as the second choice), searches each piece through
+  /api/furniture-search, counts the product priced nearest the middle, and fills the Summary, Furniture and Shopping
+  list. Without a shop price the piece carries a typical price for the style, marked "est.".
+- **Both routes are signed-in only** with per-user limits (REDESIGN_LIMITER, new SEARCH_LIMITER).
+- **Checks:** type check, lint and the unit suite pass; e2e design-studio, itual, studio, studio-fit and mansion
+  pass on desktop. Not yet checked on the live site: the vision model's real answer, and shop prices (they need
+  SERPER_API_KEY, which has not been added).

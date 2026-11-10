@@ -12,7 +12,7 @@ changed.
 2. The board SHALL animate like candlelight: a slow flicker of warm light, drifting smoke and small embers. Nothing SHALL block clicks.
 3. With no photograph, the polaroid SHALL be a drop zone (drag a file, or press it to choose one) with the line "Lay a photograph of the room here."
 4. When the visitor adds a photograph, it SHALL appear in the centre of the polaroid, in the polaroid's own frame (not in a separate card).
-5. The studio controls (room, style, preferences, furniture) SHALL stay usable beside the board, on the same screen sizes as before.
+5. The studio controls (style and preferences) SHALL stay usable beside the board, on the same screen sizes as before.
 6. IN Elegant the studio SHALL look and behave as it did before this feature.
 
 ## R2. Whisper guide (spooky custom instructions) **(assumed: this is the "custom instruction guide")**
@@ -47,7 +47,7 @@ changed.
 
 1. Lighting the fifth candle SHALL start the redesign **(assumed)**, through the same path as the old "Develop the Photograph" button (consent, AI chain, quota, demo fallback).
 2. After the fifth recording has ended (plus a short pause; 3.8 s with sound off, 12 s at most) the chamber SHALL stay open while the design is still being made, showing "The photograph is developing. Stay within the circle" and the queue position. When the design finishes or fails it SHALL fade out and the studio SHALL show the result. Close or Escape only dismisses; the design carries on.
-3. The room type and style SHALL be chosen first. If they are not, pressing the photograph SHALL say "The flames are not ready" and explain what is missing, and no chamber opens.
+3. A style SHALL be chosen first (or described, for the custom style). If it is not, pressing the photograph SHALL say "The flames are not ready" and explain what is missing, and no chamber opens. (The room type was removed; see studio-items.)
 4. When the live AI is in use, the existing consent dialog SHALL come **before** the chamber opens.
 
 ## R5. Every screen

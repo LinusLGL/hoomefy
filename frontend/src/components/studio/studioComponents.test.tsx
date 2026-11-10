@@ -45,16 +45,9 @@ describe('StyleSelector', () => {
 });
 
 describe('PreferencesPanel', () => {
-  it('sets and clears the palette, and reports the budget as a number', async () => {
+  it('reports the budget as a number', () => {
     const onChange = vi.fn();
-    render(<PreferencesPanel preferences={{ colorPalette: 'warm', intensity: 0.5 }} onChange={onChange} />);
-    expect(screen.getByRole('button', { name: /Warm/ })).toHaveAttribute('aria-pressed', 'true');
-
-    await userEvent.click(screen.getByRole('button', { name: /Warm/ }));
-    expect(onChange).toHaveBeenLastCalledWith({ colorPalette: undefined });
-    await userEvent.click(screen.getByRole('button', { name: /Cool/ }));
-    expect(onChange).toHaveBeenLastCalledWith({ colorPalette: 'cool' });
-
+    render(<PreferencesPanel preferences={{ intensity: 0.5 }} onChange={onChange} />);
     fireEvent.change(screen.getByLabelText(/Furniture budget/), { target: { value: '2500' } });
     expect(onChange).toHaveBeenLastCalledWith({ budget: 2500 });
   });
@@ -66,9 +59,19 @@ describe('PreferencesPanel', () => {
     expect(onChange).toHaveBeenLastCalledWith({ budget: undefined });
   });
 
-  it('always shows the extra instructions box', () => {
+  it('has no colour palette any more', () => {
     render(<PreferencesPanel preferences={{}} onChange={() => undefined} />);
-    expect(screen.getByLabelText(/Extra instructions/)).toBeInTheDocument();
+    expect(screen.queryByText(/colour palette/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Warm/ })).not.toBeInTheDocument();
+  });
+
+  it('always shows the extra instructions box, and reports what is typed in it', () => {
+    const onChange = vi.fn();
+    render(<PreferencesPanel preferences={{}} onChange={onChange} />);
+    const box = screen.getByLabelText(/Extra instructions/);
+    expect(box).toBeInTheDocument();
+    fireEvent.change(box, { target: { value: 'add a green velvet sofa' } });
+    expect(onChange).toHaveBeenLastCalledWith({ customInstructions: 'add a green velvet sofa' });
   });
 });
 

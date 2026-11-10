@@ -6,7 +6,7 @@
  * furniture suggestions and price estimates.
  */
 
-import type { DesignStyle, RoomType } from '@/types';
+import type { DesignStyle } from '@/types';
 
 export type PriceTier = 'budget' | 'mid' | 'premium';
 
@@ -98,13 +98,3 @@ export const STYLES: Record<DesignStyle, StyleDefinition> = {
 export const isDesignStyle = (value: unknown): value is DesignStyle =>
   typeof value === 'string' && Object.prototype.hasOwnProperty.call(STYLES, value);
 
-/** How the room is named inside the prompt. */
-export const ROOM_WORDS: Record<RoomType, string> = {
-  'living-room': 'living room',
-  bedroom: 'bedroom',
-  kitchen: 'kitchen',
-  'dining-room': 'dining room',
-  office: 'home office',
-  bathroom: 'bathroom',
-  other: 'room',
-};

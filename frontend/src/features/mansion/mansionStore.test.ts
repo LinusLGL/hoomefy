@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import type { FurnitureKey, RoomType } from '@/types';
-import { ROOM_SLOTS } from './spirits';
+import { ROOM_SLOTS, type FurnitureKey, type RoomType } from './spirits';
 import { activeHouse, clearedCount, isHouseBuilt, unclearedCount, useMansionStore } from './mansionStore';
 
 const s = () => useMansionStore.getState();

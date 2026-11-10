@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DETECT_LABELS, detectFurniture, postProcess, type RawDetection } from './detect';
 import { buildSearchQuery, parsePrice, retailerLinks, sanitizeProducts, searchProducts } from './search';
-import { estimateMid, estimateRange, formatUsd, suggestPieces } from './estimate';
+import { estimateMid, estimateRange, formatUsd } from './estimate';
 import { cleanItems, listAsText, MAX_ITEMS, shoppingTotal, useShoppingStore } from './shoppingStore';
-import { FURNITURE, FURNITURE_IDS, ROOM_PIECES } from './taxonomy';
+import { FURNITURE, FURNITURE_IDS } from './taxonomy';
 
 const det = (label: string, score: number, box = { xmin: 0.1, ymin: 0.1, xmax: 0.5, ymax: 0.6 }): RawDetection => ({ label, score, box });
 
@@ -19,10 +19,6 @@ describe('taxonomy', () => {
       }
       expect(k.price.budget[0]).toBeLessThan(k.price.premium[1]);
     }
-  });
-
-  it('only suggests pieces that exist', () => {
-    for (const pieces of Object.values(ROOM_PIECES)) for (const p of pieces) expect(FURNITURE[p]).toBeDefined();
   });
 
   it('gives the detector one phrase per piece', () => {
@@ -83,9 +79,9 @@ describe('detectFurniture', () => {
 });
 
 describe('search helpers', () => {
-  it('builds a query from the style, palette and piece', () => {
+  it('builds a query from the style and the piece', () => {
     expect(buildSearchQuery('coffee-table', 'scandinavian')).toBe('scandinavian light oak coffee table');
-    expect(buildSearchQuery('rug', null, 'warm')).toBe('warm area rug');
+    expect(buildSearchQuery('rug', null)).toBe('area rug');
     expect(buildSearchQuery('sofa', 'custom')).toBe('sofa');
   });
 
@@ -151,11 +147,6 @@ describe('estimates', () => {
   it('formats dollars', () => {
     expect(formatUsd(1299)).toBe('$1,299');
   });
-
-  it('suggests pieces for the room', () => {
-    expect(suggestPieces('bedroom')[0]).toBe('bed');
-    expect(suggestPieces(null)).toEqual(ROOM_PIECES.other);
-  });
 });
 
 describe('shopping list', () => {
@@ -200,6 +191,28 @@ describe('shopping list', () => {
     ]);
     expect(out.map((i) => i.id)).toEqual(['a', 'd']);
     expect(out[1].link).toBeNull();
+  });
+
+  it('replaces only the pieces it added itself when a new design is looked through', () => {
+    const { add, replaceAuto } = useShoppingStore.getState();
+    add(item);
+    const line = (title: string, link: string) => ({ ...item, kind: 'rug' as const, title, link, price: 100 });
+    replaceAuto([line('Old rug', 'https://shop.example/old')]);
+    expect(useShoppingStore.getState().items.map((i) => i.title)).toEqual(['Oak sofa', 'Old rug']);
+
+    replaceAuto([line('New rug', 'https://shop.example/new')]);
+    const items = useShoppingStore.getState().items;
+    expect(items.map((i) => i.title)).toEqual(['Oak sofa', 'New rug']);
+    expect(items.map((i) => Boolean(i.auto))).toEqual([false, true]);
+
+    replaceAuto([]);
+    expect(useShoppingStore.getState().items.map((i) => i.title)).toEqual(['Oak sofa']);
+  });
+
+  it('keeps the automatic mark when the list is read back from storage', () => {
+    const [kept] = cleanItems([{ id: 'a', kind: 'rug', title: 'Rug', price: 10, estimated: true, auto: true }, { id: 'b', kind: 'rug', title: 'Rug 2', price: 10, auto: 'yes' }]);
+    expect(kept.auto).toBe(true);
+    expect(cleanItems([{ id: 'b', kind: 'rug', title: 'Rug 2', price: 10, auto: 'yes' }])[0].auto).toBeUndefined();
   });
 
   it('writes a plain-text list with the budget', () => {

@@ -6,9 +6,8 @@ beforeEach(() => {
   Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true, writable: true });
 });
 
-const input = (name = 'My living room') => ({
+const input = (name = 'My design') => ({
   name,
-  roomType: 'living-room' as const,
   style: 'scandinavian' as const,
   prompt: 'Edit this photograph',
   preferences: { intensity: 0.5 },
@@ -53,6 +52,7 @@ describe('reading rows from the database', () => {
   const row = {
     id: 'abc',
     name: 'Bedroom',
+    // Older rows still have these columns and choices; they are ignored.
     room_type: 'bedroom',
     style: 'halloween',
     prompt: 'p',
@@ -65,21 +65,21 @@ describe('reading rows from the database', () => {
 
   it('maps a row to a design', () => {
     const d = rowToDesign(row, { original: 'https://signed/o', generated: 'https://signed/g' });
-    expect(d).toMatchObject({ id: 'abc', roomType: 'bedroom', style: 'halloween', originalUrl: 'https://signed/o' });
-    expect(d.preferences).toEqual({ colorPalette: 'warm', intensity: 0.9, budget: 100 });
+    expect(d).toMatchObject({ id: 'abc', style: 'halloween', originalUrl: 'https://signed/o' });
+    expect(d).not.toHaveProperty('roomType');
+    expect(d.preferences).toEqual({ intensity: 0.9, budget: 100 });
     expect(d.shopping).toHaveLength(1);
   });
 
   it('falls back safely on unexpected values', () => {
-    const d = rowToDesign({ ...row, style: 'haunted-chic', room_type: 'garage', preferences: 'junk', shopping: 'junk' }, { original: null, generated: null });
+    const d = rowToDesign({ ...row, style: 'haunted-chic', preferences: 'junk', shopping: 'junk' }, { original: null, generated: null });
     expect(d.style).toBe('custom');
-    expect(d.roomType).toBeNull();
     expect(d.preferences).toEqual({});
     expect(d.shopping).toEqual([]);
   });
 
   it('cleans preferences', () => {
-    expect(cleanPreferences({ colorPalette: 'purple', intensity: 4, customInstructions: 'x'.repeat(900), budget: -1 })).toEqual({ customInstructions: 'x'.repeat(500) });
+    expect(cleanPreferences({ colorPalette: 'warm', replaceFurniture: ['bed'], intensity: 4, customInstructions: 'x'.repeat(900), budget: -1 })).toEqual({ customInstructions: 'x'.repeat(500) });
     expect(cleanPreferences(null)).toEqual({});
   });
 });

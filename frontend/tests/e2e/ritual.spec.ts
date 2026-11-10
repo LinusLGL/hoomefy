@@ -44,8 +44,7 @@ async function uploadRoom(page: Page) {
   await expect(page.getByTestId('polaroid-photo')).toBeVisible({ timeout: 15_000 });
 }
 
-async function chooseRoomAndStyle(page: Page) {
-  await page.getByRole('button', { name: /Living Room/ }).click();
+async function chooseStyle(page: Page) {
   await page.getByRole('button', { name: /^Scandinavian/ }).click();
 }
 
@@ -101,11 +100,11 @@ test.describe('The Haunted studio: Ouija board and polaroid', () => {
     await expect(box).toHaveValue('Keep the fireplace exactly as it is. Warm lamps, like candles in the dark');
   });
 
-  test('touching the photograph before the room and style are chosen explains what is missing', async ({ page }) => {
+  test('touching the photograph before a style is chosen explains what is missing', async ({ page }) => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await expect(page.getByTestId('begin-ritual')).toContainText('Name the room and style first');
+    await expect(page.getByTestId('begin-ritual')).toContainText('Choose a style first');
     await page.getByTestId('begin-ritual').click();
     await expect(page.getByText('The flames are not ready')).toBeVisible();
     await expect(page.getByTestId('candle-ritual')).toHaveCount(0);
@@ -119,7 +118,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: true });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await expect(page.getByTestId('begin-ritual')).toContainText('Light the candles');
     await expect(page.getByTestId('stage-line')).toContainText('Touch the photograph to light the five flames');
 
@@ -172,7 +171,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByRole('button', { name: 'Develop the Photograph' }).click();
     await expect(page.getByTestId('candle-ritual')).toBeVisible();
   });
@@ -182,7 +181,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByTestId('begin-ritual').click();
     for (const [i, id] of ['left', 'right', 'top', 'bottom-left', 'bottom-right'].entries()) {
       await candle(page, id).click();
@@ -197,7 +196,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByTestId('begin-ritual').click();
     await candle(page, 'top').click();
     await candle(page, 'left').click();
@@ -218,7 +217,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByTestId('begin-ritual').focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('candle-ritual')).toBeVisible();
@@ -237,7 +236,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByTestId('begin-ritual').click();
     await candle(page, 'top').click();
     const styles = await page.evaluate(() => {
@@ -258,7 +257,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     const board = await page.evaluate(() => ({
       glow: getComputedStyle(document.querySelector('.rt-board__glow') as HTMLElement).animationName,
       wander: getComputedStyle(document.querySelector('.rt-board__wander') as HTMLElement).animationName,
@@ -283,7 +282,7 @@ test.describe('The candle ritual', () => {
     await seedHaunted(page, { sound: false });
     await signIn(page);
     await uploadRoom(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByTestId('begin-ritual').click();
     const ritual = page.getByTestId('candle-ritual');
     await expect(ritual).toBeVisible();
@@ -372,7 +371,7 @@ test.describe('The Elegant studio is unchanged', () => {
     await expect(page.getByTestId('whisper-guide')).toHaveCount(0);
     await expect(page.locator('html')).not.toHaveAttribute('data-studio-board', /.*/);
     await uploadRoom2(page);
-    await chooseRoomAndStyle(page);
+    await chooseStyle(page);
     await page.getByRole('button', { name: 'Generate Design' }).click();
     await expect(page.getByTestId('candle-ritual')).toHaveCount(0);
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });

@@ -3,8 +3,8 @@
  *
  * Shows the finished design against the original (draggable before/after slider) or on its own with
  * zoom and pan, with fullscreen, download, regenerate and save, a strip of earlier versions, and the
- * furniture boxes found on the device. In the Haunted experience a short atmospheric distortion plays
- * once as a result is revealed, and the mansion banner and spirits are shown over it.
+ * boxes around the pieces the on-device finder located. In the Haunted experience a short atmospheric distortion
+ * plays once as a result is revealed.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,11 +17,9 @@ import { useStudioStore } from '@/stores/studioStore';
 import { useIsHaunted } from '@/features/haunting/hauntingStore';
 import { revealDistortion } from '@/features/haunting/effects';
 import { useFurnitureStore } from '@/features/furniture/furnitureStore';
-import { FURNITURE } from '@/features/furniture/taxonomy';
+import type { Box } from '@/features/furniture/detect';
+import type { DesignItem } from '@/features/furniture/items';
 import { getStudioCopy } from './studioCopy';
-import { OutcomeBanner } from '@/features/mansion/OutcomeBanner';
-import { SpiritOverlay, type OverlaySpirit } from '@/features/mansion/SpiritOverlay';
-import type { JobOutcome } from '@/features/mansion/mansionStore';
 
 type View = 'compare' | 'after' | 'before';
 
@@ -34,16 +32,12 @@ interface ResultPanelProps {
   jobId: string;
   beforeSrc: string;
   style: DesignStyle;
-  /** Haunted only: which spirits this design drove out. */
-  outcome?: JobOutcome | null;
-  /** Whether the user chose any furniture to replace for this design. */
-  replacedAny?: boolean;
   onRegenerate: () => void;
   onSave: () => void;
   busy?: boolean;
 }
 
-export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedAny = false, onRegenerate, onSave, busy = false }: ResultPanelProps) {
+export function ResultPanel({ jobId, beforeSrc, style, onRegenerate, onSave, busy = false }: ResultPanelProps) {
   const haunted = useIsHaunted();
   const copy = getStudioCopy(haunted);
   const rootRef = useRef<HTMLElement>(null);
@@ -55,18 +49,14 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
   const version = history.find((v) => v.id === activeId) ?? history[0] ?? null;
   const afterSrc = version?.url ?? null;
 
-  const { pieces, versionId, selected, select, showBoxes, setShowBoxes } = useFurnitureStore();
-  const boxes = version && versionId === version.id ? pieces : [];
+  const { items, versionId, selected, select, showBoxes, setShowBoxes } = useFurnitureStore();
+  const boxes = version && versionId === version.id ? items.filter((i): i is DesignItem & { box: Box } => Boolean(i.box)) : [];
 
   const [view, setView] = useState<View>('compare');
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [fullscreen, setFullscreen] = useState(false);
   const drag = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
-
-  const spirits: OverlaySpirit[] = outcome
-    ? [...outcome.driven.map((key) => ({ key, state: 'leaving' as const })), ...outcome.remaining.map((key) => ({ key, state: 'lingering' as const }))]
-    : [];
 
   // One atmospheric reveal per result, once the image is ready.
   const revealedFor = useRef<string | null>(null);
@@ -166,8 +156,6 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
         </div>
       </div>
 
-      {haunted && outcome && <OutcomeBanner outcome={outcome} replacedAny={replacedAny} />}
-
       <div
         ref={stageRef}
         className={cn('relative overflow-hidden rounded-lg bg-navy-900 lg:min-h-0 lg:flex-1', fullscreen && 'flex h-screen w-screen items-center justify-center rounded-none')}
@@ -180,7 +168,6 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
           view === 'compare' ? (
             <div className="relative w-full lg:absolute lg:inset-0">
               <BeforeAfterSlider beforeImage={beforeSrc} afterImage={afterSrc} beforeLabel="Before" afterLabel="After" fitHeight />
-              {haunted && outcome && <SpiritOverlay spirits={spirits} />}
             </div>
           ) : (
             <div
@@ -203,19 +190,19 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
                 {view === 'after' && showBoxes &&
                   boxes.map((p) => (
                     <button
-                      key={`${p.kind}-${p.box.x.toFixed(3)}-${p.box.y.toFixed(3)}`}
+                      key={p.id}
                       type="button"
-                      onClick={() => select(selected === p.kind ? null : p.kind)}
-                      aria-label={`${FURNITURE[p.kind].label} found in the design`}
-                      aria-pressed={selected === p.kind}
+                      onClick={() => select(selected === p.id ? null : p.id)}
+                      aria-label={`${p.name} found in the design`}
+                      aria-pressed={selected === p.id}
                       className={cn(
                         'absolute rounded-sm border-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white',
-                        selected === p.kind ? 'border-amber-400 bg-amber-400/20' : 'border-white/70 hover:border-amber-300'
+                        selected === p.id ? 'border-amber-400 bg-amber-400/20' : 'border-white/70 hover:border-amber-300'
                       )}
                       style={{ left: `${p.box.x * 100}%`, top: `${p.box.y * 100}%`, width: `${p.box.w * 100}%`, height: `${p.box.h * 100}%` }}
                     >
                       <span className="absolute left-0 top-0 max-w-full -translate-y-full truncate rounded-t bg-black/70 px-1 text-[10px] leading-4 text-white">
-                        {FURNITURE[p.kind].label}
+                        {p.name}
                       </span>
                     </button>
                   ))}

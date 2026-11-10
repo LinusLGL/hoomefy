@@ -3,34 +3,31 @@
  *
  * The model edits the user's own photograph, so the prompt says what to change (furniture, materials,
  * colours, decor, light) and, just as firmly, what must stay (the architecture and the camera).
+ *
+ * The owner's own words ("Whisper your wishes") come first and are marked as the priority: the chosen style
+ * fills in everything the request does not mention, and the "keep the layout" rules give way to anything the
+ * request asks to change. Without that, a wish such as "add a window" is overruled by the rules that follow it.
  */
-
-import type { ColorPalette, DesignStyle, RoomType } from '@/types';
-import { ROOM_WORDS, STYLES } from './styles';
+import type { DesignStyle } from '@/types';
+import { STYLES } from './styles';
 
 export const MAX_FREE_TEXT = 500;
 
 export interface PromptInput {
-  roomType: RoomType | null;
   style: DesignStyle;
   /** The user's own style text. Required for the custom theme, ignored otherwise. */
   customStyle?: string;
-  palette?: ColorPalette;
   /** 0 = subtle, 1 = dramatic. */
   intensity?: number;
-  /** Extra requests from the user, such as "add more plants". */
+  /** The owner's own requests, such as "add more plants". They take priority over the style. */
   instructions?: string;
 }
 
-const PALETTES: Record<ColorPalette, string> = {
-  warm: 'Use a warm colour palette of cream, terracotta, amber and honey-coloured wood.',
-  cool: 'Use a cool colour palette of soft blue, sage, grey and silver.',
-  neutral: 'Use a neutral colour palette of white, beige, stone and soft grey.',
-  bold: 'Use a bold colour palette with saturated accent colours against a calm base.',
-};
-
 const PRESERVE =
   'Keep the exact room layout and architecture: the room shape and dimensions, wall, floor and ceiling positions, the size and position of every window and door, the camera angle and perspective, and the position and size of the main furniture. Change only the furniture design, materials, colours, textiles, decor and lighting.';
+
+const PRESERVE_UNLESS_ASKED =
+  'Otherwise keep the room layout and architecture: the room shape and dimensions, wall, floor and ceiling positions, the size and position of every window and door, the camera angle and perspective, and the position and size of the main furniture. Change those only where the request above asks for it.';
 
 const QUALITY = 'Photorealistic interior photograph, natural proportions, sharp detail, no text, no watermark, no people.';
 
@@ -61,16 +58,24 @@ export function hasStyleText(style: DesignStyle, customStyle?: string): boolean 
 }
 
 export function buildEditPrompt(input: PromptInput): string {
-  const room = input.roomType ? ROOM_WORDS[input.roomType] : 'room';
   const styleText = input.style === 'custom' ? cleanText(input.customStyle) : STYLES[input.style].prompt;
-  const parts: string[] = [`Edit this photograph of a ${room}. Restyle the interior in this look: ${styleText}.`];
+  const intensity = intensityText(Math.min(1, Math.max(0, input.intensity ?? 0.7)));
 
-  if (input.palette) parts.push(PALETTES[input.palette]);
-  parts.push(intensityText(Math.min(1, Math.max(0, input.intensity ?? 0.7))));
+  // Straight quotes would end the quotation early, and a closing full stop would double up with ours.
+  const wishes = cleanText(input.instructions)
+    .replace(/["\u201c\u201d]/g, "'")
+    .replace(/[.!\s]+$/, '');
 
-  const extra = cleanText(input.instructions);
-  if (extra) parts.push(`Also: ${extra}.`);
+  if (!wishes) {
+    return [`Edit this photograph of a room. Restyle the interior in this look: ${styleText}.`, intensity, PRESERVE, QUALITY].join(' ');
+  }
 
-  parts.push(PRESERVE, QUALITY);
-  return parts.join(' ');
+  return [
+    'Edit this photograph of a room.',
+    `The owner's request comes first and must be clearly visible in the result: "${wishes}".`,
+    `For everything the request does not mention, restyle the interior in this look: ${styleText}.`,
+    intensity,
+    PRESERVE_UNLESS_ASKED,
+    QUALITY,
+  ].join(' ');
 }

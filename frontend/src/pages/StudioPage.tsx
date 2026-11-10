@@ -1,7 +1,7 @@
 /**
  * StudioPage
  *
- * The design workspace. Laptop and desktop (1024px and up): one fixed screen, controls | canvas | preferences
+ * The design workspace. Laptop and desktop (1024px and up): one fixed screen, controls (style and wishes) | canvas | assistant
  * and assistant, with no page scroll (see PageLayout "fit"). Tablet: collapsible controls beside the canvas,
  * with the furniture panel under it. Mobile: a full-width canvas with a bottom bar that switches between
  * Design, Furniture and Settings.
@@ -15,11 +15,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { PanelLeftClose, PanelLeftOpen, RefreshCcw, ImagePlus, Sparkles, SlidersHorizontal, Armchair, Wand2, Trash2, Flame } from 'lucide-react';
-import type { FurnitureKey, RoomType } from '@/types';
-import { FurniturePicker } from '@/features/mansion/FurniturePicker';
-import { SpiritReport } from '@/features/mansion/SpiritReport';
-import { activeHouse, useMansionStore, type JobOutcome } from '@/features/mansion/mansionStore';
-import { composeInstructions } from '@/features/mansion/spirits';
 import { Button } from '@/components/ui/button';
 import { FILE_INPUT_ID, UploadContainer } from '@/components/upload/UploadContainer';
 import { PrivacyNote } from '@/components/upload/PrivacyNote';
@@ -39,7 +34,6 @@ import {
   waitStatus,
   type StageState,
 } from '@/features/ritual';
-import { RoomTypeSelector } from '@/components/studio/RoomTypeSelector';
 import { StyleSelector } from '@/components/studio/StyleSelector';
 import { PreferencesPanel } from '@/components/studio/PreferencesPanel';
 import { AssistantCard } from '@/components/studio/AssistantCard';
@@ -55,7 +49,7 @@ import { useGeneration } from '@/hooks/useGeneration';
 import { useToast } from '@/hooks/useToast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useHauntingStore, useIsHaunted } from '@/features/haunting/hauntingStore';
-import { useFurnitureStore } from '@/features/furniture/furnitureStore';
+import { resetScan, scanDesign } from '@/features/furniture/scan';
 import { grantAiConsent, getProviderMode, hasAiConsent } from '@/features/studio/ai';
 import { hasStyleText } from '@/features/studio/prompt';
 import { cn } from '@/utils/cn';
@@ -73,11 +67,9 @@ export function StudioPage() {
   const wide = useMediaQuery('(min-width: 1024px)');
 
   const originalImage = useStudioStore((s) => s.uploadedImage);
-  const roomType = useStudioStore((s) => s.roomType);
   const style = useStudioStore((s) => s.selectedStyle);
   const preferences = useStudioStore((s) => s.preferences);
   const history = useStudioStore((s) => s.history);
-  const setRoomType = useStudioStore((s) => s.setRoomType);
   const setStyle = useStudioStore((s) => s.setStyle);
   const setPreferences = useStudioStore((s) => s.setPreferences);
   const setUploadedImage = useStudioStore((s) => s.setUploadedImage);
@@ -97,28 +89,14 @@ export function StudioPage() {
   const ritualDemoRef = useRef(false);
   const consentForRitual = useRef(false);
 
-  // Haunted only: spirits are bound to furniture, and replacing it drives them out.
-  const replaceFurniture: FurnitureKey[] = preferences.replaceFurniture ?? [];
-  const setReplaceFurniture = (next: FurnitureKey[]) => setPreferences({ replaceFurniture: next });
-  const room = useMansionStore((s) => (roomType ? activeHouse(s).rooms[roomType] : undefined));
-  const registerRoom = useMansionStore((s) => s.registerRoom);
-  const applyJob = useMansionStore((s) => s.applyJob);
-  const [lastRequest, setLastRequest] = useState<{ roomType: RoomType; replaced: FurnitureKey[] } | null>(null);
-  const [outcome, setOutcome] = useState<JobOutcome | null>(null);
   const lastDemoRef = useRef(false);
 
-  // The first photograph of a room decides which spirits live in it.
-  const photoSeed = originalImage ? `${originalImage.file.name}:${originalImage.file.size}` : null;
+  // When a design finishes, find the pieces in it and look their prices up. This runs once per finished design.
   useEffect(() => {
-    if (haunted && roomType && photoSeed) registerRoom(roomType, photoSeed);
-  }, [haunted, roomType, photoSeed, registerRoom]);
-
-  // Apply a *completed* design to the mansion exactly once. Failed or cancelled jobs never reach this.
-  useEffect(() => {
-    if (!haunted || isGenerating || currentJob?.status !== 'completed' || !lastRequest) return;
-    const result = applyJob(currentJob.jobId, lastRequest.roomType, lastRequest.replaced);
-    if (result) setOutcome(result);
-  }, [haunted, isGenerating, currentJob, lastRequest, applyJob]);
+    if (isGenerating || currentJob?.status !== 'completed') return;
+    const version = useStudioStore.getState().history.find((v) => v.id === currentJob.generatedImageKey);
+    if (version) void scanDesign({ id: version.id, blob: version.blob, style: version.style });
+  }, [isGenerating, currentJob]);
 
   // Tell the haunting engine not to start anything while a generation runs, or the ritual is under way.
   const setBusy = useHauntingStore((s) => s.setBusy);
@@ -159,21 +137,21 @@ export function StudioPage() {
   // Furniture found in one picture says nothing about the next photograph.
   const photoKey = originalImage?.preview ?? null;
   useEffect(() => {
-    useFurnitureStore.getState().reset();
+    resetScan();
   }, [photoKey]);
 
   const styleReady = style !== null && hasStyleText(style, preferences.customStyle);
-  const isReady = Boolean(originalImage?.inference && roomType && styleReady);
+  const isReady = Boolean(originalImage?.inference && styleReady);
   const hasResult = history.length > 0 && Boolean(originalImage);
   const showProgress = isGenerating || currentJob?.status === 'failed';
   const showResult = !isGenerating && hasResult && Boolean(style);
   // Once a design is running, failed or finished the canvas takes over; the photo stays in the controls panel.
   const hideUpload = Boolean(originalImage) && (showResult || showProgress);
-  const currentStep: Step = !originalImage ? 'upload' : !roomType || !styleReady ? 'customize' : 'generate';
+  const currentStep: Step = !originalImage ? 'upload' : !styleReady ? 'customize' : 'generate';
 
   const startGeneration = async (demo = false) => {
-    if (!originalImage?.inference || !roomType || !style) {
-      toast.error('Missing information', 'Please add a photo and choose a room type and style.');
+    if (!originalImage?.inference || !style) {
+      toast.error('Missing information', 'Please add a photo and choose a style.');
       return;
     }
     if (!hasStyleText(style, preferences.customStyle)) {
@@ -186,22 +164,15 @@ export function StudioPage() {
       return;
     }
     lastDemoRef.current = demo;
-    setOutcome(null);
-    setLastRequest({ roomType, replaced: replaceFurniture });
     setMobileTab('design');
     // Success and failure toasts are raised by useGeneration.
     await generate({
       image: originalImage.inference,
       width: originalImage.width ?? 1024,
       height: originalImage.height ?? 1024,
-      roomType,
       style,
       demo,
-      preferences: {
-        ...preferences,
-        replaceFurniture,
-        customInstructions: composeInstructions(preferences.customInstructions, replaceFurniture),
-      },
+      preferences,
     });
   };
 
@@ -228,9 +199,7 @@ export function StudioPage() {
 
   const startOver = () => {
     clear();
-    setOutcome(null);
-    setLastRequest(null);
-    useFurnitureStore.getState().reset();
+    resetScan();
     useStudioStore.getState().reset();
   };
 
@@ -238,8 +207,6 @@ export function StudioPage() {
 
   const assistant = !originalImage
     ? { title: 'Begin', message: copy.messages.welcome }
-    : !roomType
-    ? { title: 'Select room type', message: copy.messages.selectRoom }
     : !style
     ? { title: 'Choose your style', message: copy.messages.selectStyle }
     : !styleReady
@@ -258,7 +225,7 @@ export function StudioPage() {
           'Use well-lit, high-quality photos for best results',
           'Capture the entire room from a corner angle',
           'Try different styles to explore possibilities',
-          'Adjust intensity for subtle or dramatic changes',
+          'Write what you want changed in the wishes box: your words come first',
         ].map((tip) => (
           <li key={tip} className="flex items-start gap-2">
             <span className="mt-0.5 text-accent" aria-hidden="true">
@@ -301,8 +268,6 @@ export function StudioPage() {
       <PreferencesPanel preferences={preferences} onChange={setPreferences} disabled={isGenerating} />
     </div>
   );
-
-  const spiritReport = haunted && originalImage && roomType ? <SpiritReport roomType={roomType} /> : null;
 
   // The polaroid on the Ouija board (Haunted): what it shows, and what the visitor can do with it.
   const stageState: StageState = !originalImage ? 'empty' : showProgress ? 'working' : isReady ? 'ready' : 'photo';
@@ -349,7 +314,7 @@ export function StudioPage() {
           <ol className="hidden items-center gap-2 text-sm xl:flex" aria-label="Progress">
             <StepIndicator label="Upload" active={currentStep === 'upload'} complete={!!originalImage} />
             <li aria-hidden="true" className="h-px w-8 bg-navy-600" />
-            <StepIndicator label="Customize" active={currentStep === 'customize'} complete={!!(roomType && styleReady)} />
+            <StepIndicator label="Customize" active={currentStep === 'customize'} complete={Boolean(originalImage && styleReady)} />
             <li aria-hidden="true" className="h-px w-8 bg-navy-600" />
             <StepIndicator label="Generate" active={currentStep === 'generate'} complete={Boolean(showResult)} />
           </ol>
@@ -388,11 +353,6 @@ export function StudioPage() {
           >
             {photoRow}
 
-            <div className={cn(PANEL, 'space-y-6 lg:space-y-0')}>
-              <h2 className="font-heading text-lg font-semibold text-ivory lg:sr-only">Room Details</h2>
-              <RoomTypeSelector selected={roomType} onSelect={setRoomType} disabled={isGenerating} />
-            </div>
-
             <div className={PANEL}>
               <StyleSelector
                 selected={style}
@@ -403,23 +363,8 @@ export function StudioPage() {
               />
             </div>
 
-
-
-            {!wide && preferencesCard}
-
-            <div className={PANEL}>
-              {/* On wide screens the haunting report sits in the card of the furniture it refers to; on small screens it is above the canvas. */}
-              {wide && spiritReport}
-              <FurniturePicker
-                title={copy.furnitureTitle}
-                hint={copy.furnitureHint}
-                roomType={roomType}
-                selected={replaceFurniture}
-                onChange={setReplaceFurniture}
-                boundSpirits={haunted ? room?.spirits : undefined}
-                disabled={isGenerating}
-              />
-            </div>
+            {/* The wishes box lives here, next to the style, because what is written in it changes the picture. */}
+            {preferencesCard}
 
             {!wide && <AiAllowance />}
 
@@ -480,16 +425,14 @@ export function StudioPage() {
               </div>
             )}
 
-            {originalImage && (!roomType || !styleReady) && (
+            {originalImage && !styleReady && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-600/40 bg-navy-800 p-4 md:hidden" data-testid="settings-callout">
-                <p className="text-sm text-ivory/85">Choose a room type and style to continue.</p>
+                <p className="text-sm text-ivory/85">Choose a style to continue.</p>
                 <Button type="button" size="sm" variant="secondary" onClick={() => setMobileTab('settings')}>
                   Open settings
                 </Button>
               </div>
             )}
-
-            {!wide && spiritReport}
 
             {showProgress && !haunted && (
               <GenerationProgress
@@ -508,8 +451,6 @@ export function StudioPage() {
                 jobId={currentJob?.jobId ?? 'restored'}
                 beforeSrc={originalImage.preview}
                 style={style}
-                outcome={haunted ? outcome : null}
-                replacedAny={(lastRequest?.replaced.length ?? 0) > 0}
                 onRegenerate={() => void startGeneration(lastDemoRef.current)}
                 onSave={() => setSaveOpen(true)}
                 busy={isGenerating}
@@ -529,7 +470,6 @@ export function StudioPage() {
             )}
           >
             <AssistantCard {...assistant} className="lg:shrink-0" />
-            {wide && <div className="lg:shrink-0">{preferencesCard}</div>}
             <SidePanel tab={sideTab} onTabChange={setSideTab} tips={tips} />
             {wide && (
               <div className="lg:shrink-0">

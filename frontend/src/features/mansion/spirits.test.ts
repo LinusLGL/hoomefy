@@ -1,15 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import type { RoomType } from '@/types';
 import {
-  FURNITURE,
-  MAX_INSTRUCTIONS,
   ROOM_FURNITURE,
   ROOM_SLOTS,
   applyReplacement,
-  composeInstructions,
   ghostCount,
   hashString,
   seedSpirits,
+  type RoomType,
 } from './spirits';
 
 describe('seedSpirits', () => {
@@ -75,34 +72,6 @@ describe('applyReplacement', () => {
     const r = applyReplacement(['bed'], []);
     expect(r.driven).toEqual([]);
     expect(r.remaining).toEqual(['bed']);
-  });
-});
-
-describe('composeInstructions', () => {
-  it('leaves the user text alone when nothing is replaced', () => {
-    expect(composeInstructions('More light please', [])).toBe('More light please');
-    expect(composeInstructions('   ', [])).toBeUndefined();
-    expect(composeInstructions(undefined, [])).toBeUndefined();
-  });
-
-  it('adds one sentence naming each category', () => {
-    const out = composeInstructions(undefined, ['seating', 'lighting']) as string;
-    expect(out).toContain('sofas and seating');
-    expect(out).toContain('lamps and lighting');
-    expect(out.startsWith('Replace the existing')).toBe(true);
-  });
-
-  it('keeps the user text first', () => {
-    const out = composeInstructions('Keep it cozy.', ['rugs']) as string;
-    expect(out.startsWith('Keep it cozy.')).toBe(true);
-    expect(out).toContain('rugs and curtains');
-  });
-
-  it('never exceeds the API limit and keeps the furniture sentence whole', () => {
-    const long = 'x'.repeat(900);
-    const out = composeInstructions(long, FURNITURE.map((f) => f.key)) as string;
-    expect(out.length).toBeLessThanOrEqual(MAX_INSTRUCTIONS);
-    expect(out.endsWith('suit the chosen style.')).toBe(true);
   });
 });
 

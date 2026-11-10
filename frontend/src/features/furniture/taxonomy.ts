@@ -6,7 +6,6 @@
  * prices come from the product search.
  */
 
-import type { RoomType } from '@/types';
 import type { PriceTier } from '@/features/studio/styles';
 
 export type FurnitureKindId =
@@ -86,16 +85,5 @@ export const FURNITURE_IDS = Object.keys(FURNITURE) as FurnitureKindId[];
 
 export const isFurnitureKind = (value: unknown): value is FurnitureKindId =>
   typeof value === 'string' && Object.prototype.hasOwnProperty.call(FURNITURE, value);
-
-/** The pieces that usually make up a room of this kind, most important first. */
-export const ROOM_PIECES: Record<RoomType, FurnitureKindId[]> = {
-  'living-room': ['sofa', 'coffee-table', 'armchair', 'rug', 'floor-lamp', 'side-table', 'curtains', 'wall-art', 'plant'],
-  bedroom: ['bed', 'nightstand', 'dresser', 'rug', 'table-lamp', 'curtains', 'mirror', 'wall-art'],
-  kitchen: ['dining-table', 'chair', 'pendant-light', 'rug', 'plant'],
-  'dining-room': ['dining-table', 'chair', 'chandelier', 'cabinet', 'rug', 'wall-art'],
-  office: ['desk', 'chair', 'bookshelf', 'floor-lamp', 'rug', 'plant'],
-  bathroom: ['mirror', 'cabinet', 'rug', 'plant', 'wall-art'],
-  other: ['sofa', 'rug', 'floor-lamp', 'plant', 'wall-art'],
-};
 
 export const midpoint = ([min, max]: PriceRange): number => Math.round((min + max) / 2);

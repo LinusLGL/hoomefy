@@ -163,9 +163,9 @@ describe('hauntingStore', () => {
 
   describe('isolation from application state', () => {
     it('never changes the studio or auth stores', () => {
-      useStudioStore.setState({ roomType: 'bedroom', selectedStyle: 'japandi' });
+      useStudioStore.setState({ selectedStyle: 'japandi', preferences: { customInstructions: 'keep the fireplace' } });
       useAuthStore.setState({ isAuthenticated: true });
-      const studioBefore = JSON.stringify({ r: useStudioStore.getState().roomType, st: useStudioStore.getState().selectedStyle });
+      const studioBefore = JSON.stringify({ r: useStudioStore.getState().preferences.customInstructions, st: useStudioStore.getState().selectedStyle });
       const authBefore = useAuthStore.getState().isAuthenticated;
 
       s().requestTakeover('scroll');
@@ -176,7 +176,7 @@ describe('hauntingStore', () => {
       s().replay();
       s().disableHorror();
 
-      expect(JSON.stringify({ r: useStudioStore.getState().roomType, st: useStudioStore.getState().selectedStyle })).toBe(studioBefore);
+      expect(JSON.stringify({ r: useStudioStore.getState().preferences.customInstructions, st: useStudioStore.getState().selectedStyle })).toBe(studioBefore);
       expect(useAuthStore.getState().isAuthenticated).toBe(authBefore);
     });
   });

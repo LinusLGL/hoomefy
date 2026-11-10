@@ -4,12 +4,14 @@
  * Two layers, so shopping always works:
  *   1. Search links for well-known shops and Google Shopping. Always available and free, no key needed.
  *   2. Live product results (title, price, shop, picture) from a small Cloudflare function that holds an
- *      optional search-API key. When it is not set up, or the request fails, the links remain.
+ *      optional search-API key and answers only signed-in visitors. When it is not set up, or the request
+ *      fails, the links remain and the studio shows typical prices for the style, marked as estimates.
  *
  * Hoomefy never scrapes shops and never rewrites links: every product opens on the retailer's own site.
  */
 
-import type { ColorPalette, DesignStyle } from '@/types';
+import type { DesignStyle } from '@/types';
+import { authHeaders } from '@/lib/accessAuth';
 import { STYLES } from '@/features/studio/styles';
 import { FURNITURE, type FurnitureKindId } from './taxonomy';
 
@@ -28,14 +30,11 @@ export interface RetailerLink {
   url: string;
 }
 
-const PALETTE_WORDS: Record<ColorPalette, string> = { warm: 'warm', cool: 'cool', neutral: 'neutral', bold: 'colourful' };
-
 /** The words typed into a shop's search box for this piece in this style. */
-export function buildSearchQuery(kindId: FurnitureKindId, style: DesignStyle | null, palette?: ColorPalette): string {
+export function buildSearchQuery(kindId: FurnitureKindId, style: DesignStyle | null): string {
   const noun = FURNITURE[kindId].noun;
   const styleWords = style ? STYLES[style].searchWords : '';
-  const paletteWord = palette ? PALETTE_WORDS[palette] : '';
-  return [styleWords, paletteWord, noun].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+  return [styleWords, noun].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
 }
 
 export function retailerLinks(query: string): RetailerLink[] {
@@ -98,7 +97,7 @@ export interface LiveSearchResult {
 
 export async function searchProducts(query: string, signal?: AbortSignal, fetchImpl: typeof fetch = fetch): Promise<LiveSearchResult> {
   try {
-    const res = await fetchImpl(`/api/furniture-search?q=${encodeURIComponent(query)}`, { signal, headers: { Accept: 'application/json' } });
+    const res = await fetchImpl(`/api/furniture-search?q=${encodeURIComponent(query)}`, { signal, headers: { Accept: 'application/json', ...(await authHeaders()) } });
     if (!res.ok) return { live: false, results: [] };
     const body = (await res.json()) as { live?: boolean; results?: unknown };
     return { live: body.live === true, results: sanitizeProducts(body.results) };

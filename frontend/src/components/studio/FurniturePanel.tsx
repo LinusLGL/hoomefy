@@ -1,199 +1,133 @@
 /**
  * FurniturePanel
  *
- * Names the furniture in the design and helps the visitor shop for similar pieces.
+ * The pieces found in the design on the canvas, each with a price, and the shops that sell something like it.
  *
- *   - Right away: the pieces that usually make up this kind of room, with rough prices for the chosen style.
- *   - On request: a detector running on this device finds the pieces actually in the picture.
- *   - For any piece: search links for well-known shops, live product results when the site has a search key,
- *     and a button to add a piece (or an estimate) to the shopping list.
+ *   - The pieces are found by themselves when a design is ready (see ItemScan and features/furniture/scan.ts).
+ *   - Each piece shows the price counted for it: a real shop price when the search found some, otherwise a typical
+ *     price for the style marked "est.".
+ *   - Choosing a piece shows the products found, search links for well-known shops, and buttons to add a
+ *     product (or the estimate) to the shopping list.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ExternalLink, Plus, ScanSearch, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ExternalLink, Plus } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { Button } from '@/components/ui/button';
 import { useStudioStore } from '@/stores/studioStore';
 import { useToast } from '@/hooks/useToast';
-import { detectFurniture } from '@/features/furniture/detect';
-import { runWithTransformers } from '@/features/furniture/transformersRunner';
 import { useFurnitureStore } from '@/features/furniture/furnitureStore';
-import { FURNITURE, type FurnitureKindId } from '@/features/furniture/taxonomy';
-import { estimateMid, estimateRange, formatUsd, matchLabel, suggestPieces } from '@/features/furniture/estimate';
-import { buildSearchQuery, retailerLinks, searchProducts, type ProductResult } from '@/features/furniture/search';
-import { useShoppingStore } from '@/features/furniture/shoppingStore';
+import { pickPrice, type DesignItem, type ItemPrices } from '@/features/furniture/items';
+import { estimateMid, estimateRange, formatUsd, matchLabel } from '@/features/furniture/estimate';
+import { retailerLinks } from '@/features/furniture/search';
+import { useShoppingStore, type ShoppingItem } from '@/features/furniture/shoppingStore';
+import type { DesignStyle } from '@/types';
+import { ItemScan } from './ItemScan';
 
 export function FurniturePanel() {
   const toast = useToast();
-  const roomType = useStudioStore((s) => s.roomType);
-  const style = useStudioStore((s) => s.selectedStyle);
-  const palette = useStudioStore((s) => s.preferences.colorPalette);
-  const activeId = useStudioStore((s) => s.activeVersionId);
   const version = useStudioStore((s) => s.history.find((v) => v.id === s.activeVersionId) ?? null);
-
-  const { pieces, versionId, status, percent, error, selected, select } = useFurnitureStore();
-  const detectedHere = versionId === activeId ? pieces : [];
+  const { versionId, items, prices, selected, select } = useFurnitureStore();
   const add = useShoppingStore((s) => s.add);
 
-  const startDetect = async () => {
-    if (!version) return;
-    const store = useFurnitureStore.getState();
-    store.setStatus('loading', 0);
-    try {
-      const found = await detectFurniture(version.blob, runWithTransformers, (p) => {
-        useFurnitureStore.getState().setStatus(p.stage === 'loading' ? 'loading' : 'detecting', p.percent ?? 0);
-      });
-      useFurnitureStore.getState().finish(version.id, found);
-      if (found.length === 0) toast.info('Nothing recognised', 'Try the suggested pieces below.');
-    } catch {
-      useFurnitureStore.getState().fail('The on-device detector could not run in this browser. The suggested pieces below still work.');
-    }
-  };
-
-  const suggested = useMemo(() => suggestPieces(roomType), [roomType]);
-  const detectedKinds = new Set(detectedHere.map((p) => p.kind));
-  const extraSuggestions = suggested.filter((k) => !detectedKinds.has(k));
-  const busy = status === 'loading' || status === 'detecting';
+  const style = version?.style ?? null;
+  const here = version !== null && versionId === version.id;
+  const found = here ? items : [];
+  const chosen = found.find((i) => i.id === selected) ?? null;
 
   return (
-    <div className="space-y-5" data-testid="furniture-panel">
+    <div className="space-y-4" data-testid="furniture-panel">
       <div>
         <h3 className="text-sm font-semibold text-ivory">Furniture in this design</h3>
         <p className="mt-1 text-xs text-ivory/70">
-          {version
-            ? 'Find the pieces in your picture, then look for similar ones in shops.'
-            : 'Pieces that usually suit this room. Generate a design to find the ones in your picture.'}
+          {version ? 'The pieces in your picture, with what similar ones cost in the shops.' : 'Make a design and the pieces in it are found here by themselves.'}
         </p>
       </div>
 
-      {version && (
-        <div className="space-y-2">
-          <Button type="button" variant="secondary" size="sm" onClick={startDetect} disabled={busy} data-testid="detect-furniture">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ScanSearch className="h-4 w-4" aria-hidden="true" />}
-            {busy ? (status === 'loading' ? `Preparing detector ${percent}%` : 'Looking…') : detectedHere.length ? 'Find again' : 'Find furniture in my design'}
-          </Button>
-          <p className="text-xs text-ivory/60">Runs on your device. The first time it downloads a small model (about 150 MB) that your browser keeps.</p>
-          {error && (
-            <p className="text-xs text-danger" role="alert">
-              {error}
-            </p>
-          )}
-        </div>
+      <ItemScan />
+
+      {found.length > 0 && (
+        <section aria-label="Found in your design" className="space-y-2">
+          <ul className="grid grid-cols-1 gap-2">
+            {found.map((item) => (
+              <ItemRow key={item.id} item={item} prices={prices[item.id]} style={style} on={selected === item.id} onSelect={() => select(selected === item.id ? null : item.id)} />
+            ))}
+          </ul>
+        </section>
       )}
 
-      {detectedHere.length > 0 && (
-        <PieceList title="Found in your design" kinds={detectedHere.map((p) => p.kind)} confidence={new Map(detectedHere.map((p) => [p.kind, p.confidence]))} selected={selected} onSelect={select} style={style} />
-      )}
-      {extraSuggestions.length > 0 && (
-        <PieceList title={detectedHere.length ? 'Also suits this room' : 'Suggested pieces'} kinds={extraSuggestions} selected={selected} onSelect={select} style={style} />
-      )}
-
-      {selected && (
-        <PieceDetail
-          key={selected}
-          kind={selected}
+      {chosen && (
+        <ItemDetail
+          key={chosen.id}
+          item={chosen}
+          prices={prices[chosen.id]}
           style={style}
-          palette={palette}
-          onAdd={(item) => {
-            if (add(item)) toast.success('Added to your list', item.title);
-            else toast.info('Already on your list', item.title);
+          onAdd={(line) => {
+            if (add(line)) toast.success('Added to your list', line.title);
+            else toast.info('Already on your list', line.title);
           }}
         />
       )}
-      <ActiveWatcher activeId={activeId} />
     </div>
   );
 }
 
-/** Clears the selection when the design on the canvas changes. */
-function ActiveWatcher({ activeId }: { activeId: string | null }) {
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    useFurnitureStore.getState().select(null);
-  }, [activeId]);
-  return null;
+interface ItemRowProps {
+  item: DesignItem;
+  prices: ItemPrices | undefined;
+  style: DesignStyle | null;
+  on: boolean;
+  onSelect: () => void;
 }
 
-interface PieceListProps {
-  title: string;
-  kinds: FurnitureKindId[];
-  confidence?: Map<FurnitureKindId, number>;
-  selected: FurnitureKindId | null;
-  onSelect: (kind: FurnitureKindId | null) => void;
-  style: Parameters<typeof estimateRange>[1];
-}
-
-function PieceList({ title, kinds, confidence, selected, onSelect, style }: PieceListProps) {
+function ItemRow({ item, prices, style, on, onSelect }: ItemRowProps) {
+  const pick = pickPrice(item, prices, style);
+  const searching = prices === undefined || prices.status === 'searching';
   return (
-    <section aria-label={title} className="space-y-2">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-ivory/70">{title}</h4>
-      <ul className="grid grid-cols-1 gap-2">
-        {kinds.map((kind) => {
-          const [min, max] = estimateRange(kind, style);
-          const on = selected === kind;
-          const score = confidence?.get(kind);
-          return (
-            <li key={kind}>
-              <button
-                type="button"
-                onClick={() => onSelect(on ? null : kind)}
-                aria-pressed={on}
-                data-piece={kind}
-                className={cn(
-                  'flex min-h-[44px] w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-amber-500',
-                  on ? 'border-amber-500 bg-amber-500/10 text-ivory' : 'border-navy-700 bg-navy-900 text-ivory hover:border-amber-500/60'
-                )}
-              >
-                <span className="font-medium">
-                  {FURNITURE[kind].label}
-                  {score !== undefined && <span className="ml-2 text-xs font-normal text-ivory/60">{matchLabel(score)}</span>}
-                </span>
-                <span className="shrink-0 text-xs text-ivory/70">
-                  {formatUsd(min)}–{formatUsd(max)}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+    <li>
+      <button
+        type="button"
+        onClick={onSelect}
+        aria-pressed={on}
+        data-piece={item.kind}
+        data-testid="furniture-item"
+        className={cn(
+          'flex min-h-[44px] w-full items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+          'focus:outline-none focus:ring-2 focus:ring-amber-500',
+          on ? 'border-amber-500 bg-amber-500/10 text-ivory' : 'border-navy-700 bg-navy-900 text-ivory hover:border-amber-500/60'
+        )}
+      >
+        <span className="min-w-0 font-medium">
+          {item.name}
+          {item.confidence !== undefined && <span className="ml-2 text-xs font-normal text-ivory/60">{matchLabel(item.confidence)}</span>}
+        </span>
+        <span className="shrink-0 text-xs text-ivory/70 tabular-nums">{searching ? 'Searching…' : `${formatUsd(pick.price)}${pick.estimated ? ' est.' : ''}`}</span>
+      </button>
+    </li>
   );
 }
 
-interface PieceDetailProps {
-  kind: FurnitureKindId;
-  style: Parameters<typeof estimateRange>[1];
-  palette?: Parameters<typeof buildSearchQuery>[2];
-  onAdd: (item: { kind: FurnitureKindId; title: string; price: number; estimated: boolean; source: string | null; link: string | null; imageUrl: string | null }) => void;
+interface ItemDetailProps {
+  item: DesignItem;
+  prices: ItemPrices | undefined;
+  style: DesignStyle | null;
+  onAdd: (item: Omit<ShoppingItem, 'id'>) => void;
 }
 
-function PieceDetail({ kind, style, palette, onAdd }: PieceDetailProps) {
-  const query = buildSearchQuery(kind, style, palette);
-  const [state, setState] = useState<{ status: 'loading' | 'done'; live: boolean; results: ProductResult[] }>({ status: 'loading', live: false, results: [] });
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setState({ status: 'loading', live: false, results: [] });
-    searchProducts(query, controller.signal).then((r) => {
-      if (!controller.signal.aborted) setState({ status: 'done', live: r.live, results: r.results });
-    });
-    return () => controller.abort();
-  }, [query]);
-
-  const label = FURNITURE[kind].label;
-  const [min, max] = estimateRange(kind, style);
+function ItemDetail({ item, prices, style, onAdd }: ItemDetailProps) {
+  const pick = pickPrice(item, prices, style);
+  const [min, max] = estimateRange(item.kind, style);
+  const searching = prices === undefined || prices.status === 'searching';
+  const results = prices?.results ?? [];
 
   return (
-    <section className="space-y-4 rounded-lg border border-navy-700 bg-navy-900 p-4" aria-label={`${label} details`} data-testid="piece-detail">
+    <section className="space-y-4 rounded-lg border border-navy-700 bg-navy-900 p-4" aria-label={`${item.name} details`} data-testid="piece-detail">
       <div>
-        <h4 className="font-heading text-base font-semibold text-ivory">{label}</h4>
+        <h4 className="font-heading text-base font-semibold text-ivory">{item.name}</h4>
         <p className="text-xs text-ivory/70">
-          Estimated {formatUsd(min)}–{formatUsd(max)} for this style. Search: “{query}”
+          {pick.estimated
+            ? `Typical price for this style: ${formatUsd(min)}–${formatUsd(max)}.`
+            : `${pick.shops} shop ${pick.shops === 1 ? 'price' : 'prices'} found, from ${formatUsd(pick.low ?? pick.price)} to ${formatUsd(pick.high ?? pick.price)}.`}{' '}
+          Search: “{item.query}”
         </p>
       </div>
 
@@ -201,7 +135,9 @@ function PieceDetail({ kind, style, palette, onAdd }: PieceDetailProps) {
         type="button"
         size="sm"
         variant="secondary"
-        onClick={() => onAdd({ kind, title: `${label} (estimate)`, price: estimateMid(kind, style), estimated: true, source: null, link: null, imageUrl: null })}
+        onClick={() =>
+          onAdd({ kind: item.kind, title: `${item.name} (estimate)`, price: estimateMid(item.kind, style), estimated: true, source: null, link: null, imageUrl: null })
+        }
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
         Add estimate to list
@@ -209,13 +145,11 @@ function PieceDetail({ kind, style, palette, onAdd }: PieceDetailProps) {
 
       <div className="space-y-2">
         <h5 className="text-xs font-semibold uppercase tracking-wide text-ivory/70">Similar products</h5>
-        {state.status === 'loading' && <p className="text-xs text-ivory/60">Searching…</p>}
-        {state.status === 'done' && state.results.length === 0 && (
-          <p className="text-xs text-ivory/60">Live prices are not available right now. Use the shop links below.</p>
-        )}
+        {searching && <p className="text-xs text-ivory/60">Searching…</p>}
+        {!searching && results.length === 0 && <p className="text-xs text-ivory/60">Live prices are not available right now. Use the shop links below.</p>}
         <ul className="space-y-2">
-          {state.results.map((p) => (
-            <li key={p.link} className="flex gap-3 rounded-md border border-navy-700 p-2">
+          {results.map((p) => (
+            <li key={p.link} className="flex gap-3 rounded-md border border-navy-700 p-2" data-testid="product">
               {p.imageUrl && <img src={p.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-14 w-14 shrink-0 rounded object-cover" />}
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 text-xs font-medium text-ivory">{p.title}</p>
@@ -230,7 +164,7 @@ function PieceDetail({ kind, style, palette, onAdd }: PieceDetailProps) {
                     <button
                       type="button"
                       className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover"
-                      onClick={() => onAdd({ kind, title: p.title, price: p.price ?? 0, estimated: false, source: p.source, link: p.link, imageUrl: p.imageUrl })}
+                      onClick={() => onAdd({ kind: item.kind, title: p.title, price: p.price ?? 0, estimated: false, source: p.source, link: p.link, imageUrl: p.imageUrl })}
                     >
                       <Plus className="h-3 w-3" aria-hidden="true" /> Add
                     </button>
@@ -245,7 +179,7 @@ function PieceDetail({ kind, style, palette, onAdd }: PieceDetailProps) {
       <div className="space-y-2">
         <h5 className="text-xs font-semibold uppercase tracking-wide text-ivory/70">Search the shops</h5>
         <ul className="flex flex-wrap gap-2">
-          {retailerLinks(query).map((r) => (
+          {retailerLinks(item.query).map((r) => (
             <li key={r.name}>
               <a
                 href={r.url}

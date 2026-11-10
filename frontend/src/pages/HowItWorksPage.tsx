@@ -23,7 +23,7 @@ export default function HowItWorksPage() {
         'Select from 10 professionally curated interior design styles. From Modern Minimalist to Gothic Romantic, find the perfect look for your space.',
       details: [
         'Modern, Traditional, and Contemporary styles',
-        'Customize color palettes and intensity',
+        'Write your own wishes and set how bold the change is',
         'Add custom design instructions',
       ],
     },

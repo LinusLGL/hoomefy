@@ -6,7 +6,8 @@
  * renderer unless VITE_AI_PROVIDER=live is set, so a test run never spends anyone's free GPU time.
  */
 
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getAccessAuth } from '@/lib/accessAuth';
 import { createCloudflareProvider, type CloudflareAuth } from './cloudflareProvider';
 import { createGradioProvider, DEFAULT_SPACE } from './gradioProvider';
 import { createMockProvider } from './mockProvider';
@@ -61,17 +62,7 @@ export function isBackupAiEnabled(): boolean {
   return isSupabaseConfigured && import.meta.env.VITE_AI_FALLBACK !== 'off';
 }
 
-async function getBackupAuth(): Promise<CloudflareAuth | null> {
-  const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
-  if (!supabase || !apiKey) return null;
-  try {
-    const { data } = await supabase.auth.getSession();
-    const token = data.session?.access_token;
-    return token ? { token, apiKey } : null;
-  } catch {
-    return null;
-  }
-}
+const getBackupAuth = (): Promise<CloudflareAuth | null> => getAccessAuth();
 
 // ---- Consent to send the photograph to the AI service ----
 

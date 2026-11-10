@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { SHOTS, completeRitual, makeRoomPng, seedElegantSeen, signIn } from './helpers';
+import { SHOTS, completeRitual, makeRoomPng, mockItemFinder, seedElegantSeen, signIn } from './helpers';
 
 /**
  * The Design Studio is one fixed screen on laptop and desktop: the page never scrolls, none of its three
@@ -61,7 +61,6 @@ async function expectFits(page: Page, label: string) {
   const controls = await rect(
     page,
     [
-      '[data-testid="furniture-picker"] button',
       '[data-style]',
       'aside[aria-label="Design controls"] button[aria-pressed]',
       '#intensity',
@@ -100,6 +99,7 @@ for (const mode of ['elegant', 'haunted'] as const) {
       test(`${size.width}x${size.height}: no scrolling with no photo, with a photo and with a finished design`, async ({ page }) => {
         test.setTimeout(120_000);
         await page.setViewportSize(size);
+        await mockItemFinder(page);
         await signIn(page);
         await expect(page.getByRole('heading', { name: 'Design Studio' })).toBeVisible();
         const tag = `${mode}-${size.width}x${size.height}`;
@@ -108,11 +108,10 @@ for (const mode of ['elegant', 'haunted'] as const) {
         await expectFits(page, `${tag} empty`);
         await page.screenshot({ path: `${SHOTS}/40-fit-${tag}-empty.png` });
 
-        // 2. Photo uploaded, room and style chosen.
+        // 2. Photo uploaded and a style chosen.
         const png = await makeRoomPng(page);
         await page.locator('input[type="file"]').setInputFiles({ name: 'room.png', mimeType: 'image/png', buffer: png });
         await expect(page.getByTestId('photo-row')).toContainText('room.png', { timeout: 15_000 });
-        await page.getByRole('button', { name: /Living Room/ }).click();
         await page.getByRole('button', { name: /^Scandinavian/ }).click();
         await expectFits(page, `${tag} photo`);
         await page.screenshot({ path: `${SHOTS}/41-fit-${tag}-photo.png` });

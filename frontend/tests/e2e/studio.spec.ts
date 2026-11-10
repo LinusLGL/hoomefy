@@ -17,7 +17,6 @@ async function uploadAndConfigure(page: Page) {
   const png = await makeRoomPng(page);
   await page.locator('input[type="file"]').setInputFiles({ name: 'room.png', mimeType: 'image/png', buffer: png });
   await expect(page.locator('img[alt="room.png"]')).toBeVisible({ timeout: 15_000 });
-  await page.getByRole('button', { name: /Living Room/ }).click();
   await page.getByRole('button', { name: /^Scandinavian/ }).click();
 }
 

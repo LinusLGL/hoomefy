@@ -9,16 +9,15 @@
  * tab only, so the whole save-and-reopen flow can still be used.
  */
 
-import type { DesignPreferences, DesignStyle, RoomType } from '@/types';
-import { ROOM_TYPES } from '@/types';
+import type { DesignPreferences, DesignStyle } from '@/types';
 import { DESIGNS_BUCKET, supabase } from '@/lib/supabase';
 import { isDesignStyle } from '@/features/studio/styles';
+import { cleanPreferences } from '@/features/studio/preferences';
 import { cleanItems, type ShoppingItem } from '@/features/furniture/shoppingStore';
 
 export interface SavedDesign {
   id: string;
   name: string;
-  roomType: RoomType | null;
   style: DesignStyle;
   prompt: string;
   preferences: DesignPreferences;
@@ -30,7 +29,6 @@ export interface SavedDesign {
 
 export interface SaveDesignInput {
   name: string;
-  roomType: RoomType | null;
   style: DesignStyle;
   prompt: string;
   preferences: DesignPreferences;
@@ -46,7 +44,6 @@ const SIGNED_URL_SECONDS = 60 * 60;
 interface DesignRow {
   id: string;
   name: string;
-  room_type: string | null;
   style: string;
   prompt: string | null;
   preferences: unknown;
@@ -56,26 +53,12 @@ interface DesignRow {
   created_at: string;
 }
 
-const isRoomType = (v: unknown): v is RoomType => typeof v === 'string' && Object.prototype.hasOwnProperty.call(ROOM_TYPES, v);
-
-/** Only the fields the app understands survive from storage. */
-export function cleanPreferences(input: unknown): DesignPreferences {
-  if (!input || typeof input !== 'object') return {};
-  const p = input as Record<string, unknown>;
-  const out: DesignPreferences = {};
-  if (p.colorPalette === 'warm' || p.colorPalette === 'cool' || p.colorPalette === 'neutral' || p.colorPalette === 'bold') out.colorPalette = p.colorPalette;
-  if (typeof p.intensity === 'number' && p.intensity >= 0 && p.intensity <= 1) out.intensity = p.intensity;
-  if (typeof p.customInstructions === 'string') out.customInstructions = p.customInstructions.slice(0, 500);
-  if (typeof p.customStyle === 'string') out.customStyle = p.customStyle.slice(0, 500);
-  if (typeof p.budget === 'number' && p.budget >= 0) out.budget = p.budget;
-  return out;
-}
+export { cleanPreferences };
 
 export function rowToDesign(row: DesignRow, urls: { original: string | null; generated: string | null }): SavedDesign {
   return {
     id: row.id,
     name: row.name,
-    roomType: isRoomType(row.room_type) ? row.room_type : null,
     style: isDesignStyle(row.style) ? row.style : 'custom',
     prompt: row.prompt ?? '',
     preferences: cleanPreferences(row.preferences),
@@ -121,7 +104,6 @@ class DesignsService {
       const design: SavedDesign = {
         id: newId(),
         name,
-        roomType: input.roomType,
         style: input.style,
         prompt: input.prompt,
         preferences: input.preferences,
@@ -159,7 +141,6 @@ class DesignsService {
       .insert({
         id,
         name,
-        room_type: input.roomType,
         style: input.style,
         prompt: input.prompt.slice(0, 4000),
         preferences: cleanPreferences(input.preferences),

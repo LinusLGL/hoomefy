@@ -16,9 +16,8 @@ const input: GenerateInput = {
   image: new Blob(['photo'], { type: 'image/jpeg' }),
   width: 1024,
   height: 768,
-  roomType: 'bedroom',
   style: 'japandi',
-  preferences: { intensity: 0.5, colorPalette: 'warm', customInstructions: 'add plants' },
+  preferences: { intensity: 0.5, customInstructions: 'add plants' },
 };
 
 const result = (over: Partial<EditResult> = {}): EditResult => ({ blob: new Blob(['made'], { type: 'image/jpeg' }), providerId: 'fake', demo: false, seed: 5, ...over });
@@ -53,17 +52,18 @@ describe('useGeneration', () => {
     expect(seen[0].image).toBe(input.image);
     expect(seen[0].width).toBe(1024);
     expect(seen[0].style).toBe('japandi');
-    expect(seen[0].prompt).toMatch(/^Edit this photograph of a bedroom/);
+    expect(seen[0].prompt).toMatch(/^Edit this photograph of a room\./);
     expect(seen[0].prompt).toContain('Japandi');
-    expect(seen[0].prompt).toContain('warm colour palette');
-    expect(seen[0].prompt).toContain('add plants');
+    // The visitor's own words reach the model as the priority request.
+    expect(seen[0].prompt).toContain('request comes first');
+    expect(seen[0].prompt).toContain('"add plants"');
 
     expect(job).toMatchObject({ status: 'completed', style: 'japandi' });
     expect(hook.current.isGenerating).toBe(false);
     expect(hook.current.currentJob?.generatedImageUrl).toBe('blob:made');
     const store = useStudioStore.getState();
     expect(store.history).toHaveLength(1);
-    expect(store.history[0]).toMatchObject({ providerId: 'fake', seed: 5, demo: false, style: 'japandi', roomType: 'bedroom' });
+    expect(store.history[0]).toMatchObject({ providerId: 'fake', seed: 5, demo: false, style: 'japandi' });
     expect(store.activeVersionId).toBe(store.history[0].id);
   });
 

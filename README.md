@@ -13,30 +13,34 @@ Built for **Kiroween 2026**, Costume Contest category.
 
 ## What it does
 
-- **Design studio** with three panels: controls on the left, the design canvas in the middle, the assistant and
-  furniture on the right. On a tablet the controls collapse; on a phone a bottom bar switches between Design,
+- **Design studio** with three panels: style and your wishes on the left, the design canvas in the middle, the
+  assistant and the Summary / Furniture / Shopping list on the right. On a tablet the controls collapse; on a phone a bottom bar switches between Design,
   Furniture and Settings.
 - **Real AI redesign.** The photo is edited by [FLUX.2 \[klein\] 4B](https://huggingface.co/black-forest-labs/FLUX.2-klein-4B)
   (Apache 2.0) on Hugging Face's free GPUs, called straight from the browser. The photo is the reference image,
   so it is an edit and not a new room.
 - **Five themes plus your own words:** Scandinavian, Japandi, Modern Luxury, Minimalist and Halloween. Choosing
-  a theme changes the prompt that is sent to the model, and so do the colour palette, intensity, extra
-  instructions and the custom style text.
+  a theme changes the prompt that is sent to the model. So does what you write in the wishes box on the left (`Extra
+  instructions`): your words are sent first, as the priority, and the theme fills in everything they do not mention.
+  Intensity and the custom style text go into the same prompt. There is no room type to choose.
 - **Private by design.** Photos are straightened, shrunk and stripped of camera and location data on your
   device. Only that copy goes to the AI service, and only after you agree. Nothing is stored unless you press
   Save design and tick the box.
 - **Canvas tools:** before/after slider, zoom and pan, fullscreen, version history, download as JPEG,
   regenerate, save.
-- **Furniture:** shows pieces that suit the room straight away, finds the ones actually in your picture with a
-  detector that runs on your device, estimates prices for your theme, and links to IKEA, Wayfair, Target,
-  Amazon, Etsy and Google Shopping. Live product prices appear if you add a search key. A shopping list adds
-  up the pieces against your budget.
+- **Summary, Furniture and Shopping list, filled in by themselves.** When a design is ready, a vision model on
+  Cloudflare Workers AI looks at it and names the furniture and decor in it (`/api/detect-items`). Each piece is then
+  searched in the shops (`/api/furniture-search`, Google Shopping through Serper), the product priced nearest the
+  middle of the results is counted, and one line per piece goes on the shopping list with a total against your
+  budget. Without a search key the pieces carry typical prices for your theme, marked `est.`, and links to IKEA,
+  Wayfair, Target, Amazon, Etsy and Google Shopping still work. Both routes answer signed-in visitors only. A finder
+  that runs on your own device (OWL-ViT, about 150 MB, optional) is the fallback.
 - **Accounts:** sign up and sign in with Supabase, a gallery of saved designs, delete any time.
 - **Haunted mode:** a gothic mansion theme with a candle cursor, a ghost, hidden holy water and a jumpscare.
   Everything in the studio works the same in both modes.
 - **The spirit board (Haunted studio):** the studio sits on an animated Ouija board. Your photo goes on a blank
   polaroid in the middle. Touch it and a moonlit ritual chamber opens with five candles. Light them in any order;
-  each one speaks a line (spoken and written), and the fifth starts the redesign. The extra-instructions box
+  each one speaks a line (spoken and written), and the fifth starts the redesign. The wishes box
   becomes "Whisper your wishes", with a short guide and phrases to add. Elegant mode is unchanged.
 
 ## Architecture
@@ -44,14 +48,16 @@ Built for **Kiroween 2026**, Costume Contest category.
 ```
 Browser (React + TypeScript + Vite + Tailwind + Zustand)
  ├── photo pipeline            checks, straightens, strips EXIF, makes the 1024px copy (on device)
- ├── prompt builder            theme + palette + intensity + instructions -> the edit prompt
+ ├── prompt builder            your wishes first, then theme + intensity -> the edit prompt
  ├── AI provider  ──────────►  Hugging Face Space black-forest-labs/FLUX.2-klein-4B  (visitor's free GPU allowance)
- ├── furniture detector        OWL-ViT in the browser (WebAssembly), loaded only when asked for
+ ├── item scan                 after each design: find the pieces, price them, fill the shopping list
+ ├── furniture detector        OWL-ViT in the browser (WebAssembly), only as a fallback, loaded when asked for
  └── Supabase client  ──────►  Supabase: Auth, a `designs` table and a private `designs` storage bucket (row-level security)
 
 Cloudflare Workers (static assets)
  ├── the built site (static, from wrangler.jsonc)
  ├── worker/index.ts                     routes /api, and serves video and audio with Range support
+ ├── worker/detect.ts                    /api/detect-items: a vision model names the pieces in a design
  └── functions/api/furniture-search.ts   optional live product prices; keeps the search key off the device
 ```
 

@@ -204,7 +204,7 @@ describe('takeover sequence', () => {
 
   it('does not remount or reset the application: same DOM nodes, typed text and other stores survive', async () => {
     const user = userEvent.setup();
-    useStudioStore.setState({ roomType: 'bedroom', selectedStyle: 'japandi' });
+    useStudioStore.setState({ selectedStyle: 'japandi', preferences: { customInstructions: 'keep the fireplace' } });
     useAuthStore.setState({ isAuthenticated: true });
     mount();
 
@@ -219,7 +219,7 @@ describe('takeover sequence', () => {
     expect(screen.getByLabelText('note')).toBe(input);
     expect(screen.getByRole('heading', { name: 'Hello world' })).toBe(heading);
     expect(input.value).toBe('my notes');
-    expect(useStudioStore.getState().roomType).toBe('bedroom');
+    expect(useStudioStore.getState().preferences.customInstructions).toBe('keep the fireplace');
     expect(useStudioStore.getState().selectedStyle).toBe('japandi');
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
   });

@@ -25,6 +25,10 @@
   // If you fork this project, replace it with your own project's URL.
   "vars": { "SUPABASE_URL": "https://gzidmlexfenyczrpydko.supabase.co" },
 
-  // At most 4 designs a minute per signed-in user on the backup source.
-  "ratelimits": [{ "name": "REDESIGN_LIMITER", "namespace_id": "1001", "simple": { "limit": 4, "period": 60 } }]
+  // Per signed-in user, each minute: at most 4 designs on the backup source (REDESIGN_LIMITER, which also covers the item finder),
+  // and at most 40 shop searches (SEARCH_LIMITER).
+  "ratelimits": [
+    { "name": "REDESIGN_LIMITER", "namespace_id": "1001", "simple": { "limit": 4, "period": 60 } },
+    { "name": "SEARCH_LIMITER", "namespace_id": "1002", "simple": { "limit": 40, "period": 60 } }
+  ]
 }

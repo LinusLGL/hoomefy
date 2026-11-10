@@ -498,108 +498,39 @@ test.describe('Floating ghosts', () => {
   });
 });
 
-test.describe('Build the house, replace the furniture, clear the ghosts', () => {
+test.describe('The studio no longer ties designs to rooms or furniture', () => {
   async function toStudioWithPhoto(page: Page, mansion: unknown) {
     await seedHaunted(page, { mansion });
     await signIn(page);
     const png = await makeRoomPng(page);
     await page.locator('input[type="file"]').setInputFiles({ name: 'room.png', mimeType: 'image/png', buffer: png });
     await expect(page.locator('img[alt="room.png"]')).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: /Living Room/ }).click();
     await page.getByRole('button', { name: /^Scandinavian/ }).click();
   }
-  const chip = (page: Page, label: RegExp) => page.getByTestId('furniture-picker').getByRole('button', { name: label });
 
-  test('the haunting report names the spirits and the furniture they are bound to', async ({ page }) => {
-    await toStudioWithPhoto(page, mansionWith([]));
-    const report = page.getByTestId('spirit-report');
-    await expect(report).toContainText('2 spirits linger here');
-    await expect(report).toContainText('The Lady on the Settee');
-    await expect(report).toContainText('The Lamplighter');
-
-    // The matching furniture chips carry the ghost marker; others do not.
-    await expect(chip(page, /Sofas & seating/)).toHaveAttribute('data-bound', 'true');
-    await expect(chip(page, /Lamps & lighting/)).toHaveAttribute('data-bound', 'true');
-    await expect(chip(page, /Rugs & curtains/)).not.toHaveAttribute('data-bound', /.*/);
-    await report.scrollIntoViewIfNeeded();
-    await report.screenshot({ path: `${SHOTS}/32-haunting-report.png` });
-  });
-
-  test('the Haunted studio has no "Your mansion" panel, but the spirits are still there', async ({ page }) => {
+  test('the Haunted studio has no room choice, no furniture to replace and no spirit report', async ({ page }) => {
     await toStudioWithPhoto(page, mansionWith(['bedroom']));
+    await expect(page.getByTestId('furniture-picker')).toHaveCount(0);
+    await expect(page.getByTestId('spirit-report')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Living Room|Bedroom/ })).toHaveCount(0);
     await expect(page.getByText('Your mansion')).toHaveCount(0);
-    await expect(page.getByText(/rooms cleared/)).toHaveCount(0);
-    await expect(page.getByTestId('spirit-report')).toContainText('2 spirits linger here');
+    // The house and its ghosts are still there.
     await expect(page.getByTestId('floating-ghosts')).toBeAttached();
-    await page.screenshot({ path: `${SHOTS}/36-studio-without-mansion-panel.png` });
+    await page.screenshot({ path: `${SHOTS}/36-studio-without-rooms.png` });
   });
-  test('replacing the right furniture drives a spirit out; the rest linger until replaced too', async ({ page }) => {
-    test.setTimeout(150_000);
-    const { errors } = await instrument(page);
-    await toStudioWithPhoto(page, mansionWith(['bedroom', 'kitchen', 'dining-room', 'office', 'bathroom']));
-    expect(await clearedRooms(page)).toBe(5);
-    await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', '2');
 
-    // 1. Replace only the seating.
-    await chip(page, /Sofas & seating/).click();
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('hoomefy_studio_state') as string).state.preferences.replaceFurniture);
-    expect(stored).toEqual(['seating']);
+  test('making a design leaves the house and the ghosts as they were', async ({ page }) => {
+    test.setTimeout(100_000);
+    await toStudioWithPhoto(page, mansionWith(['bedroom', 'kitchen']));
+    expect(await clearedRooms(page)).toBe(2);
+    const ghosts = await page.getByTestId('floating-ghosts').getAttribute('data-count');
     await developPhotograph(page);
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });
-
-    const banner = page.getByTestId('outcome-banner');
-    await expect(banner).toHaveAttribute('data-driven', '1');
-    await expect(banner).toHaveAttribute('data-remaining', '1');
-    await expect(banner).toHaveAttribute('data-room-cleared', 'false');
-    await expect(banner).toContainText('The Lady on the Settee');
-    await expect(banner).toContainText('Still lingering: The Lamplighter');
-    await expect(banner).toContainText('Replace the lamps & lighting');
-    expect(await clearedRooms(page)).toBe(5);
-    await expect(page.getByTestId('spirit-report')).toContainText('A spirit lingers here');
-    await expect(page.locator('[data-testid="spirit"][data-furniture="seating"]')).toHaveAttribute('data-state', /leaving|gone/);
-    await expect(page.locator('[data-testid="spirit"][data-furniture="lighting"]')).toHaveAttribute('data-state', 'lingering');
-    await page.waitForTimeout(700);
-    await page.getByTestId('result-panel').scrollIntoViewIfNeeded();
-    await page.getByTestId('result-panel').screenshot({ path: `${SHOTS}/33-spirit-leaving.png` });
-    // after the animation the driven spirit is removed
-    await expect(page.locator('[data-testid="spirit"][data-furniture="seating"]')).toHaveAttribute('data-state', 'gone', { timeout: 6000 });
-
-    // 2. Replace the lighting too: the room is cleared and the haunting thins out.
-    await chip(page, /Lamps & lighting/).click();
-    await developPhotograph(page);
-    await expect(banner).toHaveAttribute('data-room-cleared', 'true', { timeout: 40_000 });
-    await expect(banner).toContainText('The Living Room is at peace');
-    expect(await clearedRooms(page)).toBe(6);
-    await expect(page.getByTestId('spirit-report')).toHaveAttribute('data-state', 'cleared');
-    await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', '1');
-
-    expect(errors).toEqual([]);
+    await expect(page.getByTestId('outcome-banner')).toHaveCount(0);
+    expect(await clearedRooms(page)).toBe(2);
+    await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', ghosts ?? '3');
   });
 
-  test('replacing nothing clears nothing, and the user is told why', async ({ page }) => {
-    test.setTimeout(100_000);
-    await toStudioWithPhoto(page, mansionWith([]));
-    await developPhotograph(page);
-    await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });
-    const banner = page.getByTestId('outcome-banner');
-    await expect(banner).toContainText('No furniture was replaced, so the spirits stay');
-    await expect(banner).toHaveAttribute('data-driven', '0');
-    expect(await clearedRooms(page)).toBe(0);
-    await expect(page.getByTestId('spirit-report')).toContainText('2 spirits linger here');
-  });
-
-  test('clearing the last room builds the house and lights it', async ({ page }) => {
-    test.setTimeout(100_000);
-    await toStudioWithPhoto(page, mansionWith(['bedroom', 'kitchen', 'dining-room', 'office', 'bathroom', 'other']));
-    expect(await clearedRooms(page)).toBe(6);
-    await chip(page, /Sofas & seating/).click();
-    await chip(page, /Lamps & lighting/).click();
-    await developPhotograph(page);
-    const banner = page.getByTestId('outcome-banner');
-    await expect(banner).toContainText('is built', { timeout: 40_000 });
-    expect(await clearedRooms(page)).toBe(7);
-    await expect(light(page)).toHaveAttribute('data-lit', 'true'); // the whole house is lit
-  });
   test('progress survives a reload', async ({ page }) => {
     await seedHaunted(page, { mansion: mansionWith(['bedroom', 'kitchen']) });
     await signIn(page);
@@ -608,18 +539,15 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     expect(await clearedRooms(page)).toBe(2);
   });
 
-  test('the Elegant studio has the furniture picker but no ghosts, spirits or mansion', async ({ page }) => {
+  test('the Elegant studio has no furniture picker, ghosts, spirits or mansion either', async ({ page }) => {
     await seedElegantSeen(page);
     await signIn(page);
     await expect(page.locator('html')).toHaveAttribute('data-experience', 'elegant');
-    const picker = page.getByTestId('furniture-picker');
-    await expect(picker).toBeVisible();
-    expect(await picker.innerText()).not.toMatch(/spirit|ghost|haunt/i);
+    await expect(page.getByTestId('furniture-picker')).toHaveCount(0);
     await expect(page.getByTestId('spirit-report')).toHaveCount(0);
     await expect(page.getByTestId('floating-ghosts')).toHaveCount(0);
   });
 });
-
 test('the haunted gallery has no "Your mansion" panel', async ({ page }) => {
   await seedHaunted(page, { mansion: mansionWith(['bedroom']) });
   await signIn(page);

@@ -225,6 +225,66 @@ export async function developPhotograph(page: Page, options: { tap?: boolean } =
   await completeRitual(page, options);
 }
 
+export interface FoundItem {
+  kind: string;
+  name: string;
+  query: string;
+}
+
+/** What the item finder reports for the test room. */
+export const FOUND_ITEMS: FoundItem[] = [
+  { kind: 'sofa', name: 'grey linen sofa', query: 'grey linen sofa' },
+  { kind: 'coffee-table', name: 'round walnut coffee table', query: 'round walnut coffee table' },
+  { kind: 'rug', name: 'jute area rug', query: 'jute area rug' },
+];
+
+export interface ItemFinderMock {
+  /** What `/api/detect-items` answers: 200 with the items, or an error status. */
+  items: FoundItem[];
+  status: number;
+  /** Whether `/api/furniture-search` finds shop prices (three products per search: $300, $450 and $900). */
+  live: boolean;
+  detectCalls: number;
+  searchQueries: string[];
+}
+
+/**
+ * Stands in for the Worker's item finder and shop search, which do not exist in the dev server. Change the returned
+ * object's fields between steps to make the next answer different.
+ */
+export async function mockItemFinder(page: Page, initial: Partial<Pick<ItemFinderMock, 'items' | 'status' | 'live'>> = {}): Promise<ItemFinderMock> {
+  const mock: ItemFinderMock = { items: FOUND_ITEMS, status: 200, live: true, detectCalls: 0, searchQueries: [], ...initial };
+
+  await page.route(/\/api\/detect-items/, async (route) => {
+    mock.detectCalls++;
+    if (mock.status !== 200) {
+      const code = mock.status === 401 ? 'UNAUTHORIZED' : 'UNAVAILABLE';
+      await route.fulfill({ status: mock.status, contentType: 'application/json', body: JSON.stringify({ error: { code } }) });
+      return;
+    }
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ items: mock.items }) });
+  });
+
+  await page.route(/\/api\/furniture-search/, async (route) => {
+    const query = new URL(route.request().url()).searchParams.get('q') ?? '';
+    mock.searchQueries.push(query);
+    const slug = query.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    const results = mock.live
+      ? [300, 450, 900].map((price) => ({
+          title: `${query} ${price}`,
+          price,
+          priceText: `$${price}`,
+          source: 'Wayfair',
+          link: `https://shop.example/${slug}-${price}`,
+          imageUrl: null,
+        }))
+      : [];
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ live: mock.live, results }) });
+  });
+
+  return mock;
+}
+
 export async function noHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(1);

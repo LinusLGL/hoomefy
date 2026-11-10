@@ -122,7 +122,6 @@ test.describe('Mobile', () => {
     // On a phone the choices live under Settings in the bottom bar.
     await expect(page.getByTestId('settings-callout')).toBeVisible();
     await page.getByTestId('mobile-nav').getByRole('button', { name: 'Settings' }).tap();
-    await page.getByRole('button', { name: /Bedroom/ }).tap();
     await page.getByRole('button', { name: /Japandi/ }).tap();
     await developPhotograph(page, { tap: true });
 
@@ -248,7 +247,6 @@ test.describe('Mobile: the design studio', () => {
     await page.locator('input[type="file"]').setInputFiles({ name: 'room.png', mimeType: 'image/png', buffer: png });
     await expect(page.locator('.hf-evidence img[alt="room.png"]')).toBeVisible({ timeout: 15_000 });
     await nav.getByRole('button', { name: 'Settings' }).tap();
-    await page.getByRole('button', { name: /Living Room/ }).tap();
     await page.getByRole('button', { name: /^Scandinavian/ }).tap();
     await page.getByRole('button', { name: 'Generate Design' }).tap();
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });

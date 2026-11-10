@@ -13,7 +13,6 @@ import { useShoppingStore } from '@/features/furniture/shoppingStore';
 import { useToast } from '@/hooks/useToast';
 import { designsService, NAME_MAX } from '@/services/designsService';
 import { STYLES } from '@/features/studio/styles';
-import { ROOM_TYPES } from '@/types';
 import { ROUTES } from '@/utils/constants';
 
 interface SaveDialogProps {
@@ -28,7 +27,6 @@ export function SaveDialog({ open, onClose, onSaved }: SaveDialogProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const image = useStudioStore((s) => s.uploadedImage);
   const version = useStudioStore((s) => s.history.find((v) => v.id === s.activeVersionId) ?? null);
-  const roomType = useStudioStore((s) => s.roomType);
   const preferences = useStudioStore((s) => s.preferences);
   const items = useShoppingStore((s) => s.items);
 
@@ -42,10 +40,9 @@ export function SaveDialog({ open, onClose, onSaved }: SaveDialogProps) {
     setAgreed(false);
     setError(null);
     if (version) {
-      const room = roomType ? ROOM_TYPES[roomType].name : 'Room';
-      setName(`${room}, ${STYLES[version.style].name}`.slice(0, NAME_MAX));
+      setName(`My ${STYLES[version.style].name} design`.slice(0, NAME_MAX));
     }
-  }, [open, version, roomType]);
+  }, [open, version]);
 
   const persistent = designsService.persistent;
 
@@ -57,7 +54,6 @@ export function SaveDialog({ open, onClose, onSaved }: SaveDialogProps) {
     try {
       await designsService.save({
         name,
-        roomType,
         style: version.style,
         prompt: version.prompt,
         preferences,

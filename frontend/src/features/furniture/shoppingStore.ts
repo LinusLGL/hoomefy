@@ -18,6 +18,8 @@ export interface ShoppingItem {
   source: string | null;
   link: string | null;
   imageUrl: string | null;
+  /** True for a piece added automatically from the items found in a design; the next design replaces it. */
+  auto?: boolean;
 }
 
 export const MAX_ITEMS = 40;
@@ -26,6 +28,8 @@ export const SHOPPING_STORAGE_KEY = 'hoomefy_shopping';
 interface ShoppingState {
   items: ShoppingItem[];
   add: (item: Omit<ShoppingItem, 'id'>) => boolean;
+  /** Swaps the automatically added pieces for a new set. Pieces the visitor added themselves stay. */
+  replaceAuto: (items: Array<Omit<ShoppingItem, 'id'>>) => void;
   remove: (id: string) => void;
   clear: () => void;
 }
@@ -51,6 +55,7 @@ export function cleanItems(input: unknown): ShoppingItem[] {
       source: typeof r.source === 'string' ? r.source.slice(0, 60) : null,
       link: isUrl(r.link) ? r.link : null,
       imageUrl: isUrl(r.imageUrl) ? r.imageUrl : null,
+      ...(r.auto === true ? { auto: true } : {}),
     });
     if (out.length >= MAX_ITEMS) break;
   }
@@ -67,6 +72,18 @@ export const useShoppingStore = create<ShoppingState>()(
         if (items.some((i) => i.id === id) || items.length >= MAX_ITEMS) return false;
         set({ items: [...items, { ...item, id }] });
         return true;
+      },
+      replaceAuto: (incoming) => {
+        const kept = get().items.filter((i) => !i.auto);
+        const seen = new Set(kept.map((i) => i.id));
+        const added: ShoppingItem[] = [];
+        for (const item of incoming) {
+          const id = idFor(item);
+          if (seen.has(id) || kept.length + added.length >= MAX_ITEMS) continue;
+          seen.add(id);
+          added.push({ ...item, id, auto: true });
+        }
+        set({ items: [...kept, ...added] });
       },
       remove: (id) => set({ items: get().items.filter((i) => i.id !== id) }),
       clear: () => set({ items: [] }),

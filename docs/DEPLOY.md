@@ -139,25 +139,42 @@ two `VITE_SUPABASE_*` values) and talks to Supabase directly from the browser. S
 first (step 1), then build and deploy with its values, then paste the finished `workers.dev` address back into
 Supabase's **Site URL** (step 1.4).
 
-### Optional: live product prices
+### Finding the furniture in a design, and its prices
 
-The furniture panel always shows search links for IKEA, Wayfair, Target, Amazon, Etsy and Google Shopping.
-To also show live products with prices:
+When a design is ready the studio looks through it by itself and fills in the Summary, Furniture and Shopping list tabs:
 
-1. Create a free key at <https://serper.dev>.
+1. **Find the pieces.** The site's own route `/api/detect-items` (`frontend/worker/detect.ts`) shows a small copy of the design to a
+   vision model on Cloudflare Workers AI (`@cf/meta/llama-4-scout-17b-16e-instruct`, with `@cf/google/gemma-4-26b-a4b-it` as a
+   second choice) and gets back a list: what each piece is, and the words to search for it. It uses the same free 10,000
+   neurons a day as the redesign, and one look costs a small fraction of one redesign. Nothing to set up: the AI binding is
+   already in `wrangler.jsonc`.
+2. **Price them.** Each piece is searched with `/api/furniture-search`, which needs a Serper key (below). The product priced
+   nearest the middle of the results is counted, so one odd price does not decide the total.
+3. **List them.** One line per piece goes on the shopping list, replacing the lines the last design added and keeping any the
+   visitor added by hand.
+
+Both routes answer **signed-in visitors only**, each with a per-user rate limit (`REDESIGN_LIMITER` for finding, 4 a minute;
+`SEARCH_LIMITER` for searching, 40 a minute), so strangers and scripts cannot spend the allowances. If finding fails the studio says
+why and offers **Try again** and a finder that runs on the visitor's own device (about 150 MB, optional).
+
+**Live prices need a search key.** To turn them on:
+
+1. Create a free key at <https://serper.dev> (it includes 2,500 free searches, enough for a few hundred designs).
 2. In Cloudflare open your Worker's **Settings → Variables and secrets** and add `SERPER_API_KEY` as a **Secret**.
 3. Redeploy. The key stays on Cloudflare's servers; the browser never sees it.
 
-Without the key nothing breaks: the panel says live prices are not available and the shop links still work.
+Without the key nothing breaks: the pieces are still found, each carries a typical price for the chosen style marked `est.`,
+and the shop links (IKEA, Wayfair, Target, Amazon, Etsy, Google Shopping) still work.
 
 ## 3. Check that everything works
 
 1. Open your `*.workers.dev` address and press **Design My Room**, then create an account.
-2. Upload a room photo, pick a room type and a theme, and press **Generate Design**. You should see the consent
-   message, then a redesigned room in 10 to 30 seconds.
+2. Upload a room photo, pick a theme (optionally write what you want changed in the wishes box), and press **Generate Design**.
+   You should see the consent message, then a redesigned room in 10 to 30 seconds.
 3. Press **Save design**, tick the box, then open **My Designs**. In Supabase, **Table Editor → designs** and
    **Storage → designs** should now show the row and the two images.
-4. In the furniture tab press **Find furniture in my design** (it downloads a small model the first time).
+4. Without pressing anything, the **Summary** tab lists the furniture found in the design with a price for each, the **Furniture**
+   tab lets you open a piece to see the products, and the **Shopping list** tab holds one line per piece.
 
 From your computer, `cd frontend && npm run smoke:live -- path/to/room.jpg` checks the AI service on its own, and
 `npm run check:supabase` checks that your Supabase project keeps every person's designs and photos private (it makes two

@@ -1,8 +1,9 @@
 /**
  * ShoppingList
  *
- * The pieces the visitor picked, a running total and how it compares with their budget. Prices marked
- * "est." are rough ranges for the style; products picked from the search use the shop's own price.
+ * The pieces found in the design (added by themselves) and any the visitor picked, a running total and how it
+ * compares with their budget. Prices marked "est." are typical prices for the style; products from the search use
+ * the shop's own price.
  */
 
 import { Copy, ExternalLink, Trash2 } from 'lucide-react';
@@ -38,7 +39,7 @@ export function ShoppingList() {
     <div className="space-y-4" data-testid="shopping-list">
       <div>
         <h3 className="text-sm font-semibold text-ivory">Shopping list</h3>
-        <p className="mt-1 text-xs text-ivory/70">Add pieces from the Furniture tab.</p>
+        <p className="mt-1 text-xs text-ivory/70">The pieces found in your design are added here by themselves, one line each. Add more, or remove any, from the Furniture tab.</p>
       </div>
 
       {items.length === 0 ? (
