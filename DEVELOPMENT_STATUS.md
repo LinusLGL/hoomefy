@@ -474,23 +474,26 @@ In Haunted the Design Studio is now a spirit board. The photo goes on a blank po
 - Second line uses `script2.1.mp3`; the chamber waits for the design, then shows the result; `firesound.mp3` plays (1.4 s) on every Haunted click; candle light dims every 3.3 s to 12 %.
 - Checks: tsc, eslint, 608 unit tests, build, 92 desktop e2e (ritual, holywater, mansion, studio-fit) pass. Not yet live-verified.
 
-
 ## Studio: wishes, found items and prices (Nov 5, 2026)
 
-Spec: .kiro/specs/studio-items/.
+Spec: `.kiro/specs/studio-items/`.
 
 - **Wishes steer the picture.** The wishes box ("Extra instructions"; "Whisper your wishes" in Haunted) moved to the left
   panel, under the style, and the prompt now sends its words first, as the priority, with the style filling in the rest.
   The "keep the layout" rule gives way to what is asked. The demo renderer cannot follow wishes and says so.
 - **Removed:** the room type, the colour palette and "furniture to replace" (screen, store, prompt, saved designs, copy, the
-  ritual gate). Stored data that still has them is read and they are ignored (studioStore persist version 3).
+  ritual gate). Stored data that still has them is read and they are ignored (`studioStore` persist version 3).
   The spirit report, outcome banner and spirit overlay went with them; the house, floating ghosts and candle lift remain,
   but designing no longer clears a room.
-- **Items found by themselves.** When a design is ready, scanDesign posts a small copy to /api/detect-items
-  (worker/detect.ts, Llama 4 Scout on Workers AI, Gemma 4 as the second choice), searches each piece through
-  /api/furniture-search, counts the product priced nearest the middle, and fills the Summary, Furniture and Shopping
+- **Items found by themselves.** When a design is ready, `scanDesign` posts a small copy to `/api/detect-items`
+  (`worker/detect.ts`, Llama 4 Scout on Workers AI, Gemma 4 as the second choice), searches each piece through
+  `/api/furniture-search`, counts the product priced nearest the middle, and fills the Summary, Furniture and Shopping
   list. Without a shop price the piece carries a typical price for the style, marked "est.".
-- **Both routes are signed-in only** with per-user limits (REDESIGN_LIMITER, new SEARCH_LIMITER).
-- **Checks:** type check, lint and the unit suite pass; e2e design-studio, itual, studio, studio-fit and mansion
-  pass on desktop. Not yet checked on the live site: the vision model's real answer, and shop prices (they need
-  SERPER_API_KEY, which has not been added).
+- **Both routes are signed-in only** with per-user limits (`REDESIGN_LIMITER`, new `SEARCH_LIMITER`).
+- **Checks:** type check, lint, 673 unit tests and the build pass; the full Playwright suite passes.
+- **Live check (commit df748d6, throwaway accounts):** `/api/furniture-search` answers 401 without a sign-in. A signed-in run
+  with the real redesign and the wish "Make the sofa dark green velvet and paint the walls deep navy blue" came back with a
+  dark green velvet sofa and navy walls. `/api/detect-items` named eight pieces correctly on the first try (Llama 4 Scout).
+  The shop search answered 200 for all eight but with `live=false`, because `SERPER_API_KEY` is not set on the Worker, so
+  every price was a typical price marked "est.". Saving that design and opening it again from My Designs kept the list, the
+  wishes and the style, with no Supabase errors. **Open item: add `SERPER_API_KEY` as a Worker secret to get real shop prices.**

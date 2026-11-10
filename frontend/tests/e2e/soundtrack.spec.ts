@@ -36,6 +36,9 @@ async function stubMedia(page: Page, opts: { refuseFirst?: boolean } = {}) {
 const plays = (page: Page) => page.evaluate(() => (window as unknown as { __media: MediaLog }).__media.plays);
 /** Which files were asked to play, in order, once each (the dev server mounts effects twice under React StrictMode). */
 const played = async (page: Page) => [...new Set((await plays(page)).map((p) => p.src))];
+/** Every click in the Haunted site also crackles like a flame (see features/haunting/clickSound.ts); it is not the soundtrack. */
+const CLICK_SOUND = '/audio/firesound.mp3';
+const soundtrackOnly = async (page: Page) => (await played(page)).filter((src) => src !== CLICK_SOUND);
 const pauses = (page: Page) => page.evaluate(() => (window as unknown as { __media: MediaLog }).__media.pauses);
 
 async function endSting(page: Page) {
@@ -150,6 +153,8 @@ test.describe('Haunted soundtrack', () => {
       (window as unknown as { __media: MediaLog }).__media.refuse = false;
     });
     await page.mouse.click(300, 300);
-    await expect.poll(() => played(page)).toEqual([`${AMBIENT}:refused`, AMBIENT]);
+    await expect.poll(() => soundtrackOnly(page)).toEqual([`${AMBIENT}:refused`, AMBIENT]);
+    // The same click also made the fire crackle.
+    expect(await played(page)).toContain(CLICK_SOUND);
   });
 });
