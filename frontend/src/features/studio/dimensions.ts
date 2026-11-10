@@ -18,7 +18,8 @@ const snap = (value: number, step: number) => Math.round(value / step) * step;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export function fitToModelSize(width: number, height: number, max = MODEL_MAX, min = MODEL_MIN, step = MODEL_STEP): Size {
-  if (!(width > 0) || !(height > 0)) return { width: max, height: max };
+  // Zero, negative, NaN and infinite sizes all mean the real size is not known. (Infinity used to give NaN.)
+  if (!(width > 0) || !(height > 0) || !Number.isFinite(width) || !Number.isFinite(height)) return { width: max, height: max };
   // Never scale up: a small photograph is edited at its own size.
   const scale = Math.min(1, max / Math.max(width, height));
   return {

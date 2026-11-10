@@ -53,6 +53,14 @@ describe('mapSerperShopping', () => {
   });
 });
 
+describe('prices from the search service', () => {
+  it('ignores an infinite or absurd price value (found by the property tests)', () => {
+    const link = 'https://shop.example/x';
+    const products = mapSerperShopping({ shopping: [{ title: 'a', link, priceValue: Infinity }, { title: 'b', link, priceValue: 5e9, price: '$120' }] });
+    expect(products.map((p) => p.price)).toEqual([null, 120]);
+  });
+});
+
 describe('GET /api/furniture-search', () => {
   it('rejects a missing or odd query', async () => {
     const res = await call(null);

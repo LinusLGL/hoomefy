@@ -516,3 +516,15 @@ Spec: `.kiro/specs/studio-items/`.
   `live=false` with `reason=not_configured` for every piece: the deployed Worker does not have `SERPER_API_KEY`. The usual cause is
   adding it under Settings → Build → Variables and secrets (build time only) instead of the Worker's own Settings → Variables and
   secrets. Until it is added, every price is a typical price marked "est.".
+
+
+## Kiro features (hooks, property tests, agents, MCP, power)
+
+Added without changing how the app behaves, except three small input guards found by the property tests (see `docs/kiro-usage.md`).
+
+- Hooks in `.kiro/hooks/`: `credential-guard` (PreToolUse), `quality-gate` (Stop), `worker-security-checklist` (PostFileSave).
+- Property-based tests with fast-check: six `*.property.test.ts` files. At the last run the full unit suite had 738 passing tests.
+- Custom agents in `.kiro/agents/`: `hoomefy-reviewer`, `hoomefy-asset-director`.
+- Local power in `powers/hoomefy-media-studio/`.
+- Spec: `.kiro/specs/kiro-features/`.
+- Still to do: add `.kiro/settings/mcp.json` by hand (contents in `docs/kiro-usage.md`), then run the hooks, agents and power inside Kiro and record what happened. Rows in `docs/kiro-usage.md` marked "to confirm" stay unconfirmed until then.

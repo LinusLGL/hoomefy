@@ -121,6 +121,18 @@ describe('search helpers', () => {
     expect(sanitizeProducts('x')).toEqual([]);
   });
 
+  it('does not accept an infinite, huge or negative price (found by the property tests)', () => {
+    const link = 'https://shop.example/x';
+    const out = sanitizeProducts([
+      { title: 'a', link, price: Infinity, priceText: null },
+      { title: 'b', link, price: 1e300, priceText: '$80' },
+      { title: 'c', link, price: -5, priceText: null },
+    ]);
+    expect(out.map((p) => p.price)).toEqual([null, 80, null]);
+    expect(parsePrice('$99,999,999')).toBeNull();
+    expect(parsePrice('$1,000,000')).toBe(1_000_000);
+  });
+
   it('returns no live results when the search function is missing or fails', async () => {
     const notFound = vi.fn(async () => new Response('nope', { status: 404 })) as unknown as typeof fetch;
     expect(await searchProducts('sofa', undefined, notFound)).toEqual({ live: false, results: [] });

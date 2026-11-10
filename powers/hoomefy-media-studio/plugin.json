@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "hoomefy-media-studio",
+  "version": "1.0.0",
+  "description": "Generate on-brand haunted images, video clips and sound for Hoomefy through the OpenArt MCP server.",
+  "author": {
+    "name": "Hoomefy"
+  },
+  "keywords": ["hoomefy", "haunted", "jumpscare", "ritual", "media", "openart", "image", "video", "sound"]
+}

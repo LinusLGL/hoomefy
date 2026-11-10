@@ -43,12 +43,17 @@ export function cleanQuery(raw: string | null): string | null {
   return q;
 }
 
+/** No piece of furniture costs more than this. Anything above it (or not a finite number) is a bad value, not a price. */
+export const MAX_PRICE = 1_000_000;
+
+const isPrice = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= MAX_PRICE;
+
 export function parsePrice(text: unknown): number | null {
   if (typeof text !== 'string') return null;
   const m = /(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/.exec(text.replace(/\s/g, ''));
   if (!m) return null;
   const n = Number(`${m[1].replace(/,/g, '')}${m[2] ? `.${m[2]}` : ''}`);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  return isPrice(n) ? n : null;
 }
 
 const httpUrl = (v: unknown): string | null => {
@@ -72,7 +77,7 @@ export function mapSerperShopping(data: unknown): Product[] {
     const priceText = typeof r.price === 'string' ? r.price.slice(0, 40) : null;
     out.push({
       title: r.title.slice(0, 160),
-      price: typeof r.priceValue === 'number' && r.priceValue > 0 ? r.priceValue : parsePrice(priceText),
+      price: isPrice(r.priceValue) ? r.priceValue : parsePrice(priceText),
       priceText,
       source: typeof r.source === 'string' ? r.source.slice(0, 60) : 'Shop',
       link,

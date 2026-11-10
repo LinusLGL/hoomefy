@@ -116,6 +116,11 @@ describe('themes', () => {
 });
 
 describe('fitToModelSize', () => {
+  it('treats an infinite size as unknown instead of returning NaN (found by the property tests)', () => {
+    expect(fitToModelSize(Infinity, 500)).toEqual({ width: 1024, height: 1024 });
+    expect(fitToModelSize(500, -Infinity)).toEqual({ width: 1024, height: 1024 });
+  });
+
   it('keeps the proportions with sides that are multiples of 8', () => {
     expect(fitToModelSize(4000, 3000)).toEqual({ width: 1024, height: 768 });
     expect(fitToModelSize(1100, 782)).toEqual({ width: 1024, height: 728 });

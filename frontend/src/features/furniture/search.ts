@@ -49,13 +49,18 @@ export function retailerLinks(query: string): RetailerLink[] {
   ];
 }
 
+/** No piece of furniture costs more than this. Anything above it (or not a finite number) is a bad value, not a price. */
+export const MAX_PRICE = 1_000_000;
+
+const isPrice = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= MAX_PRICE;
+
 /** "$1,299.00" -> 1299. Returns null when no price can be read. */
 export function parsePrice(text: string | null | undefined): number | null {
   if (!text) return null;
   const match = /(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/.exec(text.replace(/\s/g, ''));
   if (!match) return null;
   const value = Number(`${match[1].replace(/,/g, '')}${match[2] ? `.${match[2]}` : ''}`);
-  return Number.isFinite(value) && value > 0 ? value : null;
+  return isPrice(value) ? value : null;
 }
 
 const isHttpUrl = (value: unknown): value is string => {
@@ -79,7 +84,7 @@ export function sanitizeProducts(input: unknown, limit = 8): ProductResult[] {
     const priceText = typeof r.priceText === 'string' ? r.priceText.slice(0, 40) : null;
     out.push({
       title: r.title.slice(0, 160),
-      price: typeof r.price === 'number' && r.price > 0 ? r.price : parsePrice(priceText),
+      price: isPrice(r.price) ? r.price : parsePrice(priceText),
       priceText,
       source: typeof r.source === 'string' ? r.source.slice(0, 60) : 'Shop',
       link: r.link,

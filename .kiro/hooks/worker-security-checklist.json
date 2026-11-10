@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Worker security checklist",
+      "trigger": "PostFileSave",
+      "description": "Whenever a Worker route file is saved (not a test file), remind the agent of the project's security checklist (sign-in, rate limit, validation, no logging).",
+      "matcher": "frontend[\\\\/]worker[\\\\/][^\\\\/]+(?<!\\.test)\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "A Cloudflare Worker route file was just saved. Before you continue, check it against .kiro/steering/security.md: (1) the caller must be a signed-in user (requireUser in frontend/worker/guard.ts) with a per-user rate limit; (2) every input is validated and anything from the network or a model is cleaned before it is used or returned; (3) no photo, prompt, token or key is logged or returned; (4) errors return a short code and message, never internals. If a point does not hold, fix it and add or update the test in frontend/worker/*.test.ts."
+      }
+    }
+  ]
+}
