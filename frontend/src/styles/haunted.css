@@ -600,6 +600,18 @@ html[data-experience='haunted'] .hf-frame .h-32 {
   filter: grayscale(0.5) brightness(0.55) contrast(1.05);
 }
 
+/* The compact style tiles in the studio on laptop and desktop screens: a thinner frame and no tilt, so six fit in a row of three. */
+@media (min-width: 1024px) {
+  html[data-experience='haunted'] .hf-frame.hf-frame--compact {
+    border-width: 3px;
+    transform: none;
+  }
+  html[data-experience='haunted'] .hf-frame.hf-frame--compact:hover,
+  html[data-experience='haunted'] .hf-frame.hf-frame--compact:focus-within {
+    transform: translateY(-1px);
+  }
+}
+
 /* Evidence board (upload panel) */
 .hf-pin {
   display: none;
@@ -653,6 +665,19 @@ html[data-experience='haunted'] .hf-evidence::before {
   max-height: 46vh;
   object-fit: cover;
   transition: filter 1.4s ease, opacity 1.4s ease;
+}
+/* In the one-screen studio (laptop and desktop) the developing photograph fills the space it is given and is shown whole. */
+@media (min-width: 1024px) {
+  .hf-develop.hf-develop--fit {
+    border-width: 4px;
+  }
+  .hf-develop.hf-develop--fit img {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+  }
 }
 .hf-develop[data-stage='queued'] img {
   filter: grayscale(1) blur(16px) brightness(0.55) sepia(0.4);

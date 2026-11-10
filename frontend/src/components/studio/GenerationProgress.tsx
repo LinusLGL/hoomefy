@@ -44,7 +44,7 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
 
   return (
     <section
-      className="rounded-xl border border-navy-700 bg-navy-800 p-6"
+      className="rounded-xl border border-navy-700 bg-navy-800 p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-4"
       role="status"
       aria-live="polite"
       aria-busy={active}
@@ -53,7 +53,7 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
     >
       <div className="flex items-center gap-3">
         {active && <Loader2 className="h-5 w-5 animate-spin text-accent" aria-hidden="true" />}
-        <h3 className="font-heading text-xl font-semibold text-ivory">{stage === 'failed' ? copy.stages.failed : copy.generatingTitle}</h3>
+        <h3 className="font-heading text-xl font-semibold text-ivory lg:text-lg">{stage === 'failed' ? copy.stages.failed : copy.generatingTitle}</h3>
       </div>
       <p className="mt-1 text-sm text-ivory/75" data-testid="generation-stage">
         {stage === 'failed' ? (job?.errorMessage ?? copy.stages.failed) : copy.stages[stage]}
@@ -66,11 +66,11 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
       )}
 
       {imageSrc && (
-        <div className={cn('mt-5', haunted ? 'hf-develop' : 'overflow-hidden rounded-lg')} data-stage={stage}>
+        <div className={cn('mt-5 lg:relative lg:mt-3 lg:min-h-0 lg:flex-1', haunted ? 'hf-develop hf-develop--fit' : 'overflow-hidden rounded-lg')} data-stage={stage}>
           <img
             src={imageSrc}
             alt=""
-            className={cn(!haunted && 'max-h-[46vh] w-full object-cover', !haunted && active && 'opacity-80')}
+            className={cn(!haunted && 'max-h-[46vh] w-full object-cover lg:absolute lg:inset-0 lg:h-full lg:max-h-none lg:object-contain', !haunted && active && 'opacity-80')}
           />
         </div>
       )}
@@ -79,14 +79,14 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
         <button
           type="button"
           onClick={onCancel}
-          className="mt-5 min-h-[44px] rounded-md px-3 text-sm font-medium text-ivory/80 underline-offset-4 hover:text-ivory hover:underline"
+          className="mt-5 min-h-[44px] rounded-md px-3 text-sm font-medium text-ivory/80 underline-offset-4 hover:text-ivory hover:underline lg:mt-2 lg:shrink-0 lg:self-start"
         >
           Cancel
         </button>
       )}
 
       {stage === 'failed' && (onRetry || canShowDemo) && (
-        <div className="mt-5 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-3 lg:mt-3 lg:shrink-0">
           {onRetry && (
             <Button type="button" size="sm" onClick={onRetry} data-testid="retry-generation">
               Try again

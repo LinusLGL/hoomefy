@@ -15,6 +15,11 @@ interface BeforeAfterSliderProps {
   beforeLabel?: string;
   afterLabel?: string;
   className?: string;
+  /**
+   * On laptop and desktop screens (1024px and wider) fill the height of the parent and show the whole
+   * photograph instead of a cropped 16:9 frame. Smaller screens are not affected.
+   */
+  fitHeight?: boolean;
 }
 
 const KEY_STEP = 5;
@@ -25,6 +30,7 @@ export function BeforeAfterSlider({
   beforeLabel = 'Before',
   afterLabel = 'After',
   className,
+  fitHeight = false,
 }: BeforeAfterSliderProps) {
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -85,12 +91,12 @@ export function BeforeAfterSlider({
   return (
     <div
       ref={containerRef}
-      className={cn('relative w-full aspect-video overflow-hidden rounded-lg select-none', className)}
+      className={cn('relative w-full aspect-video overflow-hidden rounded-lg select-none', fitHeight && 'lg:aspect-auto lg:h-full', className)}
       style={{ touchAction: 'none' }}
     >
       {/* After Image (full) */}
       <div className="absolute inset-0">
-        <img src={afterImage} alt={afterLabel} className="h-full w-full object-cover" />
+        <img src={afterImage} alt={afterLabel} className={cn('h-full w-full object-cover', fitHeight && 'lg:object-contain')} />
         <div className="absolute right-4 top-4 rounded-full bg-green-700 px-3 py-1 text-sm font-semibold text-white shadow-lg">
           {afterLabel}
         </div>
@@ -98,7 +104,7 @@ export function BeforeAfterSlider({
 
       {/* Before Image (clipped) */}
       <div className="absolute inset-0 overflow-hidden" style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}>
-        <img src={beforeImage} alt={beforeLabel} className="h-full w-full object-cover" />
+        <img src={beforeImage} alt={beforeLabel} className={cn('h-full w-full object-cover', fitHeight && 'lg:object-contain')} />
         <div className="absolute left-4 top-4 rounded-full bg-gray-700 px-3 py-1 text-sm font-semibold text-white shadow-lg">
           {beforeLabel}
         </div>

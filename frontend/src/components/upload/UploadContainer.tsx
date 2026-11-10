@@ -38,11 +38,11 @@ export function UploadContainer({ collapsed = false }: UploadContainerProps) {
   const showDropzone = !storedImage && !isUploading;
 
   return (
-    <div className="hf-evidence w-full space-y-4 p-1" hidden={collapsed}>
+    <div className="hf-evidence w-full space-y-4 p-1 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:space-y-0 lg:gap-2" hidden={collapsed}>
       <span className="hf-pin hf-pin--tl" aria-hidden="true" />
       <span className="hf-pin hf-pin--tr" aria-hidden="true" />
 
-      <div hidden={!showDropzone}>
+      <div hidden={!showDropzone} className="lg:min-h-0 lg:flex-1">
         <ImageUpload onImageSelect={upload} inputId={FILE_INPUT_ID} />
       </div>
 
@@ -50,6 +50,7 @@ export function UploadContainer({ collapsed = false }: UploadContainerProps) {
 
       {storedImage && !isUploading && (
         <ImagePreview
+          className="lg:min-h-0 lg:flex-1"
           src={storedImage.preview}
           fileName={storedImage.file.name}
           fileSize={storedImage.file.size}
@@ -62,7 +63,7 @@ export function UploadContainer({ collapsed = false }: UploadContainerProps) {
         />
       )}
 
-      <PrivacyNote />
+      <PrivacyNote className="flex items-start gap-2 text-xs text-ivory/70 lg:shrink-0" />
     </div>
   );
 }

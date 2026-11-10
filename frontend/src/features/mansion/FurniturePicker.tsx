@@ -32,10 +32,10 @@ export function FurniturePicker({ title, hint, roomType, selected, onChange, bou
   };
 
   return (
-    <fieldset className="space-y-3" data-testid="furniture-picker" disabled={disabled}>
-      <legend className="text-lg font-semibold text-ivory">{title}</legend>
-      <p className="text-sm text-ivory/75">{hint}</p>
-      <div className="flex flex-wrap gap-2">
+    <fieldset className="space-y-3 lg:space-y-1.5" data-testid="furniture-picker" disabled={disabled}>
+      <legend className="text-lg font-semibold text-ivory lg:text-sm">{title}</legend>
+      <p className="text-sm text-ivory/75 lg:sr-only">{hint}</p>
+      <div className="flex flex-wrap gap-2 lg:gap-1.5">
         {options.map((f) => {
           const on = selected.includes(f.key);
           const haunted = bound.has(f.key);
@@ -48,13 +48,13 @@ export function FurniturePicker({ title, hint, roomType, selected, onChange, bou
               data-bound={haunted ? 'true' : undefined}
               onClick={() => toggle(f.key)}
               className={cn(
-                'inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                'inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors lg:min-h-[24px] lg:gap-1.5 lg:px-2.5 lg:py-0 lg:text-xs',
                 'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-navy-900',
                 on ? 'border-amber-600 bg-amber-600 text-on-accent' : 'border-navy-600 bg-navy-900 text-ivory hover:border-amber-600',
                 disabled && 'cursor-not-allowed opacity-50'
               )}
             >
-              {haunted && <Ghost className="h-4 w-4" aria-hidden="true" />}
+              {haunted && <Ghost className="h-4 w-4 lg:h-3 lg:w-3" aria-hidden="true" />}
               {f.label}
               {haunted && <span className="sr-only"> (a spirit is bound to this)</span>}
             </button>

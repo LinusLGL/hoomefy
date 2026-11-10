@@ -38,8 +38,8 @@ export function SidePanel({ tab, onTabChange, tips }: SidePanelProps) {
   };
 
   return (
-    <section className="rounded-xl border border-navy-700 bg-navy-800" aria-label="Design assistant and furniture">
-      <div role="tablist" aria-label="Design assistant" className="flex border-b border-navy-700">
+    <section className="rounded-xl border border-navy-700 bg-navy-800 lg:flex lg:min-h-[10rem] lg:flex-1 lg:flex-col lg:overflow-hidden" aria-label="Design assistant and furniture">
+      <div role="tablist" aria-label="Design assistant" className="flex border-b border-navy-700 lg:shrink-0">
         {TABS.map((t, i) => (
           <button
             key={t.id}
@@ -55,7 +55,7 @@ export function SidePanel({ tab, onTabChange, tips }: SidePanelProps) {
             onClick={() => onTabChange(t.id)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'min-h-[44px] flex-1 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+              'min-h-[44px] flex-1 px-2 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 lg:min-h-[36px]',
               tab === t.id ? 'border-b-2 border-amber-500 text-accent' : 'text-ivory/75 hover:text-ivory'
             )}
           >
@@ -64,9 +64,9 @@ export function SidePanel({ tab, onTabChange, tips }: SidePanelProps) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" id={`${base}-panel-${tab}`} aria-labelledby={`${base}-tab-${tab}`} className="p-5">
+      <div role="tabpanel" id={`${base}-panel-${tab}`} aria-labelledby={`${base}-tab-${tab}`} className="p-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:p-3">
         {tab === 'summary' && (
-          <div className="space-y-6">
+          <div className="space-y-6 lg:space-y-3">
             <DesignSummary />
             {tips}
           </div>

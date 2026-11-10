@@ -27,19 +27,19 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
   const intensity = preferences.intensity ?? 0.7;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:space-y-2.5">
       <div>
-        <h3 className="text-lg font-semibold text-ivory">Preferences</h3>
-        <p className="mt-1 text-sm text-ivory/70">Fine-tune the transformation</p>
+        <h3 className="text-lg font-semibold text-ivory lg:text-sm">Preferences</h3>
+        <p className="mt-1 text-sm text-ivory/70 lg:sr-only">Fine-tune the transformation</p>
       </div>
 
       {/* Color Palette */}
-      <fieldset className="space-y-3">
-        <legend className="flex items-center gap-2 text-sm font-medium text-ivory">
+      <fieldset className="space-y-3 lg:space-y-1">
+        <legend className="flex items-center gap-2 text-sm font-medium text-ivory lg:text-xs">
           <Palette className="h-4 w-4 text-ivory/70" aria-hidden="true" />
           Colour palette
         </legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 lg:gap-1.5">
           {COLOR_PALETTES.map(({ value, label, colors }) => {
             const on = preferences.colorPalette === value;
             return (
@@ -51,15 +51,15 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
                 disabled={disabled}
                 aria-pressed={on}
                 className={cn(
-                  'rounded-lg border-2 p-3 text-left transition-all hover:border-amber-500',
+                  'rounded-lg border-2 p-3 text-left transition-all hover:border-amber-500 lg:rounded-md lg:border lg:p-1',
                   'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
                   on ? 'border-amber-500 bg-amber-500/10' : 'border-navy-700 bg-navy-900',
                   disabled && 'cursor-not-allowed opacity-50'
                 )}
               >
-                <span className="mb-2 flex items-center gap-1.5" aria-hidden="true">
+                <span className="mb-2 flex items-center gap-1.5 lg:mb-0.5 lg:gap-1" aria-hidden="true">
                   {colors.map((color) => (
-                    <span key={color} className="h-5 w-5 rounded-full border border-navy-700" style={{ backgroundColor: color }} />
+                    <span key={color} className="h-5 w-5 rounded-full border border-navy-700 lg:h-3 lg:w-3" style={{ backgroundColor: color }} />
                   ))}
                 </span>
                 <span className={cn('text-xs font-medium', on ? 'text-accent' : 'text-ivory')}>{label}</span>
@@ -70,8 +70,8 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
       </fieldset>
 
       {/* Transformation Intensity */}
-      <div className="space-y-3">
-        <label htmlFor="intensity" className="flex items-center gap-2 text-sm font-medium text-ivory">
+      <div className="space-y-3 lg:space-y-1">
+        <label htmlFor="intensity" className="flex items-center gap-2 text-sm font-medium text-ivory lg:text-xs">
           <Sparkles className="h-4 w-4 text-ivory/70" aria-hidden="true" />
           Transformation intensity
         </label>
@@ -86,7 +86,7 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
           disabled={disabled}
           className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-navy-700 accent-amber-600"
         />
-        <div className="flex justify-between text-xs text-ivory/70">
+        <div className="flex justify-between text-xs text-ivory/70 lg:-mt-0.5">
           <span>Subtle</span>
           <span className="font-medium text-accent">{Math.round(intensity * 100)}%</span>
           <span>Bold</span>
@@ -94,8 +94,8 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
       </div>
 
       {/* Custom instructions */}
-      <div className="space-y-2">
-        <label htmlFor="custom-instructions" className="flex items-center gap-2 text-sm font-medium text-ivory">
+      <div className="space-y-2 lg:space-y-1">
+        <label htmlFor="custom-instructions" className="flex items-center gap-2 text-sm font-medium text-ivory lg:text-xs">
           <MessageSquare className="h-4 w-4 text-ivory/70" aria-hidden="true" />
           Extra instructions <span className="font-normal text-ivory/70">(optional)</span>
         </label>
@@ -108,7 +108,7 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
           maxLength={MAX_FREE_TEXT}
           rows={3}
           className={cn(
-            'w-full resize-none rounded-lg border border-navy-600 px-4 py-3 text-sm text-ivory placeholder-navy-400',
+            'w-full resize-none rounded-lg border border-navy-600 px-4 py-3 text-sm text-ivory placeholder-navy-400 lg:h-11 lg:px-3 lg:py-1 lg:text-xs',
             'transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20',
             disabled && 'cursor-not-allowed opacity-50'
           )}
@@ -116,8 +116,8 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
       </div>
 
       {/* Budget */}
-      <div className="space-y-2">
-        <label htmlFor="budget" className="flex items-center gap-2 text-sm font-medium text-ivory">
+      <div className="space-y-2 lg:space-y-1">
+        <label htmlFor="budget" className="flex items-center gap-2 text-sm font-medium text-ivory lg:text-xs">
           <Wallet className="h-4 w-4 text-ivory/70" aria-hidden="true" />
           Furniture budget (USD) <span className="font-normal text-ivory/70">(optional)</span>
         </label>
@@ -136,7 +136,7 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
           disabled={disabled}
           placeholder="e.g. 3000"
           className={cn(
-            'w-full rounded-lg border border-navy-600 px-4 py-3 text-sm text-ivory placeholder-navy-400',
+            'w-full rounded-lg border border-navy-600 px-4 py-3 text-sm text-ivory placeholder-navy-400 lg:px-3 lg:py-1.5 lg:text-xs',
             'transition-colors focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20',
             disabled && 'cursor-not-allowed opacity-50'
           )}

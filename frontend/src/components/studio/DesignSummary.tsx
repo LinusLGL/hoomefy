@@ -23,9 +23,9 @@ export function DesignSummary() {
   ];
 
   return (
-    <div className="space-y-4" data-testid="design-summary">
+    <div className="space-y-4 lg:space-y-2" data-testid="design-summary">
       <h3 className="text-sm font-semibold text-ivory">Current design</h3>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm lg:gap-y-1 lg:text-xs">
         {rows.map(([k, v]) => (
           <div key={k} className="contents">
             <dt className="text-ivory/70">{k}</dt>
@@ -35,7 +35,7 @@ export function DesignSummary() {
       </dl>
 
       {version && (
-        <div className="space-y-2 border-t border-navy-700 pt-4 text-xs text-ivory/70">
+        <div className="space-y-2 border-t border-navy-700 pt-4 text-xs text-ivory/70 lg:space-y-1 lg:pt-2">
           <p>
             {count} {count === 1 ? 'version' : 'versions'} this visit.{' '}
             {version.demo ? 'This one is a demo rendering, not an AI redesign.' : 'Made with FLUX.2 klein 4B.'}

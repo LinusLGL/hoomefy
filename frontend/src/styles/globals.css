@@ -158,3 +158,16 @@
     @apply hidden;
   }
 }
+
+/*
+ * The Design Studio is one fixed screen on laptop and desktop (see PageLayout "fit"): the page itself never
+ * scrolls there, only the panels inside it, and only if a screen is too short. StudioPage sets data-studio-fit
+ * while it is open. The Haunted background layers (mist, grain, drifting ghosts) extend past the bottom edge,
+ * which would otherwise add a page scrollbar.
+ */
+@media (min-width: 1024px) {
+  html[data-studio-fit='true'],
+  html[data-studio-fit='true'] body {
+    overflow: hidden;
+  }
+}

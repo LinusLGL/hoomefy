@@ -1,9 +1,10 @@
 /**
  * StudioPage
  *
- * The design workspace. Desktop: controls | canvas | assistant and furniture. Tablet: collapsible controls
- * beside the canvas, with the furniture panel under it. Mobile: a full-width canvas with a bottom bar that
- * switches between Design, Furniture and Settings.
+ * The design workspace. Laptop and desktop (1024px and up): one fixed screen, controls | canvas | preferences
+ * and assistant, with no page scroll (see PageLayout "fit"). Tablet: collapsible controls beside the canvas,
+ * with the furniture panel under it. Mobile: a full-width canvas with a bottom bar that switches between
+ * Design, Furniture and Settings.
  *
  * Works identically in the Elegant and Haunted experiences; only copy and styling change
  * (see studioCopy.ts and styles/haunted.css).
@@ -35,6 +36,7 @@ import { getStudioCopy } from '@/components/studio/studioCopy';
 import { useStudioStore } from '@/stores/studioStore';
 import { useGeneration } from '@/hooks/useGeneration';
 import { useToast } from '@/hooks/useToast';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useHauntingStore, useIsHaunted } from '@/features/haunting/hauntingStore';
 import { useFurnitureStore } from '@/features/furniture/furnitureStore';
 import { grantAiConsent, getProviderMode, hasAiConsent } from '@/features/studio/ai';
@@ -44,12 +46,14 @@ import { cn } from '@/utils/cn';
 type Step = 'upload' | 'customize' | 'generate';
 type MobileTab = 'design' | 'furniture' | 'settings';
 
-const PANEL = 'rounded-xl border border-navy-700 bg-navy-800 p-6';
+const PANEL = 'rounded-xl border border-navy-700 bg-navy-800 p-6 lg:p-2.5';
 
 export function StudioPage() {
   const toast = useToast();
   const haunted = useIsHaunted();
   const copy = getStudioCopy(haunted);
+  // On laptop and desktop screens the studio is one fixed screen: a few controls move to the right-hand column there.
+  const wide = useMediaQuery('(min-width: 1024px)');
 
   const originalImage = useStudioStore((s) => s.uploadedImage);
   const roomType = useStudioStore((s) => s.roomType);
@@ -104,8 +108,10 @@ export function StudioPage() {
   // Lets the page styles lift the ghost and the settings buttons above the phone's bottom bar.
   useEffect(() => {
     document.documentElement.dataset.studioNav = 'true';
+    document.documentElement.dataset.studioFit = 'true';
     return () => {
       delete document.documentElement.dataset.studioNav;
+      delete document.documentElement.dataset.studioFit;
     };
   }, []);
 
@@ -183,9 +189,9 @@ export function StudioPage() {
     : { title: 'Ready', message: copy.messages.ready };
 
   const tips = (
-    <section className="space-y-3" aria-label="Quick tips">
+    <section className="space-y-3 lg:space-y-1.5 lg:[@media(max-height:899px)]:hidden" aria-label="Quick tips">
       <h3 className="text-sm font-semibold text-ivory">Quick Tips</h3>
-      <ul className="space-y-3 text-sm text-ivory/80">
+      <ul className="space-y-3 text-sm text-ivory/80 lg:space-y-1 lg:text-xs">
         {[
           'Use well-lit, high-quality photos for best results',
           'Capture the entire room from a corner angle',
@@ -203,11 +209,44 @@ export function StudioPage() {
     </section>
   );
 
+  const photoRow = originalImage && (
+    <div className={cn(PANEL, 'flex items-center gap-4 p-4 lg:gap-2 lg:p-1.5')} data-testid="photo-row">
+      <img src={originalImage.preview} alt="" className="h-16 w-16 shrink-0 rounded-md object-cover lg:h-8 lg:w-8" />
+      <div className="min-w-0 flex-1 lg:flex lg:items-center lg:gap-2">
+        <p className="truncate text-sm font-medium text-ivory lg:min-w-0 lg:flex-1 lg:text-xs">
+          {originalImage.file.name}
+          <span className="hidden font-normal text-ivory/60 lg:inline">
+            {originalImage.originalWidth && originalImage.originalHeight ? ` · ${originalImage.originalWidth} × ${originalImage.originalHeight}` : ''}
+          </span>
+        </p>
+        <p className="text-xs text-ivory/70 lg:hidden">
+          {originalImage.originalWidth && originalImage.originalHeight ? `${originalImage.originalWidth} × ${originalImage.originalHeight}` : 'Ready'}
+        </p>
+        <div className="mt-1 flex gap-3 lg:mt-0 lg:shrink-0 lg:gap-1">
+          <button type="button" onClick={replacePhoto} disabled={isGenerating} className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover disabled:opacity-50 lg:min-h-[28px] lg:min-w-[28px] lg:justify-center" title="Replace photo">
+            <ImagePlus className="h-3 w-3 lg:h-4 lg:w-4" aria-hidden="true" /> <span className="lg:sr-only">Replace photo</span>
+          </button>
+          <button type="button" onClick={() => setUploadedImage(null)} disabled={isGenerating} className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-ivory/75 hover:text-danger disabled:opacity-50 lg:min-h-[28px] lg:min-w-[28px] lg:justify-center" title="Remove">
+            <Trash2 className="h-3 w-3 lg:h-4 lg:w-4" aria-hidden="true" /> <span className="lg:sr-only">Remove</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const preferencesCard = (
+    <div className={PANEL}>
+      <PreferencesPanel preferences={preferences} onChange={setPreferences} disabled={isGenerating} />
+    </div>
+  );
+
+  const spiritReport = haunted && originalImage && roomType ? <SpiritReport roomType={roomType} /> : null;
+
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
+    <div className="min-h-screen pb-24 md:pb-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:pb-0">
       {/* Toolbar */}
-      <div className="sticky top-16 z-10 border-b border-navy-700 bg-navy-900/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+      <div className="sticky top-16 z-10 border-b border-navy-700 bg-navy-900/95 backdrop-blur-md lg:static lg:shrink-0">
+        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:flex-nowrap lg:gap-3 lg:px-8 lg:py-1.5">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -219,9 +258,9 @@ export function StudioPage() {
             >
               {controlsOpen ? <PanelLeftClose className="h-5 w-5" aria-hidden="true" /> : <PanelLeftOpen className="h-5 w-5" aria-hidden="true" />}
             </button>
-            <div>
-              <h1 className="font-heading text-xl font-bold text-ivory">Design Studio</h1>
-              <p className="text-sm text-ivory/70">{haunted ? 'Reconstruct your space' : 'Transform your space with AI'}</p>
+            <div className="lg:flex lg:items-baseline lg:gap-3">
+              <h1 className="font-heading text-xl font-bold text-ivory lg:text-lg lg:leading-tight">Design Studio</h1>
+              <p className="text-sm text-ivory/70 lg:hidden xl:block xl:text-xs">{haunted ? 'Reconstruct your space' : 'Transform your space with AI'}</p>
             </div>
           </div>
 
@@ -233,17 +272,25 @@ export function StudioPage() {
             <StepIndicator label="Generate" active={currentStep === 'generate'} complete={Boolean(showResult)} />
           </ol>
 
-          <Button onClick={() => void startGeneration(false)} disabled={!isReady || isGenerating} isLoading={isGenerating}>
-            {!isGenerating && <Sparkles className="h-4 w-4" aria-hidden="true" />}
-            {isGenerating ? copy.generatingLabel : copy.generateLabel}
-          </Button>
+          <div className="flex items-center gap-2">
+            {wide && (
+              <Button type="button" variant="ghost" size="sm" className="lg:min-h-[36px]" onClick={startOver} disabled={isGenerating} data-testid="reset-controls" aria-label="Reset everything" title="Reset everything">
+                <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                Reset
+              </Button>
+            )}
+            <Button className="lg:min-h-[36px] lg:py-1" onClick={() => void startGeneration(false)} disabled={!isReady || isGenerating} isLoading={isGenerating}>
+              {!isGenerating && <Sparkles className="h-4 w-4" aria-hidden="true" />}
+              {isGenerating ? copy.generatingLabel : copy.generateLabel}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1800px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 py-8 sm:px-6 lg:min-h-0 lg:w-full lg:flex-1 lg:px-8 lg:py-2">
         <div
           className={cn(
-            'grid grid-cols-1 gap-6 lg:grid-cols-12',
+            'grid grid-cols-1 gap-6 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_280px] lg:gap-4 xl:grid-cols-[300px_minmax(0,1fr)_340px]',
             controlsOpen ? 'md:grid-cols-[minmax(0,320px)_minmax(0,1fr)]' : 'md:grid-cols-1'
           )}
         >
@@ -251,34 +298,16 @@ export function StudioPage() {
           <aside
             aria-label="Design controls"
             className={cn(
-              'space-y-6 md:row-span-2 lg:col-span-3 lg:col-start-1 lg:row-span-1 lg:row-start-1',
-              'lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:self-start lg:overflow-y-auto lg:pr-1',
+              'space-y-6 md:row-span-2 lg:col-start-1 lg:row-span-1 lg:row-start-1',
+              'lg:h-full lg:min-h-0 lg:space-y-1.5 lg:overflow-y-auto lg:pb-14 lg:pr-1',
               mobileTab === 'settings' ? 'block' : 'hidden',
               controlsOpen ? 'md:block' : 'md:hidden lg:block'
             )}
           >
-            {originalImage && (
-              <div className={cn(PANEL, 'flex items-center gap-4 p-4')} data-testid="photo-row">
-                <img src={originalImage.preview} alt="" className="h-16 w-16 shrink-0 rounded-md object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-ivory">{originalImage.file.name}</p>
-                  <p className="text-xs text-ivory/70">
-                    {originalImage.originalWidth && originalImage.originalHeight ? `${originalImage.originalWidth} × ${originalImage.originalHeight}` : 'Ready'}
-                  </p>
-                  <div className="mt-1 flex gap-3">
-                    <button type="button" onClick={replacePhoto} disabled={isGenerating} className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-accent hover:text-accent-hover disabled:opacity-50">
-                      <ImagePlus className="h-3 w-3" aria-hidden="true" /> Replace photo
-                    </button>
-                    <button type="button" onClick={() => setUploadedImage(null)} disabled={isGenerating} className="inline-flex min-h-[32px] items-center gap-1 text-xs font-medium text-ivory/75 hover:text-danger disabled:opacity-50">
-                      <Trash2 className="h-3 w-3" aria-hidden="true" /> Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {photoRow}
 
-            <div className={cn(PANEL, 'space-y-6')}>
-              <h2 className="font-heading text-lg font-semibold text-ivory">Room Details</h2>
+            <div className={cn(PANEL, 'space-y-6 lg:space-y-0')}>
+              <h2 className="font-heading text-lg font-semibold text-ivory lg:sr-only">Room Details</h2>
               <RoomTypeSelector selected={roomType} onSelect={setRoomType} disabled={isGenerating} />
             </div>
 
@@ -292,11 +321,13 @@ export function StudioPage() {
               />
             </div>
 
-            <div className={PANEL}>
-              <PreferencesPanel preferences={preferences} onChange={setPreferences} disabled={isGenerating} />
-            </div>
+
+
+            {!wide && preferencesCard}
 
             <div className={PANEL}>
+              {/* On wide screens the haunting report sits in the card of the furniture it refers to; on small screens it is above the canvas. */}
+              {wide && spiritReport}
               <FurniturePicker
                 title={copy.furnitureTitle}
                 hint={copy.furnitureHint}
@@ -308,27 +339,32 @@ export function StudioPage() {
               />
             </div>
 
-            <AiAllowance />
+            {!wide && <AiAllowance />}
 
-            <Button type="button" variant="ghost" className="w-full" onClick={startOver} disabled={isGenerating} data-testid="reset-controls">
-              <RefreshCcw className="h-4 w-4" aria-hidden="true" />
-              Reset everything
-            </Button>
+            {!wide && (
+              <Button type="button" variant="ghost" className="w-full" onClick={startOver} disabled={isGenerating} data-testid="reset-controls">
+                <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                Reset everything
+              </Button>
+            )}
           </aside>
 
           {/* Center: photo, progress, canvas (Design tab on mobile) */}
           <section
             aria-label="Design canvas"
             className={cn(
-              'min-w-0 space-y-6 lg:col-span-6 lg:col-start-4 lg:row-start-1',
+              'min-w-0 space-y-6 lg:col-start-2 lg:row-start-1',
+              'lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:space-y-0 lg:gap-2',
               mobileTab === 'design' ? 'block' : 'hidden',
               'md:block'
             )}
           >
             {/* The file input must stay in the page (hidden) so Replace photo can open it. */}
-            <div className={cn(PANEL, hideUpload && 'hidden')}>
-              <h2 className="mb-4 font-heading text-lg font-semibold text-ivory">{copy.uploadTitle}</h2>
-              <UploadContainer collapsed={hideUpload} />
+            <div className={cn(PANEL, hideUpload ? 'hidden' : 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col')}>
+              <h2 className="mb-4 font-heading text-lg font-semibold text-ivory lg:mb-2 lg:shrink-0 lg:text-base">{copy.uploadTitle}</h2>
+              <div className="lg:min-h-0 lg:flex-1">
+                <UploadContainer collapsed={hideUpload} />
+              </div>
               {!originalImage && <p className="sr-only">Add a photo to begin.</p>}
             </div>
 
@@ -341,7 +377,7 @@ export function StudioPage() {
               </div>
             )}
 
-            {haunted && originalImage && roomType && <SpiritReport roomType={roomType} />}
+            {!wide && spiritReport}
 
             {showProgress && (
               <GenerationProgress
@@ -373,19 +409,24 @@ export function StudioPage() {
           <aside
             aria-label="Design assistant"
             className={cn(
-              'min-w-0 space-y-6 lg:col-span-3 lg:col-start-10 lg:row-start-1',
-              'lg:sticky lg:top-36 lg:max-h-[calc(100vh-10rem)] lg:self-start lg:overflow-y-auto lg:pr-1',
+              'min-w-0 space-y-6 lg:col-start-3 lg:row-start-1',
+              'lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:space-y-0 lg:gap-2 lg:overflow-y-auto lg:pr-1',
               controlsOpen ? 'md:col-start-2' : 'md:col-start-1',
               mobileTab === 'furniture' ? 'block' : 'hidden',
               'md:block'
             )}
           >
-            <AssistantCard {...assistant} />
+            <AssistantCard {...assistant} className="lg:shrink-0" />
+            {wide && <div className="lg:shrink-0">{preferencesCard}</div>}
             <SidePanel tab={sideTab} onTabChange={setSideTab} tips={tips} />
+            {wide && (
+              <div className="lg:shrink-0">
+                <AiAllowance />
+              </div>
+            )}
           </aside>
         </div>
       </div>
-
       {/* Mobile bottom navigation */}
       <nav aria-label="Studio sections" className="fixed inset-x-0 bottom-0 z-20 border-t border-navy-700 bg-navy-900/95 backdrop-blur-md md:hidden" data-testid="mobile-nav">
         <ul className="mx-auto grid max-w-xl grid-cols-3">

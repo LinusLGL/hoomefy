@@ -101,7 +101,7 @@ export function ImageUpload({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full lg:flex lg:h-full lg:flex-col">
       <div
         onClick={handleClick}
         onDragOver={handleDragOver}
@@ -109,7 +109,7 @@ export function ImageUpload({
         onDrop={handleDrop}
         className={cn(
           'relative border-2 border-dashed rounded-lg p-8 transition-all cursor-pointer',
-          'flex flex-col items-center justify-center gap-4 min-h-[300px]',
+          'flex flex-col items-center justify-center gap-4 min-h-[300px] lg:min-h-0 lg:flex-1 lg:gap-3 lg:p-4',
           isDragging && !disabled
             ? 'border-amber-500 bg-amber-500/10'
             : 'border-navy-600 hover:border-amber-500 hover:bg-navy-800',
@@ -164,7 +164,7 @@ export function ImageUpload({
 
       {/* Error Message */}
       {error && (
-        <div className="mt-3 flex items-center gap-2 text-danger text-sm">
+        <div className="mt-3 flex items-center gap-2 text-danger text-sm lg:mt-2 lg:shrink-0">
           <X className="w-4 h-4" />
           <span>{error}</span>
         </div>

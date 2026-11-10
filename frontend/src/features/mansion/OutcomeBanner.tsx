@@ -48,13 +48,15 @@ export function OutcomeBanner({ outcome, replacedAny }: { outcome: JobOutcome; r
       data-driven={driven}
       data-remaining={remaining}
       data-room-cleared={outcome.roomCleared ? 'true' : 'false'}
-      className="mb-4 rounded-lg border border-accent/40 bg-navy-900 p-4"
+      className="mb-4 rounded-lg border border-accent/40 bg-navy-900 p-4 lg:mb-2 lg:shrink-0 lg:p-2.5"
     >
-      <p className="font-heading text-lg font-semibold text-ivory">{headline}</p>
-      <p className="mt-1 text-sm text-ivory/85">{detail}</p>
-      {next && <p className="mt-1 text-sm text-ivory/85">{next}</p>}
-      {outcome.roomCleared && <p className="mt-2 text-sm font-semibold text-accent">The {room} is at peace.</p>}
-      {outcome.houseBuilt && <p className="mt-1 text-sm font-semibold text-accent">Every room is clear. {houseName} is built.</p>}
+      <p className="font-heading text-lg font-semibold text-ivory lg:text-base">{headline}</p>
+      <p className="mt-1 text-sm text-ivory/85 lg:text-xs lg:leading-snug">
+        <span className="block lg:inline">{detail}</span>
+        {next && <span className="mt-1 block lg:ml-1 lg:mt-0 lg:inline">{next}</span>}
+      </p>
+      {outcome.roomCleared && <p className="mt-2 text-sm font-semibold text-accent lg:mt-1 lg:text-xs">The {room} is at peace.</p>}
+      {outcome.houseBuilt && <p className="mt-1 text-sm font-semibold text-accent lg:text-xs">Every room is clear. {houseName} is built.</p>}
     </div>
   );
 }

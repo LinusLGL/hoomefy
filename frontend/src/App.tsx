@@ -82,7 +82,7 @@ function App() {
           path={ROUTES.studio}
           element={
             <RouteGuard open={ALLOW_GUESTS}>
-              <PageLayout>
+              <PageLayout fit>
                 <StudioPage />
               </PageLayout>
             </RouteGuard>

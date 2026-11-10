@@ -78,22 +78,23 @@ export function RoomTypeSelector({
   disabled = false,
 }: RoomTypeSelectorProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 lg:space-y-1.5">
       <div>
-        <h3 className="text-lg font-semibold text-ivory">Room Type</h3>
-        <p className="text-sm text-ivory/70 mt-1">
+        <h3 className="text-lg font-semibold text-ivory lg:text-sm">Room Type</h3>
+        <p className="text-sm text-ivory/70 mt-1 lg:sr-only">
           What kind of room are you redesigning?
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:flex lg:flex-wrap lg:gap-1.5">
         {ROOM_TYPES.map(({ type, label, icon: Icon, description }) => (
           <button
             key={type}
             onClick={() => onSelect(type)}
             disabled={disabled}
+            aria-pressed={selected === type}
             className={cn(
-              'relative p-2.5 rounded-lg border-2 text-left transition-all',
+              'relative p-2.5 rounded-lg border-2 text-left transition-all lg:rounded-md lg:border lg:px-2 lg:py-0.5',
               'hover:border-amber-500 hover:shadow-md',
               'focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2',
               selected === type
@@ -102,21 +103,21 @@ export function RoomTypeSelector({
               disabled && 'opacity-50 cursor-not-allowed hover:border-navy-700'
             )}
           >
-            <div className="flex items-center gap-2 pr-4">
+            <div className="flex items-center gap-2 pr-4 lg:gap-1.5 lg:pr-0">
               <div
                 className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                  'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 lg:h-5 lg:w-5 lg:rounded-md',
                   selected === type
                     ? 'bg-amber-600 text-on-accent'
                     : 'bg-navy-800 text-ivory/70'
                 )}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 lg:h-3.5 lg:w-3.5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
-                    'text-sm font-semibold',
+                    'text-sm font-semibold lg:text-xs',
                     selected === type ? 'text-accent' : 'text-ivory'
                   )}
                 >
@@ -135,7 +136,7 @@ export function RoomTypeSelector({
 
             {/* Selected Indicator */}
             {selected === type && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center">
+              <div className="absolute top-2 right-2 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center lg:hidden">
                 <svg
                   className="w-3 h-3 text-on-accent"
                   fill="none"

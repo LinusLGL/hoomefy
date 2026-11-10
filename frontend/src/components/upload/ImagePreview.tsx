@@ -42,13 +42,13 @@ export function ImagePreview({
   };
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative lg:flex lg:flex-col', className)}>
       {/* Image Container */}
-      <div className="relative bg-navy-800 rounded-lg overflow-hidden">
+      <div className="relative bg-navy-800 rounded-lg overflow-hidden lg:min-h-0 lg:flex-1">
         <img
           src={src}
           alt={fileName}
-          className="w-full h-auto object-contain max-h-[500px]"
+          className="w-full h-auto object-contain max-h-[500px] lg:absolute lg:inset-0 lg:h-full lg:max-h-none"
           style={{ transform: `rotate(${rotation}deg)` }}
         />
 
@@ -69,7 +69,7 @@ export function ImagePreview({
       </div>
 
       {/* Image Info */}
-      <div className="mt-4 bg-navy-900 border border-navy-700 rounded-lg p-4 space-y-3">
+      <div className="mt-4 bg-navy-900 border border-navy-700 rounded-lg p-4 space-y-3 lg:mt-2 lg:shrink-0 lg:space-y-0 lg:p-2.5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-ivory truncate">{fileName}</p>

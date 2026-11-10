@@ -136,14 +136,14 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
   return (
     <section
       ref={rootRef}
-      className="rounded-xl border border-navy-700 bg-navy-800 p-4 sm:p-6"
+      className="rounded-xl border border-navy-700 bg-navy-800 p-4 sm:p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-4"
       aria-label={copy.resultTitle}
       data-testid="result-panel"
     >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-2 lg:shrink-0">
         <div>
-          <h3 className="font-heading text-xl font-semibold text-ivory">{copy.resultTitle}</h3>
-          <p className="text-sm text-ivory/75">{copy.resultCaption}</p>
+          <h3 className="font-heading text-xl font-semibold text-ivory lg:text-lg">{copy.resultTitle}</h3>
+          <p className="text-sm text-ivory/75 lg:sr-only">{copy.resultCaption}</p>
         </div>
         <div role="group" aria-label="View" className="inline-flex overflow-hidden rounded-md border border-navy-600">
           {(['compare', 'after', 'before'] as const).map((v) => (
@@ -156,7 +156,7 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
                 if (v === 'compare') changeZoom(1);
               }}
               className={cn(
-                'min-h-[40px] px-3 text-xs font-medium capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500',
+                'min-h-[40px] px-3 text-xs font-medium capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 lg:min-h-[32px]',
                 view === v ? 'bg-amber-600 text-on-accent' : 'bg-navy-900 text-ivory/80 hover:text-ivory'
               )}
             >
@@ -170,7 +170,7 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
 
       <div
         ref={stageRef}
-        className={cn('relative overflow-hidden rounded-lg bg-navy-900', fullscreen && 'flex h-screen w-screen items-center justify-center rounded-none')}
+        className={cn('relative overflow-hidden rounded-lg bg-navy-900 lg:min-h-0 lg:flex-1', fullscreen && 'flex h-screen w-screen items-center justify-center rounded-none')}
         data-testid="canvas-stage"
         tabIndex={view === 'compare' ? -1 : 0}
         onKeyDown={onKeyDown}
@@ -178,27 +178,27 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
       >
         {afterSrc ? (
           view === 'compare' ? (
-            <div className="relative w-full">
-              <BeforeAfterSlider beforeImage={beforeSrc} afterImage={afterSrc} beforeLabel="Before" afterLabel="After" />
+            <div className="relative w-full lg:absolute lg:inset-0">
+              <BeforeAfterSlider beforeImage={beforeSrc} afterImage={afterSrc} beforeLabel="Before" afterLabel="After" fitHeight />
               {haunted && outcome && <SpiritOverlay spirits={spirits} />}
             </div>
           ) : (
             <div
-              className={cn('flex w-full items-center justify-center', zoom > 1 ? 'cursor-grab touch-none active:cursor-grabbing' : '')}
+              className={cn('flex w-full items-center justify-center lg:absolute lg:inset-0', zoom > 1 ? 'cursor-grab touch-none active:cursor-grabbing' : '')}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
             >
               <div
-                className="relative inline-block max-w-full"
+                className="relative inline-block max-w-full lg:max-h-full"
                 style={{ transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`, transformOrigin: 'center', transition: drag.current ? 'none' : 'transform 150ms ease-out' }}
               >
                 <img
                   src={shown ?? undefined}
                   alt={view === 'before' ? 'Your original room photo' : 'Your redesigned room'}
                   draggable={false}
-                  className={cn('block h-auto max-w-full select-none object-contain', fullscreen ? 'max-h-screen' : 'max-h-[68vh]')}
+                  className={cn('block h-auto max-w-full select-none object-contain', fullscreen ? 'max-h-screen' : 'max-h-[68vh] lg:max-h-full')}
                 />
                 {view === 'after' && showBoxes &&
                   boxes.map((p) => (
@@ -228,11 +228,11 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
       </div>
 
       {/* Tools */}
-      <div className="mt-4 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Canvas tools">
+      <div className="mt-4 flex flex-wrap items-center gap-2 lg:mt-2 lg:shrink-0 lg:gap-1.5" role="toolbar" aria-label="Canvas tools">
         <ToolButton label="Zoom out" onClick={() => changeZoom(zoom - ZOOM_STEP)} disabled={zoom <= MIN_ZOOM}>
           <ZoomOut className="h-4 w-4" aria-hidden="true" />
         </ToolButton>
-        <span className="min-w-[3.5rem] text-center text-xs tabular-nums text-ivory/80" data-testid="zoom-level" aria-live="polite">
+        <span className="min-w-[3.5rem] text-center text-xs tabular-nums text-ivory/80 lg:min-w-[2.75rem]" data-testid="zoom-level" aria-live="polite">
           {Math.round(zoom * 100)}%
         </span>
         <ToolButton label="Zoom in" onClick={zoomIn} disabled={zoom >= MAX_ZOOM}>
@@ -252,30 +252,31 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
           </ToolButton>
         )}
 
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2 lg:gap-1.5">
           {afterSrc && (
             <a href={afterSrc} download={`hoomefy-${style}-${index || 1}.jpg`} data-testid="download-design">
-              <Button variant="secondary" size="sm" type="button">
+              <Button variant="secondary" size="sm" type="button" className="lg:px-3 lg:py-1.5 lg:text-xs">
                 <Download className="h-4 w-4" aria-hidden="true" />
                 Download
               </Button>
             </a>
           )}
-          <Button variant="secondary" size="sm" type="button" onClick={onRegenerate} disabled={busy} data-testid="regenerate">
+          <Button variant="secondary" size="sm" type="button" className="lg:px-3 lg:py-1.5 lg:text-xs" onClick={onRegenerate} disabled={busy} data-testid="regenerate">
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Regenerate
           </Button>
-          <Button size="sm" type="button" onClick={onSave} disabled={!afterSrc} data-testid="save-design">
+          <Button size="sm" type="button" className="lg:px-3 lg:py-1.5 lg:text-xs" onClick={onSave} disabled={!afterSrc} data-testid="save-design">
             <Save className="h-4 w-4" aria-hidden="true" />
             Save design
           </Button>
         </div>
       </div>
 
+      <div className="lg:flex lg:shrink-0 lg:items-center lg:gap-3">
       {/* History */}
       {history.length > 1 && (
-        <div className="mt-4" data-testid="history">
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ivory/70">Earlier versions</h4>
+        <div className="mt-4 lg:mt-2 lg:shrink-0" data-testid="history">
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ivory/70 lg:sr-only">Earlier versions</h4>
           <ul className="flex gap-2 overflow-x-auto pb-1">
             {history.map((v, i) => {
               const on = v.id === version?.id;
@@ -286,7 +287,7 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
                     onClick={() => setActive(v.id)}
                     aria-pressed={on}
                     aria-label={`Version ${history.length - i}${v.demo ? ' (demo)' : ''}`}
-                    className={cn('h-16 w-24 overflow-hidden rounded-md border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500', on ? 'border-amber-500' : 'border-navy-700 hover:border-amber-500/60')}
+                    className={cn('h-16 w-24 overflow-hidden rounded-md border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 lg:h-10 lg:w-14', on ? 'border-amber-500' : 'border-navy-700 hover:border-amber-500/60')}
                   >
                     <img src={v.url} alt="" className="h-full w-full object-cover" />
                   </button>
@@ -298,10 +299,11 @@ export function ResultPanel({ jobId, beforeSrc, style, outcome = null, replacedA
       )}
 
       {version?.demo && (
-        <p className="mt-3 text-xs text-ivory/70" data-testid="demo-note">
+        <p className="mt-3 text-xs text-ivory/70 lg:mt-2 lg:min-w-0 lg:flex-1" data-testid="demo-note">
           Demo rendering: a colour-graded version of your photo, not an AI redesign.
         </p>
       )}
+      </div>
     </section>
   );
 }
@@ -314,7 +316,7 @@ function ToolButton({ label, onClick, disabled, children }: { label: string; onC
       disabled={disabled}
       aria-label={label}
       title={label}
-      className="flex h-10 w-10 items-center justify-center rounded-md border border-navy-600 bg-navy-900 text-ivory/90 transition-colors hover:border-amber-500 hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-40"
+      className="flex h-10 w-10 items-center justify-center rounded-md border border-navy-600 bg-navy-900 text-ivory/90 transition-colors hover:border-amber-500 hover:text-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-40 lg:h-9 lg:w-9"
     >
       {children}
     </button>
