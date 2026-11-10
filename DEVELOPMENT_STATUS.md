@@ -419,3 +419,11 @@ Hugging Face's free GPU time ("The free AI time for today is used up") is one al
 - **Verified live** (workers.dev, real Supabase account, real Workers AI): the route refuses GET, a missing size, a non-form body, no sign-in and a fake token (405, 411, 415, 401, 401); with Hugging Face blocked in the browser the studio falls back and returns a 1024x720 design in 6 s; with Hugging Face allowed but out of free time (the real situation) it falls back by itself and returns a 1024x688 design in 11 s; no console or CSP errors; the consent dialog and privacy note name Cloudflare.
 - **Quality caveat (measured):** the Cloudflare model sees a 480 px reference, so the layout is kept more loosely than on Hugging Face. Over 5 samples of the app's own prompt the sofa, main window and fireplace stayed in place every time; an arched window became square in some, and an extra window or door appeared in some. Prompt rewordings ("image 0" wording, a short preserve-first prompt) and a 512 px reference did not do better, so the prompt was left as it is.
 - **Not verified:** both sources used up at once (it would take about 100 designs; covered by unit tests only), Safari and Firefox, the guest path on the live site.
+
+## "Your mansion" panel removed (Nov 2026)
+
+Removed the Haunted-only "Your mansion" panel (`MansionProgress`: house name, "0 of 7 rooms cleared", the room list and the "Build the next house" button) from the Studio right column and from the Gallery. The component file is deleted.
+
+- **Kept:** the spirit mechanic (haunting report, furniture "a spirit is bound to this" markers, spirits leaving the result, outcome banner, floating ghosts, candle light level) and the saved game state (`hoomefy_mansion`), so progress is still recorded and survives a reload.
+- **Consequence:** the rooms-cleared count is no longer shown anywhere, and once all 7 rooms are clear there is no button to start a second house (`buildNextHouse` is still in the store and its tests, but nothing calls it).
+- **Tests:** the three panel unit tests were deleted; the browser tests that read the count from the panel now read it from the saved state (`clearedRooms` helper), the "build the next house" and "gallery shows the progress" tests were trimmed or removed.

@@ -38,6 +38,13 @@ function mansionWith(clearedRooms: string[], livingSpirits: string[] = ['seating
   return { houses: [{ id: 'house-1', name: 'The First House', rooms }], activeId: 'house-1', appliedJobs: [] };
 }
 
+/** Rooms cleared in the active house, read from the saved game state (the progress panel no longer exists). */
+const clearedRooms = (page: Page) =>
+  page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hoomefy_mansion') ?? '{}').state as { houses: { id: string; rooms: Record<string, { cleared: boolean }> }[]; activeId: string } | undefined;
+    const house = state?.houses.find((h) => h.id === state.activeId);
+    return Object.values(house?.rooms ?? {}).filter((r) => r.cleared).length;
+  });
 const candle = (page: Page) => page.locator('[data-testid="candle-cursor"]');
 
 /** Current translate of the candle in px (the cursor eases toward the pointer, so compare with a tolerance). */
@@ -517,11 +524,19 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     await report.screenshot({ path: `${SHOTS}/32-haunting-report.png` });
   });
 
+  test('the Haunted studio has no "Your mansion" panel, but the spirits are still there', async ({ page }) => {
+    await toStudioWithPhoto(page, mansionWith(['bedroom']));
+    await expect(page.getByText('Your mansion')).toHaveCount(0);
+    await expect(page.getByText(/rooms cleared/)).toHaveCount(0);
+    await expect(page.getByTestId('spirit-report')).toContainText('2 spirits linger here');
+    await expect(page.getByTestId('floating-ghosts')).toBeAttached();
+    await page.screenshot({ path: `${SHOTS}/36-studio-without-mansion-panel.png` });
+  });
   test('replacing the right furniture drives a spirit out; the rest linger until replaced too', async ({ page }) => {
     test.setTimeout(150_000);
     const { errors } = await instrument(page);
     await toStudioWithPhoto(page, mansionWith(['bedroom', 'kitchen', 'dining-room', 'office', 'bathroom']));
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('5 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(5);
     await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', '2');
 
     // 1. Replace only the seating.
@@ -538,7 +553,7 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     await expect(banner).toContainText('The Lady on the Settee');
     await expect(banner).toContainText('Still lingering: The Lamplighter');
     await expect(banner).toContainText('Replace the lamps & lighting');
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('5 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(5);
     await expect(page.getByTestId('spirit-report')).toContainText('A spirit lingers here');
     await expect(page.locator('[data-testid="spirit"][data-furniture="seating"]')).toHaveAttribute('data-state', /leaving|gone/);
     await expect(page.locator('[data-testid="spirit"][data-furniture="lighting"]')).toHaveAttribute('data-state', 'lingering');
@@ -553,12 +568,10 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     await page.getByRole('button', { name: 'Develop the Photograph' }).click();
     await expect(banner).toHaveAttribute('data-room-cleared', 'true', { timeout: 40_000 });
     await expect(banner).toContainText('The Living Room is at peace');
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('6 of 7 rooms cleared');
-    await expect(page.locator('[data-room="living-room"]')).toHaveAttribute('data-cleared', 'true');
+    expect(await clearedRooms(page)).toBe(6);
     await expect(page.getByTestId('spirit-report')).toHaveAttribute('data-state', 'cleared');
     await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', '1');
-    await page.getByTestId('mansion-progress').scrollIntoViewIfNeeded();
-    await page.getByTestId('mansion-progress').screenshot({ path: `${SHOTS}/34-room-cleared.png` });
+
     expect(errors).toEqual([]);
   });
 
@@ -570,39 +583,28 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     const banner = page.getByTestId('outcome-banner');
     await expect(banner).toContainText('No furniture was replaced, so the spirits stay');
     await expect(banner).toHaveAttribute('data-driven', '0');
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('0 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(0);
     await expect(page.getByTestId('spirit-report')).toContainText('2 spirits linger here');
   });
 
-  test('clearing the last room builds the house, and the next one can be started', async ({ page }) => {
+  test('clearing the last room builds the house and lights it', async ({ page }) => {
     test.setTimeout(100_000);
     await toStudioWithPhoto(page, mansionWith(['bedroom', 'kitchen', 'dining-room', 'office', 'bathroom', 'other']));
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('6 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(6);
     await chip(page, /Sofas & seating/).click();
     await chip(page, /Lamps & lighting/).click();
     await page.getByRole('button', { name: 'Develop the Photograph' }).click();
-
     const banner = page.getByTestId('outcome-banner');
     await expect(banner).toContainText('is built', { timeout: 40_000 });
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('7 of 7 rooms cleared');
-    await expect(page.getByTestId('house-built')).toBeVisible();
+    expect(await clearedRooms(page)).toBe(7);
     await expect(light(page)).toHaveAttribute('data-lit', 'true'); // the whole house is lit
-    await page.getByTestId('mansion-progress').screenshot({ path: `${SHOTS}/35-house-built.png` });
-
-    await page.getByRole('button', { name: 'Build the next house' }).click();
-    await expect(page.getByTestId('house-name')).toHaveText('House 2');
-    await expect(light(page)).toHaveAttribute('data-lit', 'false'); // a new house starts in the dark again
-    await expect(light(page)).toHaveAttribute('data-level', '0');
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('0 of 7 rooms cleared');
-    await expect(page.getByTestId('floating-ghosts')).toHaveAttribute('data-count', '3');
   });
-
   test('progress survives a reload', async ({ page }) => {
     await seedHaunted(page, { mansion: mansionWith(['bedroom', 'kitchen']) });
     await signIn(page);
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('2 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(2);
     await page.reload();
-    await expect(page.getByTestId('rooms-cleared')).toHaveText('2 of 7 rooms cleared');
+    expect(await clearedRooms(page)).toBe(2);
   });
 
   test('the Elegant studio has the furniture picker but no ghosts, spirits or mansion', async ({ page }) => {
@@ -612,17 +614,17 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     const picker = page.getByTestId('furniture-picker');
     await expect(picker).toBeVisible();
     expect(await picker.innerText()).not.toMatch(/spirit|ghost|haunt/i);
-    await expect(page.getByTestId('mansion-progress')).toHaveCount(0);
     await expect(page.getByTestId('spirit-report')).toHaveCount(0);
     await expect(page.getByTestId('floating-ghosts')).toHaveCount(0);
   });
 });
 
-test('the haunted gallery shows the mansion progress', async ({ page }) => {
+test('the haunted gallery has no "Your mansion" panel', async ({ page }) => {
   await seedHaunted(page, { mansion: mansionWith(['bedroom']) });
   await signIn(page);
   await page.locator('header').getByRole('link', { name: 'My Designs' }).click();
   await expect(page).toHaveURL(/\/gallery$/);
   await expect(page.getByRole('heading', { name: 'The Archive' })).toBeVisible();
-  await expect(page.getByTestId('rooms-cleared')).toHaveText('1 of 7 rooms cleared');
+  await expect(page.getByText('Your mansion')).toHaveCount(0);
+  await expect(page.getByText(/rooms cleared/)).toHaveCount(0);
 });

@@ -15,7 +15,6 @@ import { STYLES } from '@/features/studio/styles';
 import { openDesignInStudio } from '@/features/studio/openDesign';
 import { useToast } from '@/hooks/useToast';
 import { useIsHaunted } from '@/features/haunting/hauntingStore';
-import { MansionProgress } from '@/features/mansion/MansionProgress';
 
 type LoadState = { status: 'loading' } | { status: 'error'; message: string } | { status: 'ready'; designs: SavedDesign[] };
 
@@ -82,8 +81,6 @@ export default function GalleryPage() {
       {!designsService.persistent && (
         <p className="mt-3 max-w-2xl text-sm text-ivory/60">No account storage is connected on this copy of the site, so designs are kept for this visit only.</p>
       )}
-
-      {haunted && <MansionProgress className="mt-8 max-w-2xl" />}
 
       {state.status === 'loading' && (
         <div className="mt-16 flex justify-center" role="status" aria-live="polite">

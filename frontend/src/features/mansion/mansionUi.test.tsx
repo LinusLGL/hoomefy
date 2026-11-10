@@ -5,12 +5,10 @@ import { useState } from 'react';
 import type { FurnitureKey, RoomType } from '@/types';
 import { GlitchText } from '@/features/haunting/GlitchText';
 import { FurniturePicker } from './FurniturePicker';
-import { MansionProgress } from './MansionProgress';
 import { OutcomeBanner } from './OutcomeBanner';
 import { SpiritOverlay } from './SpiritOverlay';
 import { SpiritReport } from './SpiritReport';
 import { activeHouse, useMansionStore, type JobOutcome } from './mansionStore';
-import { ROOM_SLOTS } from './spirits';
 
 const store = () => useMansionStore.getState();
 
@@ -88,46 +86,6 @@ describe('SpiritReport', () => {
   it('renders nothing for a room that has not been photographed', () => {
     render(<SpiritReport roomType="office" />);
     expect(screen.queryByTestId('spirit-report')).toBeNull();
-  });
-});
-
-describe('MansionProgress', () => {
-  it('starts at 0 of 7 with every room haunted', () => {
-    render(<MansionProgress />);
-    expect(screen.getByTestId('rooms-cleared')).toHaveTextContent('0 of 7 rooms cleared');
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuemax', '7');
-    expect(screen.queryByTestId('house-built')).toBeNull();
-  });
-
-  it('updates as rooms are cleared and marks them in the list', () => {
-    store().registerRoom('bedroom', 'p');
-    store().applyJob('j', 'bedroom', activeHouse(store()).rooms.bedroom!.spirits);
-    render(<MansionProgress />);
-    expect(screen.getByTestId('rooms-cleared')).toHaveTextContent('1 of 7 rooms cleared');
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuetext', '1 of 7 rooms cleared');
-    expect(document.querySelector('[data-room="bedroom"]')).toHaveAttribute('data-cleared', 'true');
-    expect(document.querySelector('[data-room="kitchen"]')).toHaveAttribute('data-cleared', 'false');
-  });
-
-  it('offers to build the next house only when this one is built, and then does', async () => {
-    const user = userEvent.setup();
-    render(<MansionProgress />);
-    expect(screen.queryByRole('button', { name: 'Build the next house' })).toBeNull();
-
-    ROOM_SLOTS.forEach((room, i) => {
-      store().registerRoom(room, `r${i}`);
-      store().applyJob(`jb${i}`, room, activeHouse(store()).rooms[room]!.spirits);
-    });
-    // re-render with the new store state
-    cleanup();
-    render(<MansionProgress />);
-    expect(screen.getByTestId('house-built')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Build the next house' }));
-    expect(screen.getByTestId('house-name')).toHaveTextContent('House 2');
-    expect(screen.getByTestId('rooms-cleared')).toHaveTextContent('0 of 7 rooms cleared');
-    expect(screen.getByText('1 built')).toBeInTheDocument();
   });
 });
 

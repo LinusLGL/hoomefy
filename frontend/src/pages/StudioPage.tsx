@@ -17,7 +17,6 @@ import { PanelLeftClose, PanelLeftOpen, RefreshCcw, ImagePlus, Sparkles, Sliders
 import type { FurnitureKey, RoomType } from '@/types';
 import { FurniturePicker } from '@/features/mansion/FurniturePicker';
 import { SpiritReport } from '@/features/mansion/SpiritReport';
-import { MansionProgress } from '@/features/mansion/MansionProgress';
 import { activeHouse, useMansionStore, type JobOutcome } from '@/features/mansion/mansionStore';
 import { composeInstructions } from '@/features/mansion/spirits';
 import { Button } from '@/components/ui/button';
@@ -382,7 +381,6 @@ export function StudioPage() {
             )}
           >
             <AssistantCard {...assistant} />
-            {haunted && <MansionProgress />}
             <SidePanel tab={sideTab} onTabChange={setSideTab} tips={tips} />
           </aside>
         </div>

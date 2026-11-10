@@ -40,7 +40,8 @@ chequered marble floor, crimson mist; headline "Your Dream Home Has *Secrets.*")
 The brief says users must build houses and replace furniture to clear the ghosts away. Interpretation:
 
 1. A **house** has one slot per room type (7). Every room starts **haunted**. A house is **built** when all
-   rooms are **cleared**; the user may then **build the next house**.
+   rooms are **cleared**. (The store can start a next house, but the "Your mansion" panel that offered it was
+   removed, so there is currently no button for it.)
 2. When a room is first photographed, it receives 1–3 **spirits**, each **bound to a furniture category**
    (seating, bed, tables, lighting, storage, rugs & curtains, mirrors & art). Seeded from the photo and room type
    so the result is deterministic. Only categories that make sense for that room type are used.
@@ -49,7 +50,8 @@ The brief says users must build houses and replace furniture to clear the ghosts
 4. When a generation **completes**, every spirit bound to a replaced category is **driven out**. Remaining
    spirits stay. A room with no spirits left is **cleared**.
 5. Feedback: a "haunting report" before generating, a spirits-leaving animation and a plain-language outcome after
-   ("2 spirits driven out. 1 lingers: replace the lamps."), and a mansion progress panel.
+   ("2 spirits driven out. 1 lingers: replace the lamps."). The "Your mansion" progress panel was removed; progress
+   is still tracked and shown by the candle light and the floating ghosts.
 6. Each job SHALL be applied **at most once** (idempotent), and a failed or cancelled generation SHALL clear nothing.
 7. Spirits, houses and progress exist **only in the Haunted experience**. Elegant mode shows the plain
    "furniture to replace" picker without any ghost language.
