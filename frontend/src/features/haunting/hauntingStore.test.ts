@@ -14,7 +14,6 @@ const fresh = () => {
     takeoverRequest: 0,
     takeoverReason: null,
     skipRequest: 0,
-    mirrorTouches: 0,
     audioEnabled: true,
     busy: false,
     busyKeys: [],
@@ -48,7 +47,7 @@ describe('hauntingStore', () => {
     it('rejects automatic reveals after the takeover has been seen', () => {
       s().finishTakeover();
       expect(s().requestTakeover('scroll')).toBe(false);
-      expect(s().requestTakeover('mirror')).toBe(false);
+      expect(s().requestTakeover('click')).toBe(false);
       expect(s().takeoverRequest).toBe(0);
     });
 
@@ -153,11 +152,30 @@ describe('hauntingStore', () => {
   });
 
   describe('mirror', () => {
-    it('counts touches and resets them when the takeover finishes', () => {
-      expect(s().touchMirror()).toBe(1);
-      expect(s().touchMirror()).toBe(2);
+    it('starts the takeover at once for a first-time visitor', () => {
+      expect(s().requestTakeover('mirror')).toBe(true);
+      expect(s().takeoverReason).toBe('mirror');
+      expect(s().takeoverRequest).toBe(1);
+    });
+
+    it('starts it every time, even after the reveal has been seen', () => {
       s().finishTakeover();
-      expect(s().mirrorTouches).toBe(0);
+      s().chooseElegant();
+      expect(s().takeoverSeen).toBe(true);
+      expect(s().requestTakeover('mirror')).toBe(true);
+      expect(s().takeoverRequest).toBe(1);
+    });
+
+    it('still respects the opt-out, and has nothing to do in Haunted or while a sequence runs', () => {
+      s().disableHorror();
+      expect(s().requestTakeover('mirror')).toBe(false);
+      fresh();
+      s().chooseHaunted();
+      expect(s().requestTakeover('mirror')).toBe(false);
+      fresh();
+      s().beginSequence();
+      expect(s().requestTakeover('mirror')).toBe(false);
+      expect(s().takeoverRequest).toBe(0);
     });
   });
 

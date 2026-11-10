@@ -65,7 +65,7 @@ describe('GET /api/furniture-search', () => {
     vi.stubGlobal('fetch', fetchSpy);
     const res = await call('oak coffee table');
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ live: false, results: [] });
+    expect(await res.json()).toEqual({ live: false, results: [], reason: 'not_configured' });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -87,11 +87,12 @@ describe('GET /api/furniture-search', () => {
   });
 
   it('falls back to not live when the search service fails', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 500 })));
-    expect(await (await call('oak table', { SERPER_API_KEY: 'k' })).json()).toEqual({ live: false, results: [] });
+    // A refused key and an outage are told apart, and the key itself is never echoed.
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 403 })));
+    expect(await (await call('oak table', { SERPER_API_KEY: 'k' })).json()).toEqual({ live: false, results: [], reason: 'rejected', upstream: 403 });
     vi.stubGlobal('fetch', vi.fn(async () => {
       throw new Error('offline');
     }));
-    expect(await (await call('oak table', { SERPER_API_KEY: 'k' })).json()).toEqual({ live: false, results: [] });
+    expect(await (await call('oak table', { SERPER_API_KEY: 'k' })).json()).toEqual({ live: false, results: [], reason: 'unreachable' });
   });
 });

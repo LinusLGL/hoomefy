@@ -914,7 +914,7 @@ html[data-motion='reduced'] .hf-candle__halo {
     rgba(5, 3, 4, 0.8) var(--hf-light-r)
   );
   /* The radius eases to each new value (a clear, or the candle burning lower). */
-  transition: --hf-light-r 1.4s ease, opacity 0.9s ease;
+  transition: --hf-light-r 0.9s ease, opacity 0.9s ease;
 }
 .hf-candlelight[data-lit='true'] {
   opacity: 0;

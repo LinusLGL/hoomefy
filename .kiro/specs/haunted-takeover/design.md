@@ -27,11 +27,11 @@ takeoverSeen: boolean
 sequence: 'idle' | 'running'          // not persisted
 takeoverRequest: number               // monotonic; controller reacts to increments
 skipRequest: number
-mirrorTouches: number
 ```
 
 Actions: `requestTakeover(reason)`, `requestSkip()`, `finishTakeover()`, `setExperience`,
-`disableHorror`, `enableHorror`, `replay`, `touchMirror`.
+`disableHorror`, `enableHorror`, `replay`.
+(`mirrorTouches` / `touchMirror` were removed: the mirror no longer escalates; `requestTakeover('mirror')` is a deliberate request that skips the once-only rule.)
 A pure function `canAutoTakeover(state)` encodes the "never force a reveal" rules.
 
 The existing auth/studio/toast stores are untouched.
@@ -51,7 +51,7 @@ The existing auth/studio/toast stores are untouched.
 | `SceneFrame` | Editorial image using `DistortedImageTransition` (elegant room ⇄ classroom ⇄ corridor). |
 | `HauntedSchoolBackground` | Fixed 2D canvas: corridor, flickering light, fog, dust, grain. 30 fps cap. |
 | `ParanormalShadow` | Blurred humanlike silhouette; flash / cross / lurk-on-hover. |
-| `HauntedMirror` | Antique mirror on the home page; click escalates anomalies then triggers takeover. |
+| `HauntedMirror` | Antique mirror on the home page. Elegant: a press requests the takeover (reason `mirror`) at once, every time, unless the visitor opted out. Haunted: a press plays the jumpscare video (`scareNow`), every time, but not with reduced motion. |
 | `HauntingControls` | Discreet control menu + Skip button. |
 | `ambientAudio.ts` | WebAudio synthesis (drone, hallway air, distant bell, footsteps). |
 

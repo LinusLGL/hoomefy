@@ -13,9 +13,6 @@ export type TakeoverReason = 'scroll' | 'mirror' | 'click' | 'replay';
 export type SequenceState = 'idle' | 'running';
 export type TakeoverPhase = 'none' | 'A' | 'B' | 'C' | 'D';
 
-/** Number of mirror clicks that accelerate the reveal into the takeover. */
-export const MIRROR_TOUCHES_TO_TRIGGER = 3;
-
 export interface HauntingState {
   // Persisted
   experience: ExperienceName;
@@ -34,7 +31,6 @@ export interface HauntingState {
   takeoverRequest: number;
   takeoverReason: TakeoverReason | null;
   skipRequest: number;
-  mirrorTouches: number;
   /** True while any keyed activity (upload, generation) is in flight. */
   busy: boolean;
   busyKeys: string[];
@@ -51,7 +47,6 @@ export interface HauntingState {
   disableHorror: () => void;
   enableHorror: () => void;
   replay: () => void;
-  touchMirror: () => number;
   setAudioEnabled: (enabled: boolean) => void;
   setCandleCursor: (enabled: boolean) => void;
   setCandleDarkness: (enabled: boolean) => void;
@@ -81,15 +76,20 @@ export const useHauntingStore = create<HauntingState>()(
       takeoverRequest: 0,
       takeoverReason: null,
       skipRequest: 0,
-      mirrorTouches: 0,
       busy: false,
       busyKeys: [],
 
       requestTakeover: (reason) => {
         const s = get();
         if (s.sequence !== 'idle') return false;
-        // Scroll and mirror reveals are automatic; replay is a deliberate user action.
-        if (reason !== 'replay' && !canAutoTakeover(s)) return false;
+        if (reason === 'mirror') {
+          // Pressing the mirror is a deliberate choice, so it works every time, even for someone who has seen the
+          // reveal before. It still respects the opt-out, and only Elegant has anything to turn into Haunted.
+          if (!s.horrorEnabled || s.experience !== 'elegant') return false;
+        } else if (reason !== 'replay' && !canAutoTakeover(s)) {
+          // Scroll and the first press are automatic (once only); replay is a deliberate user action.
+          return false;
+        }
         set({ takeoverRequest: s.takeoverRequest + 1, takeoverReason: reason });
         return true;
       },
@@ -105,7 +105,7 @@ export const useHauntingStore = create<HauntingState>()(
       setExperience: (experience) => set({ experience }),
 
       finishTakeover: () =>
-        set({ experience: 'haunted', takeoverSeen: true, sequence: 'idle', phase: 'none', mirrorTouches: 0 }),
+        set({ experience: 'haunted', takeoverSeen: true, sequence: 'idle', phase: 'none' }),
 
       chooseElegant: () =>
         set({ experience: 'elegant', takeoverSeen: true, sequence: 'idle', phase: 'none' }),
@@ -140,12 +140,6 @@ export const useHauntingStore = create<HauntingState>()(
           phase: 'none',
         });
         get().requestTakeover('replay');
-      },
-
-      touchMirror: () => {
-        const next = get().mirrorTouches + 1;
-        set({ mirrorTouches: next });
-        return next;
       },
 
       setAudioEnabled: (audioEnabled) => set({ audioEnabled }),

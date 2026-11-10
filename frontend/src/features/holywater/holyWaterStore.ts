@@ -38,6 +38,8 @@ export interface HolyWaterState {
   setArmed: (armed: boolean) => void;
   markScared: () => void;
   startScare: () => void;
+  /** Plays the jumpscare now, whether or not it has played before. False while a video is already playing. */
+  scareNow: () => boolean;
   startCure: () => boolean;
   finishVideo: () => void;
   resetTransient: () => void;
@@ -76,6 +78,13 @@ export const useHolyWaterStore = create<HolyWaterState>()(
         if (s.scared || s.video !== 'none') return;
         // `scared` is set as the video starts, so a reload in the middle of it cannot repeat it.
         set({ scared: true, video: 'scare', openRoom: null, armed: false });
+      },
+
+      // The visitor pressed the mirror in Haunted: the scare plays every time they ask, not once a session.
+      scareNow: () => {
+        if (get().video !== 'none') return false;
+        set({ scared: true, video: 'scare', openRoom: null, armed: false });
+        return true;
       },
 
       startCure: () => {

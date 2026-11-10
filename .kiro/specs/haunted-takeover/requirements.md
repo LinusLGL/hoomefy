@@ -30,7 +30,7 @@ studio, navigation) keeps working in both experiences.
 3. Anomalies SHALL NOT run when horror is disabled, when `prefers-reduced-motion` is set, or while an upload or generation request is in flight.
 
 ### R3 — Takeover sequence
-1. WHEN the designated reveal section (`[data-haunt-trigger]`) reaches the trigger line, OR the user activates the antique mirror enough times, OR the user chooses "Replay the Haunting", THE SYSTEM SHALL run the takeover once.
+1. WHEN the designated reveal section (`[data-haunt-trigger]`) reaches the trigger line, OR the user presses the antique mirror (once is enough, every time, even after the reveal has been seen; in Haunted the mirror plays the jumpscare instead), OR the user chooses "Replay the Haunting", THE SYSTEM SHALL run the takeover once.
 2. Phase A (0–1.2 s) SHALL apply horizontal tearing, RGB channel separation, chromatic aberration, scanline interference, displaced typography and uneven flicker to the real interface.
 3. Phase B (1.2–2.7 s) SHALL intensify using an animated SVG displacement map, WebGL image warping, large glitch strips, duplicated segments, distorted shadows, warped text and rapid low-contrast flashes of school imagery.
 4. Phase C (2.7–4.5 s) SHALL tween the whole UI palette from Elegant to Haunted, warp the hero image into a school corridor, fragment and reassemble the hero heading, distort navigation text, cross a shadow silhouette, raise mist, and show "YOU SHOULDN'T BE HERE."

@@ -8,7 +8,7 @@
 
 import { gsap } from 'gsap';
 import { registry, selectDistortTargets } from './registry';
-import { canAutoTakeover, useHauntingStore } from './hauntingStore';
+import { useHauntingStore } from './hauntingStore';
 import { flashShadow } from './shadowEffects';
 import { prefersReducedMotion, isMobileLike } from './env';
 
@@ -56,31 +56,18 @@ export function revealDistortion(el: HTMLElement | null): boolean {
   return microDistort([el], { ms: 650, warp: 26, tear: 5 });
 }
 
-/** Result of a mirror click: how far the escalation went. */
-export type MirrorOutcome = 'ignored' | 'glitch' | 'warp' | 'takeover';
+/** What pressing the mirror did: it started the takeover, or nothing (opted out, already Haunted, mid-sequence). */
+export type MirrorOutcome = 'ignored' | 'takeover';
 
+/**
+ * Pressing the statement mirror in Elegant lets the haunting in, at once and every time (the first press of the
+ * escalating glitches it used to need is gone). It still respects the opt-out. In Haunted the mirror plays the
+ * jumpscare instead (see HauntedMirror).
+ */
 export function touchMirror(shadowEl?: HTMLElement | null): MirrorOutcome {
   const state = useHauntingStore.getState();
-  if (!effectsAllowed() || state.experience !== 'elegant') return 'ignored';
-  const overlay = registry.overlay;
-  if (!overlay) return 'ignored';
-
-  const n = state.touchMirror();
-  if (shadowEl) flashShadow(shadowEl, { peak: 0.75, ms: 300 });
-
-  if (n >= 3) {
-    // Accelerate straight into the full takeover if the visitor is eligible.
-    if (canAutoTakeover(useHauntingStore.getState())) {
-      useHauntingStore.getState().requestTakeover('mirror');
-      return 'takeover';
-    }
-    return 'warp';
-  }
-  if (n === 2) {
-    overlay.bell(260);
-    microDistort(undefined, { ms: 380, warp: 16, tear: 4 });
-    return 'warp';
-  }
-  overlay.tear.burst(3, 160, 0.4);
-  return 'glitch';
+  if (state.experience !== 'elegant') return 'ignored';
+  // The shadow in the glass flashes first, as the house notices you (not with reduced motion).
+  if (shadowEl && effectsAllowed()) flashShadow(shadowEl, { peak: 0.75, ms: 300 });
+  return state.requestTakeover('mirror') ? 'takeover' : 'ignored';
 }

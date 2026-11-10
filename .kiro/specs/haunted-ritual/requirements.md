@@ -76,4 +76,4 @@ Lighting candles on the Elegant side; a different set of words per candle positi
 ## Click sound and candle dimming (follow-up)
 
 - Every click in the Haunted site plays the first 1.4 s of `firesound.mp3` (volume 0.55, restarts on each click, silent when sound is off or a video plays).
-- The candle cursor light now shrinks every 3.3 s (was 5 s) down to a floor of 12 % (was 15 %), so it is very dim before the 12 s jumpscare starts **(interpretation of 'dim 50 % more', to be confirmed)**.
+- The candle cursor light now shrinks every 3.3 s (was 5 s) down to a floor of 12 % (was 15 %), so it is very dim before the 12 s jumpscare starts **(interpretation of 'dim 50 % more', to be confirmed)**. *Superseded: it was still too slow, so it now shrinks by 15 % every 1.2 s (about 7 s to the floor). See DEVELOPMENT_STATUS.md.*

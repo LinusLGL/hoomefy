@@ -32,7 +32,6 @@ const resetStore = (overrides: Partial<ReturnType<typeof s>> = {}) =>
     takeoverRequest: 0,
     takeoverReason: null,
     skipRequest: 0,
-    mirrorTouches: 0,
     audioEnabled: true,
     busy: false,
     busyKeys: [],

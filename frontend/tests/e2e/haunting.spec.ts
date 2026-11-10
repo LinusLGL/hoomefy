@@ -395,6 +395,35 @@ test.describe('Click triggers', () => {
     await waitForHaunted(page);
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('hoomefy_haunting')!).state.takeoverSeen)).toBe(true);
   });
+
+  test('the mirror lets the haunting in every time, even for someone who has seen the reveal before', async ({ page }) => {
+    test.setTimeout(90_000);
+    await instrument(page);
+    // Elegant, with the reveal already seen: nothing else on the page would wake the house now.
+    await page.addInitScript(() => {
+      if (sessionStorage.getItem('e2e-seeded')) return;
+      sessionStorage.setItem('e2e-seeded', '1');
+      localStorage.setItem('hoomefy_haunting', JSON.stringify({ state: { experience: 'elegant', horrorEnabled: true, takeoverSeen: true, audioEnabled: false }, version: 0 }));
+    });
+    await gotoHome(page);
+    await expect(page.locator('html')).toHaveAttribute('data-experience', 'elegant');
+    const mirror = page.getByRole('button', { name: /Statement mirror/ });
+    await mirror.scrollIntoViewIfNeeded();
+    await mirror.click();
+    await waitForHaunted(page);
+  });
+
+  test('the mirror does nothing for someone who switched the horror effects off', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('hoomefy_haunting', JSON.stringify({ state: { experience: 'elegant', horrorEnabled: false, takeoverSeen: false, audioEnabled: false }, version: 0 }));
+    });
+    await gotoHome(page);
+    const mirror = page.getByRole('button', { name: /Statement mirror/ });
+    await mirror.scrollIntoViewIfNeeded();
+    await mirror.click();
+    await page.waitForTimeout(1500);
+    await expect(page.locator('html')).toHaveAttribute('data-experience', 'elegant');
+  });
 });
 
 test.describe('Reduced motion', () => {

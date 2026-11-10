@@ -59,29 +59,30 @@ describe('light model', () => {
     expect(useLightStore.getState().radius).toBe(100); // stays at full light
   });
 
-  it('burns lower by 10% of itself, and never below the floor', () => {
-    expect(DECAY_FACTOR).toBe(0.9);
-    expect(decayedRadius(100)).toBeCloseTo(90);
-    expect(decayedRadius(30)).toBeCloseTo(27);
+  it('burns lower by 15% of itself, and never below the floor', () => {
+    expect(DECAY_FACTOR).toBe(0.85);
+    expect(decayedRadius(100)).toBeCloseTo(85);
+    expect(decayedRadius(30)).toBeCloseTo(25.5);
     expect(decayedRadius(MIN_RADIUS)).toBe(MIN_RADIUS);
     let r = 30;
     for (let i = 0; i < 100; i++) r = decayedRadius(r);
     expect(r).toBe(MIN_RADIUS);
   });
 
-  it('dims 50% faster than the 5 second pace it had, and ends very dim', () => {
-    // One burn-down step every 5000 / 1.5 ms: a rate of 0.3 steps a second instead of 0.2.
-    expect(DECAY_INTERVAL_MS).toBe(Math.round(5000 / 1.5));
-    expect(1000 / DECAY_INTERVAL_MS / (1000 / 5000)).toBeCloseTo(1.5, 2);
-    // From the first light (30%) the floor is reached after nine steps, about 30 seconds.
+  it('burns down in about seven seconds (it took 30), and ends very dim', () => {
+    // One step every 1200 ms, each one taking 15% of the radius (it was every 3333 ms and 10%).
+    expect(DECAY_INTERVAL_MS).toBe(1200);
+    // From the first light (30%) the floor is reached after six steps, about seven seconds.
     let r = 30;
     let steps = 0;
     while (r > MIN_RADIUS) {
       r = decayedRadius(r);
       steps += 1;
     }
-    expect(steps).toBe(9);
-    expect((steps * DECAY_INTERVAL_MS) / 1000).toBeLessThan(31);
+    expect(steps).toBe(6);
+    expect((steps * DECAY_INTERVAL_MS) / 1000).toBeLessThan(8);
+    // At least three times quicker than the 30 seconds it took before.
+    expect((steps * DECAY_INTERVAL_MS) / 1000).toBeLessThan(30 / 3);
     // The floor is a small circle: smaller than the 15% it used to be, and than the 30% it starts at.
     expect(MIN_RADIUS).toBeLessThan(15);
     expect(MIN_RADIUS).toBeLessThan(30);
@@ -126,12 +127,12 @@ describe('light model', () => {
 });
 
 describe('useCandleLight', () => {
-  it('burns the candle down every 3.3 seconds while enabled', () => {
+  it('burns the candle down every 1.2 seconds while enabled', () => {
     renderHook(() => useCandleLight(true));
     tick();
-    expect(useLightStore.getState().radius).toBeCloseTo(27);
+    expect(useLightStore.getState().radius).toBeCloseTo(25.5);
     tick();
-    expect(useLightStore.getState().radius).toBeCloseTo(24.3);
+    expect(useLightStore.getState().radius).toBeCloseTo(21.675);
   });
 
   it('does not burn down when disabled or while the tab is hidden', () => {
@@ -146,7 +147,7 @@ describe('useCandleLight', () => {
     expect(useLightStore.getState().radius).toBe(30);
     hidden.mockRestore();
     tick();
-    expect(useLightStore.getState().radius).toBeCloseTo(27);
+    expect(useLightStore.getState().radius).toBeCloseTo(25.5);
   });
 
   it('lifts one step each time a clear drives a spirit out, and not when spirits arrive', () => {
@@ -249,13 +250,13 @@ describe('clicking brightens the light', () => {
     wait(DECAY_INTERVAL_MS - 100);
     expect(useLightStore.getState().radius).toBe(80); // would have shrunk without the restart
     wait(200);
-    expect(useLightStore.getState().radius).toBeCloseTo(72);
+    expect(useLightStore.getState().radius).toBeCloseTo(68);
   });
 
   it('a click brightens the candle again after it burned down', () => {
     renderHook(() => useCandleLight(true));
-    wait(DECAY_INTERVAL_MS * 3); // 30 -> 21.87
-    expect(useLightStore.getState().radius).toBeCloseTo(21.87, 1);
+    wait(DECAY_INTERVAL_MS * 3); // 30 -> 18.42
+    expect(useLightStore.getState().radius).toBeCloseTo(18.42, 1);
     click();
     expect(useLightStore.getState().radius).toBe(50);
   });

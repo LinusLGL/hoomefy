@@ -276,7 +276,10 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     test.setTimeout(60_000);
     await seedHaunted(page);
     await gotoHome(page);
-    await expect(light(page)).toHaveAttribute('data-radius', '30');
+    // It starts at 30% and burns down every 1.2 s, so it may already have taken a step by now.
+    const r0 = Number(await light(page).getAttribute('data-radius'));
+    expect(r0).toBeLessThanOrEqual(30);
+    expect(r0).toBeGreaterThan(12);
     const glow0 = Number(await candle(page).evaluate((el) => (el as HTMLElement).style.getPropertyValue('--hf-glow')));
     const px0 = await lightRadiusPx(page);
 
@@ -300,7 +303,8 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     await page.mouse.click(at.x, at.y);
     await expect(light(page)).toHaveAttribute('data-radius', '100');
     await expect(light(page)).toHaveAttribute('data-lit', 'true'); // the whole room is lit
-    await expect(light(page)).toHaveCSS('opacity', '0', { timeout: 3000 }); // the darkness has finished fading out
+    // The darkness fades out (0.9 s); the candle starts burning down again 1.2 s after the click, so allow for a small lag.
+    await expect.poll(async () => Number(await light(page).evaluate((el) => getComputedStyle(el).opacity)), { timeout: 3000 }).toBeLessThan(0.5);
     await page.screenshot({ path: `${SHOTS}/37-candlelight-full.png` });
 
     // ...and it starts burning down again (and goes dark again) a few seconds later.
@@ -316,24 +320,27 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     const box = (await plain.boundingBox()) as { x: number; y: number; width: number; height: number };
     await page.mouse.move(box.x + 6, box.y + box.height / 2);
 
-    await page.waitForTimeout(2000); // the first burn-down is about 1.3 s away
+    await page.waitForTimeout(1000); // a burn-down step comes every 1.2 s, so one is close
     await page.mouse.click(box.x + 6, box.y + box.height / 2);
     await expect(light(page)).toHaveAttribute('data-radius', '50');
-    await page.waitForTimeout(2500); // past the original burn-down moment
+    await page.waitForTimeout(900); // the wait started over at the click, so there is still no shrink
     expect(Number(await light(page).getAttribute('data-radius'))).toBe(50);
-    await expect.poll(async () => Number(await light(page).getAttribute('data-radius')), { timeout: 6000 }).toBeLessThan(50);
+    await expect.poll(async () => Number(await light(page).getAttribute('data-radius')), { timeout: 4000 }).toBeLessThan(50);
   });
 
-  test('burns lower: the circle shrinks by 10% about every 3.3 seconds', async ({ page }) => {
+  test('burns lower: the circle shrinks by 15% about every 1.2 seconds', async ({ page }) => {
     test.setTimeout(60_000);
     await seedHaunted(page);
     await gotoHome(page);
     const start = Number(await light(page).getAttribute('data-radius'));
-    expect(start).toBe(30);
+    const px = await lightRadiusPx(page);
+    expect(start).toBeLessThanOrEqual(30); // it may already have taken a step
+    expect(start).toBeGreaterThan(12);
     await expect.poll(async () => Number(await light(page).getAttribute('data-radius')), { timeout: 9000 }).toBeLessThan(start);
     const afterOne = Number(await light(page).getAttribute('data-radius'));
-    expect(afterOne).toBeCloseTo(27, 0);
-    const px = await lightRadiusPx(page);
+    expect(afterOne).toBeLessThanOrEqual(26);
+    // It reaches its dimmest in well under ten seconds (it took about 30).
+    await expect.poll(async () => Number(await light(page).getAttribute('data-radius')), { timeout: 10_000 }).toBe(12);
     await expect.poll(() => lightRadiusPx(page), { timeout: 9000 }).toBeLessThan(px);
   });
 

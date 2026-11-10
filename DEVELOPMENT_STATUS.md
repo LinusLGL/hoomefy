@@ -497,3 +497,15 @@ Spec: `.kiro/specs/studio-items/`.
   The shop search answered 200 for all eight but with `live=false`, because `SERPER_API_KEY` is not set on the Worker, so
   every price was a typical price marked "est.". Saving that design and opening it again from My Designs kept the list, the
   wishes and the style, with no Supabase errors. **Open item: add `SERPER_API_KEY` as a Worker secret to get real shop prices.**
+
+## Mirror, faster candle, Elegant style photographs (Nov 5, 2026)
+
+- **The statement mirror ("A mirror changes a room") is a switch.** In Elegant, one press lets the haunting in, every time, even
+  for someone who has seen the reveal before (`requestTakeover('mirror')` is now a deliberate request, like replay). It still
+  respects the opt-out. In Haunted, one press plays `Jumpscare.mp4` full-screen, every time (`holyWaterStore.scareNow`); with
+  reduced motion no video plays. The old three-press escalation and `mirrorTouches` are gone. The mirror is exempt from the
+  "first button press wakes the house" rule, so its own handler decides.
+- **The candle dims much faster.** The light now shrinks by 15% of itself every 1.2 s (it was 10% every 3.3 s), so it reaches
+  its dimmest in about 7 s instead of about 30 s. The floor is unchanged (12%). The jumpscare still follows 12 s after the floor.
+- **Elegant style cards use photographs** from `Resource/Clean`: Scandinavian (bright kitchen), Japandi (rooftop tea terrace) and
+  Modern Classic (living room), built to 960 x 540 WebP by `scripts/build-style-images.mjs` into `public/images/styles/`.

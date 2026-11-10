@@ -22,6 +22,29 @@ describe('resetAll', () => {
     expect(JSON.parse(sessionStorage.getItem(HOLY_WATER_STORAGE_KEY) ?? '{}').state).toMatchObject({ foundIn: null, cured: false });
   });
 });
+describe('scareNow (the mirror in Haunted)', () => {
+  it('plays the scare, and plays it again every time it is asked for', () => {
+    expect(s().scareNow()).toBe(true);
+    expect(s()).toMatchObject({ video: 'scare', scared: true });
+    s().finishVideo();
+    expect(s().video).toBe('none');
+    // startScare is once a session, scareNow is not.
+    s().startScare();
+    expect(s().video).toBe('none');
+    expect(s().scareNow()).toBe(true);
+    expect(s().video).toBe('scare');
+  });
+
+  it('does nothing while a video is already playing, and closes the room viewer and the bottle', () => {
+    useHolyWaterStore.setState({ video: 'cure' });
+    expect(s().scareNow()).toBe(false);
+    expect(s().video).toBe('cure');
+    useHolyWaterStore.setState({ video: 'none', openRoom: 'library', foundIn: 'library', armed: true });
+    expect(s().scareNow()).toBe(true);
+    expect(s()).toMatchObject({ openRoom: null, armed: false });
+  });
+});
+
 describe('rooms', () => {
   it('has three rooms, each with its own hidden holy water inside the painting', () => {
     expect([...ROOM_IDS]).toEqual(['drawing-room', 'library', 'grand-ballroom']);

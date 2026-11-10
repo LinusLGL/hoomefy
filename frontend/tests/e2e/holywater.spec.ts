@@ -88,9 +88,16 @@ test.describe('The room paintings', () => {
     expect(errors).toEqual([]);
   });
 
-  test('Elegant keeps its colour swatches and has no room buttons', async ({ page }) => {
+  test('Elegant shows a photograph on each style card and has no room buttons', async ({ page }) => {
     await seed(page, { experience: 'elegant' });
     await gotoHome(page);
+    const photos = page.locator('.hf-styles img');
+    await expect(photos).toHaveCount(3);
+    await photos.first().scrollIntoViewIfNeeded();
+    for (const [i, file] of ['scandinavian', 'japandi', 'modern-classic'].entries()) {
+      await expect(photos.nth(i)).toHaveAttribute('src', `/images/styles/${file}.webp`);
+      await expect.poll(() => photos.nth(i).evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth), { timeout: 15_000 }).toBe(960);
+    }
     await expect(page.locator('.hf-room')).toHaveCount(0);
     await expect(page.locator('[data-testid^="room-card-"]')).toHaveCount(0);
     await expect(page.getByTestId('ghost-target')).toHaveCount(0);
@@ -457,7 +464,7 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
   // the page's own work, so these tests take 40 to 60 real seconds each.
   test.describe.configure({ timeout: 180_000 });
 
-  /** A frozen clock, so the burn-down (3.3 s) and 12-second timers can be stepped exactly. */
+  /** A frozen clock, so the burn-down (1.2 s) and 12-second timers can be stepped exactly. */
   async function startFrozen(page: Page, s: Seed) {
     await page.clock.install();
     await seed(page, { candle: true, ...s });
@@ -469,7 +476,7 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
   const radius = (page: Page) => page.getByTestId('candle-light').getAttribute('data-radius');
 
   /**
-   * Lets the candle burn down (30% loses a tenth of itself every 3.3 s: nine ticks to the 12% floor), one
+   * Lets the candle burn down (30% loses 15% of itself every 1.2 s: six ticks to the 12% floor), one
    * second at a time, and stops the moment it reaches the floor. The 12 seconds are counted from there, so
    * the caller is at most one second past the start of them.
    */
@@ -484,7 +491,9 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
 
   test('plays Jumpscare.mp4 full-screen after exactly 12 seconds at the lowest light, then never again', async ({ page }) => {
     await startFrozen(page, {});
-    expect(await radius(page)).toBe('30');
+    // Starts at 30% and takes a step every 1.2 s, so one may already have passed while the clock was being set up.
+    expect(Number(await radius(page))).toBeLessThanOrEqual(30);
+    expect(Number(await radius(page))).toBeGreaterThan(12);
     await burnDown(page);
 
     // The candle has been at its lowest for between 0 and 1 seconds: 10 more is not yet 12, 13 more is.
@@ -562,6 +571,41 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
   test('does nothing in Elegant mode', async ({ page }) => {
     await startFrozen(page, { experience: 'elegant' });
     await page.clock.runFor(30_000);
+    await expect(video(page)).toHaveCount(0);
+  });
+});
+
+test.describe('The statement mirror in Haunted plays the jumpscare', () => {
+  const mirror = (page: Page) => page.getByRole('button', { name: /Statement mirror/ });
+
+  test('every press of the mirror plays Jumpscare.mp4 full-screen, even when it has played before', async ({ page }) => {
+    test.setTimeout(90_000);
+    // The scare has already been spent this session, so the 12-second one would never come again.
+    await seed(page, { session: { scared: true } });
+    await gotoHome(page);
+    await mirror(page).scrollIntoViewIfNeeded();
+    await mirror(page).click();
+
+    await expect(video(page)).toBeVisible();
+    await expect(video(page)).toHaveAttribute('data-kind', 'scare');
+    await expect(video(page).locator('video')).toHaveAttribute('src', '/video/jumpscare.mp4');
+    await expect(page.locator('html')).toHaveAttribute('data-experience', 'haunted');
+
+    await page.keyboard.press('Escape');
+    await expect(video(page)).toHaveCount(0);
+
+    // And again.
+    await mirror(page).click();
+    await expect(video(page)).toBeVisible();
+    await expect(video(page)).toHaveAttribute('data-kind', 'scare');
+  });
+
+  test('does not play in Elegant, where the mirror lets the haunting in instead', async ({ page }) => {
+    await seed(page, { experience: 'elegant' });
+    await gotoHome(page);
+    await mirror(page).scrollIntoViewIfNeeded();
+    await mirror(page).click();
+    await expect(page.locator('html')).toHaveAttribute('data-experience', 'haunted', { timeout: 40_000 });
     await expect(video(page)).toHaveCount(0);
   });
 });

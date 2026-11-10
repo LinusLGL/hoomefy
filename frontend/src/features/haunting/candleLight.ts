@@ -8,9 +8,9 @@
  *   - It starts at 30%.
  *   - Every click lifts it one step: 30% -> 50% -> 80% -> 100%. At 100% the whole room is lit.
  *     Driving a spirit out of a room (a completed generation) lifts it one step as well.
- *   - Every DECAY_INTERVAL_MS (3.3 seconds) the candle burns lower: the radius shrinks by 10% of itself, but never
+ *   - Every DECAY_INTERVAL_MS (1.2 seconds) the candle burns lower: the radius shrinks by 15% of itself, but never
  *     below MIN_RADIUS so the page always stays usable. A lift starts the wait over. From the first light
- *     (30%) the floor is reached after nine steps, about 30 seconds; the jumpscare follows 12 seconds later.
+ *     (30%) the floor is reached after six steps, about 7 seconds; the jumpscare follows 12 seconds later.
  *
  * Everything here is pure so it can be tuned and unit tested without a browser.
  */
@@ -23,10 +23,10 @@ export const LIGHT_LEVELS = [30, 50, 80, 100] as const;
 export const FULL_LIGHT = 100;
 /** The candle never burns lower than this, so the interface stays reachable. A very dim, small circle. */
 export const MIN_RADIUS = 12;
-/** Each tick the radius becomes this fraction of itself (a 10% reduction). */
-export const DECAY_FACTOR = 0.9;
-/** One tick of burning down. It was 5000 ms; the candle now dims 50% faster (5000 / 1.5). */
-export const DECAY_INTERVAL_MS = 3333;
+/** Each tick the radius becomes this fraction of itself (a 15% reduction; it was 10%). */
+export const DECAY_FACTOR = 0.85;
+/** One tick of burning down. It was 5000 ms, then 3333 ms; 30 seconds to the floor was still too long, so now 1200 ms. */
+export const DECAY_INTERVAL_MS = 1200;
 /** How dark the room is outside the light (0.8 = 80% dark). */
 export const DARKNESS_ALPHA = 0.8;
 /** Smallest radius in pixels, for very small windows. */

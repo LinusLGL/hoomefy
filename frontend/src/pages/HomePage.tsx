@@ -32,6 +32,9 @@ interface StyleCardProps {
   name: string;
   blurb: string;
   swatch: string;
+  /** The Elegant photograph for this style (16:9, built by scripts/build-style-images.mjs). */
+  image: string;
+  imageAlt: string;
   haunted: boolean;
   hauntedName: string;
   hauntedBlurb: string;
@@ -39,7 +42,7 @@ interface StyleCardProps {
   room: RoomId;
 }
 
-function StyleCard({ name, blurb, swatch, haunted, hauntedName, hauntedBlurb, room }: StyleCardProps) {
+function StyleCard({ name, blurb, swatch, image, imageAlt, haunted, hauntedName, hauntedBlurb, room }: StyleCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
   const horrorEnabled = useHauntingStore((s) => s.horrorEnabled);
@@ -76,7 +79,10 @@ function StyleCard({ name, blurb, swatch, haunted, hauntedName, hauntedBlurb, ro
           </button>
         </div>
       ) : (
-        <div className="h-44 w-full" style={{ background: swatch }} />
+        // The swatch shows while the photograph loads. The photograph is 16:9, like the Haunted room cards.
+        <div className="aspect-video w-full" style={{ background: swatch }}>
+          <img className="h-full w-full object-cover" src={image} alt={imageAlt} width={960} height={540} loading="lazy" decoding="async" />
+        </div>
       )}
       <ParanormalShadow ref={shadowRef} className="hf-card-shadow" style={{ right: '8%', top: '4%', width: '22%', height: '46%' }} />
       <div className="p-6">
@@ -94,6 +100,8 @@ const STYLE_CARDS: Omit<StyleCardProps, 'haunted'>[] = [
     hauntedName: 'The Drawing Room',
     hauntedBlurb: 'Pale wood, candle-gold light, and a chair someone has only just left.',
     swatch: 'linear-gradient(135deg, #efe7d6 0%, #d9ccb0 55%, #b9a77f 100%)',
+    image: '/images/styles/scandinavian.webp',
+    imageAlt: 'A bright Scandinavian kitchen in light oak, with an island, rattan stools and soft daylight',
     room: 'drawing-room',
   },
   {
@@ -102,6 +110,8 @@ const STYLE_CARDS: Omit<StyleCardProps, 'haunted'>[] = [
     hauntedName: 'The Library',
     hauntedBlurb: 'Low shelves, long shadows, and a book that turns its own pages.',
     swatch: 'linear-gradient(135deg, #cfc5ad 0%, #8e8468 55%, #5c5440 100%)',
+    image: '/images/styles/japandi.webp',
+    imageAlt: 'A Japandi rooftop tea terrace at dusk, with a low oak table, a bonsai and paper lanterns',
     room: 'library',
   },
   {
@@ -110,6 +120,8 @@ const STYLE_CARDS: Omit<StyleCardProps, 'haunted'>[] = [
     hauntedName: 'The Grand Ballroom',
     hauntedBlurb: 'Chandeliers, a cold dance floor, and a waltz that never quite ends.',
     swatch: 'linear-gradient(135deg, #e8dfcc 0%, #b79d6c 55%, #7a5f33 100%)',
+    image: '/images/styles/modern-classic.webp',
+    imageAlt: 'A modern classic living room with a crystal chandelier, a cream sectional and marble floors',
     room: 'grand-ballroom',
   },
 ];

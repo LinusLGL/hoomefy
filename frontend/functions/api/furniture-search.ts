@@ -88,7 +88,8 @@ export const onRequestGet = async (context: { request: Request; env: Env; waitUn
   const q = cleanQuery(new URL(request.url).searchParams.get('q'));
   if (!q) return reply({ error: 'A short furniture search is needed.' }, 400, { 'Cache-Control': 'no-store' });
 
-  if (!env.SERPER_API_KEY) return reply({ live: false, results: [] });
+  // "reason" says why there are no live prices, so a missing or refused key can be told apart from a quiet search.
+  if (!env.SERPER_API_KEY) return reply({ live: false, results: [], reason: 'not_configured' });
 
   const cache = (globalThis as unknown as { caches?: { default?: Cache } }).caches?.default;
   const cacheKey = new Request(`https://hoomefy.invalid/furniture-search?q=${encodeURIComponent(q.toLowerCase())}`);
@@ -101,12 +102,12 @@ export const onRequestGet = async (context: { request: Request; env: Env; waitUn
       headers: { 'X-API-KEY': env.SERPER_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ q, gl: 'us', hl: 'en', num: 10 }),
     });
-    if (!res.ok) return reply({ live: false, results: [] }, 200, { 'Cache-Control': 'no-store' });
+    if (!res.ok) return reply({ live: false, results: [], reason: 'rejected', upstream: res.status }, 200, { 'Cache-Control': 'no-store' });
     const results = mapSerperShopping(await res.json());
     const response = reply({ live: true, results }, 200, { 'Cache-Control': 'public, max-age=86400' });
     if (cache && results.length > 0) context.waitUntil?.(cache.put(cacheKey, response.clone()));
     return response;
   } catch {
-    return reply({ live: false, results: [] }, 200, { 'Cache-Control': 'no-store' });
+    return reply({ live: false, results: [], reason: 'unreachable' }, 200, { 'Cache-Control': 'no-store' });
   }
 };

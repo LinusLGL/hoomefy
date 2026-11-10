@@ -88,6 +88,8 @@ export function HorrorTakeoverController() {
       if (!e.isTrusted || !(e.target instanceof Element)) return;
       if (!e.target.closest('button, [role="button"], a[href]')) return;
       if (e.target.closest('[data-hf-controls]')) return;
+      // The statement mirror has its own, deliberate way in (touchMirror), which works every time.
+      if (e.target.closest('.hf-mirror')) return;
       if (!canAutoTakeover(useHauntingStore.getState())) return;
       e.preventDefault();
       e.stopImmediatePropagation();

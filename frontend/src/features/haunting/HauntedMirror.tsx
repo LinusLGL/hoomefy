@@ -1,9 +1,9 @@
 /**
  * HauntedMirror
  *
- * Presented as an ordinary "statement mirror" furnishing tile. Selecting it looks
- * like a product-detail hover; repeated selection escalates through small
- * anomalies and finally triggers the takeover (touchMirror in effects.ts).
+ * Presented as an ordinary "statement mirror" furnishing tile.
+ *   - In Elegant, pressing it lets the haunting in, at once and every time (touchMirror in effects.ts).
+ *   - In Haunted, pressing it plays the jumpscare video, every time (not with reduced motion, which skips video).
  *
  * It is a real <button> so it is keyboard reachable and announced as a control.
  */
@@ -12,6 +12,19 @@ import { useEffect, useRef } from 'react';
 import { ParanormalShadow } from './ParanormalShadow';
 import { renderScene, paintElegantRoom } from './scenes';
 import { touchMirror } from './effects';
+import { useHauntingStore } from './hauntingStore';
+import { prefersReducedMotion } from './env';
+import { useHolyWaterStore } from '@/features/holywater/holyWaterStore';
+
+/** What pressing the mirror does: let the haunting in (Elegant) or scare the visitor (Haunted). */
+function pressMirror(shadowEl: HTMLElement | null): void {
+  const state = useHauntingStore.getState();
+  if (state.experience === 'haunted') {
+    if (state.horrorEnabled && state.sequence === 'idle' && !prefersReducedMotion()) useHolyWaterStore.getState().scareNow();
+    return;
+  }
+  touchMirror(shadowEl);
+}
 
 export function HauntedMirror() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,7 +57,7 @@ export function HauntedMirror() {
       type="button"
       className="hf-mirror"
       aria-label="Statement mirror. Select to look closer."
-      onClick={() => touchMirror(shadowRef.current)}
+      onClick={() => pressMirror(shadowRef.current)}
       data-distort=""
     >
       <span className="hf-mirror__frame">
