@@ -74,7 +74,7 @@ OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. The project config 
 
 (The editing tool used for this change was blocked from writing under `.kiro/settings/`, so this file must be added by hand.) The same server is in the power's `mcp.json`.
 
-The project owner reports that the images, videos and sound in the app came from OpenArt. **To confirm before submitting:** the list of assets and for each one the tool that produced it. The `Resource/` folder holds the originals. `Resource/cinematic-soul-halloween-halloween-dark-music-617915.mp3` looks like a stock-site track and is probably not from OpenArt; check its licence and source before describing it. HeyGen is not used.
+The project owner reports that the images, videos and sound in the app came from OpenArt. **To confirm before submitting:** the list of assets and for each one the tool that produced it. The `Resource/` folder holds the originals. The one exception is the ambient music: `Resource/cinematic-soul-halloween-halloween-dark-music-617915.mp3` (the same file the app serves as `frontend/public/audio/haunted-ambient.mp3`) comes from [Pixabay Music](https://pixabay.com/music/), not from OpenArt. Say so on Devpost. **To confirm:** the track's Pixabay page and its licence terms at the time of download, and save the page link here. HeyGen is not used.
 
 ## Power
 
