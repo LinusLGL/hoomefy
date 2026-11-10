@@ -7,6 +7,7 @@ import {
   makeRoomPng,
   openSettings,
   signIn,
+  developPhotograph,
   textContrast,
   waitForHaunted,
   waitForPhase,
@@ -94,11 +95,11 @@ test.describe('Photo upload and AI generation after the transformation', () => {
     await page.screenshot({ path: `${SHOTS}/14-studio-haunted-ready.png` });
 
     await watchStages(page);
-    await page.getByRole('button', { name: 'Develop the Photograph' }).click();
+    await developPhotograph(page);
 
-    // "Reconstructing your space..." and a stage that follows the real job status
+    // "Reconstructing your space..." and a stage that follows the real job status, shown on the polaroid itself
     await expect(page.getByRole('heading', { name: 'Reconstructing your space...' })).toBeVisible();
-    await expect(page.locator('.hf-develop')).toBeVisible();
+    await expect(page.getByTestId('polaroid-photo')).toBeVisible();
     await expect(page.getByTestId('generation-progress')).toHaveAttribute('data-stage', 'developing', { timeout: 20_000 });
     await page.screenshot({ path: `${SHOTS}/15-studio-haunted-developing.png` });
 

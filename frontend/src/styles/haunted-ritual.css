@@ -1,0 +1,864 @@
+/* ==========================================================================
+   Haunted Design Studio: the Ouija board table and the candle ritual
+   (see src/features/ritual). Everything here is only used in the Haunted experience.
+
+   1. The board: a fixed backdrop behind the whole studio, lit by flickering candles
+   2. The polaroid stage: the photograph on the board
+   3. The ritual chamber: five candles, the words, the voices
+   4. Reduced motion
+   All movement is opacity and transform only.
+   ========================================================================== */
+
+/* ---------- 1. The board ------------------------------------------------- */
+
+.rt-board {
+  position: fixed;
+  inset: 0;
+  /* Inside the app layer (z-index 1): above the mansion background, below the page. */
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #0b0605;
+}
+.rt-board__art {
+  position: absolute;
+}
+.rt-board__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+/* The board sits behind a layout that normally tints the page; in the studio the table shows through. */
+html[data-studio-board='true'] [data-page-layout] {
+  background-color: transparent;
+}
+
+/* A glow over each of the two candles drawn on the board, flickering out of step. */
+.rt-board__glow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 178, 88, 0.6) 0%, rgba(255, 140, 50, 0.24) 30%, transparent 66%);
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%);
+  animation: rt-flicker-glow 3.4s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+@keyframes rt-flicker-glow {
+  0% { opacity: 0.82; transform: translate(-50%, -50%) scale(1); }
+  7% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); }
+  13% { opacity: 0.96; transform: translate(-50%, -50%) scale(1.05); }
+  24% { opacity: 0.68; transform: translate(-50%, -50%) scale(0.98); }
+  31% { opacity: 1; transform: translate(-50%, -50%) scale(1.07); }
+  47% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.96); }
+  58% { opacity: 0.92; transform: translate(-50%, -50%) scale(1.03); }
+  72% { opacity: 0.64; transform: translate(-50%, -50%) scale(0.95); }
+  86% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0.82; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* A warm light that drifts across the parchment, as if a candle were being carried past. */
+.rt-board__wander {
+  position: absolute;
+  left: 18%;
+  top: 8%;
+  width: 64%;
+  height: 74%;
+  background: radial-gradient(ellipse at center, rgba(255, 186, 104, 0.3), rgba(255, 150, 70, 0.09) 46%, transparent 70%);
+  mix-blend-mode: screen;
+  animation: rt-wander 21s ease-in-out infinite alternate, rt-breathe 5.3s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes rt-wander {
+  from { transform: translate(-20%, -8%); }
+  to { transform: translate(22%, 14%); }
+}
+@keyframes rt-breathe {
+  0%, 100% { opacity: 0.55; }
+  38% { opacity: 1; }
+  64% { opacity: 0.7; }
+  82% { opacity: 0.95; }
+}
+
+/* The dark room around the table. It breathes slightly with the flames. */
+.rt-board__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(6, 3, 2, 0.1) 30%, rgba(5, 2, 2, 0.55) 74%, rgba(3, 1, 1, 0.9) 100%),
+    rgba(8, 4, 3, 0.16);
+  animation: rt-shade 6.7s ease-in-out infinite;
+}
+@keyframes rt-shade {
+  0%, 100% { opacity: 0.92; }
+  30% { opacity: 1; }
+  55% { opacity: 0.84; }
+  78% { opacity: 0.97; }
+}
+
+.rt-board__specks {
+  position: absolute;
+  inset: 0;
+}
+.rt-speck {
+  position: absolute;
+  border-radius: 50%;
+  background: #ffd9a0;
+  box-shadow: 0 0 6px 1px rgba(255, 200, 120, 0.6);
+  opacity: 0;
+  animation: rt-speck linear infinite;
+}
+@keyframes rt-speck {
+  0% { opacity: 0; transform: translate(0, 0); }
+  15% { opacity: var(--rt-a, 0.5); }
+  85% { opacity: var(--rt-a, 0.5); }
+  100% { opacity: 0; transform: translate(var(--rt-drift, 0), var(--rt-rise, -120px)); }
+}
+
+.rt-board[data-dim='true'] .rt-board__img {
+  filter: blur(3px) brightness(0.5);
+}
+
+/* The cards and panels of the studio become dark, slightly see-through glass so the board stays visible. */
+html[data-experience='haunted'][data-studio-board='true'] .rt-panel,
+html[data-experience='haunted'][data-studio-board='true'] .rt-plate {
+  background-color: rgb(var(--c-navy-900) / 0.8);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+/* ---------- 2. The polaroid stage --------------------------------------- */
+
+.rt-stage-wrap[hidden] {
+  display: none;
+}
+.rt-stage {
+  z-index: 2;
+}
+/* Laptop and desktop: fixed exactly over the polaroid drawn on the board (the position comes from the maths in geometry.ts). */
+.rt-stage-wrap[data-mode='fixed'] .rt-stage {
+  position: fixed;
+}
+/* Tablet and phone: a block in the page showing the part of the board around the polaroid. */
+.rt-stage-wrap[data-mode='inline'] .rt-stage {
+  position: relative;
+  width: min(100%, 26rem);
+  margin: 0 auto;
+  border-radius: 10px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(201, 169, 97, 0.35);
+}
+
+.rt-stage__window {
+  position: absolute;
+  overflow: hidden;
+  container-type: size;
+  /* The polaroid's own picture shows through if the photograph is not square. */
+  background: #cdb48a;
+}
+.rt-stage__strip {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  container-type: size;
+  color: #3a2414;
+}
+.rt-stage__title,
+html[data-experience='haunted'] .rt-stage__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(13px, 7cqw, 24px);
+  line-height: 1.1;
+  color: #2e1a0e;
+  text-shadow: none;
+}
+.rt-stage__line {
+  margin: 2px 0 0;
+  font-size: clamp(10.5px, 4.2cqw, 15px);
+  line-height: 1.22;
+  color: #4a2e1b;
+}
+.rt-stage__below {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  width: min(30rem, 92vw);
+  transform: translateX(-50%);
+}
+.rt-stage__below--flow {
+  position: static;
+  width: 100%;
+  margin-top: 0.75rem;
+  transform: none;
+}
+.rt-plate {
+  border-radius: 0.75rem;
+}
+
+/* Everything the upload area puts in the window fills it. */
+.rt-evidence {
+  position: absolute;
+  inset: 0;
+}
+html[data-experience='haunted'] .hf-evidence.rt-evidence {
+  /* The haunted evidence-board skin makes .hf-evidence position: relative; in the polaroid it must fill the window. */
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+html[data-experience='haunted'] .hf-evidence.rt-evidence::before {
+  display: none;
+}
+.rt-evidence[hidden],
+.rt-evidence__drop[hidden] {
+  display: none;
+}
+.rt-evidence__drop,
+.rt-drop {
+  position: absolute;
+  inset: 0;
+}
+
+/* The empty polaroid: a dashed ink outline, with a faint ghostly shimmer inside. */
+.rt-drop__zone {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4cqh;
+  padding: 5cqw;
+  text-align: center;
+  color: #3a2414;
+  cursor: pointer;
+  border: 1.5px dashed rgba(70, 42, 22, 0.6);
+  background: radial-gradient(ellipse at 50% 38%, rgba(255, 241, 208, 0.6), rgba(214, 190, 150, 0.3));
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+.rt-drop__zone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 66%, rgba(205, 222, 255, 0.55), transparent 62%);
+  mix-blend-mode: soft-light;
+  animation: rt-shimmer 6.2s ease-in-out infinite;
+}
+@keyframes rt-shimmer {
+  0%, 100% { opacity: 0.2; transform: scale(0.9); }
+  45% { opacity: 0.85; transform: scale(1.08); }
+  70% { opacity: 0.4; transform: scale(1); }
+}
+.rt-drop__zone:hover,
+.rt-drop[data-dragging='true'] .rt-drop__zone {
+  border-color: #8e1b2c;
+  background: radial-gradient(ellipse at 50% 38%, rgba(255, 246, 222, 0.82), rgba(226, 202, 160, 0.5));
+}
+.rt-drop__icon {
+  width: 11cqw;
+  height: 11cqw;
+  min-width: 22px;
+  min-height: 22px;
+  color: #5a3a1c;
+}
+.rt-drop__headline {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(13px, 6.2cqw, 22px);
+  line-height: 1.15;
+  color: #2e1a0e;
+}
+.rt-drop__hint {
+  margin: 0;
+  font-size: clamp(10.5px, 4cqw, 14px);
+  line-height: 1.25;
+  color: #4a2e1b;
+}
+.rt-drop__browse {
+  min-height: 32px;
+  padding: 0.3em 0.95em;
+  font-size: clamp(11px, 4.2cqw, 14px);
+  font-weight: 600;
+  color: #f3e7cf;
+  background: rgba(46, 26, 14, 0.92);
+  border: 1px solid #5a3a1c;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.rt-drop__browse:hover:not(:disabled) {
+  background: #6a1a26;
+}
+.rt-drop__browse:focus-visible {
+  outline: 2px solid #8e1b2c;
+  outline-offset: 2px;
+}
+.rt-drop__limits {
+  margin: 0;
+  font-size: clamp(9px, 3.2cqw, 11px);
+  line-height: 1.2;
+  color: #5a4128;
+}
+.rt-drop__error {
+  position: absolute;
+  left: 4cqw;
+  right: 4cqw;
+  bottom: 3cqw;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3em;
+  margin: 0;
+  padding: 0.3em 0.5em;
+  font-size: clamp(10px, 3.8cqw, 13px);
+  line-height: 1.2;
+  color: #8e1b2c;
+  background: rgba(255, 245, 222, 0.94);
+  border-radius: 2px;
+}
+
+.rt-uploading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3cqw;
+  color: #3a2414;
+  background: rgba(226, 208, 174, 0.92);
+}
+.rt-uploading__text {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: clamp(12px, 5.2cqw, 18px);
+}
+.rt-uploading__bar {
+  width: 60%;
+  height: 4px;
+  overflow: hidden;
+  background: rgba(58, 36, 20, 0.25);
+  border-radius: 2px;
+}
+.rt-uploading__bar > span {
+  display: block;
+  height: 100%;
+  background: #8e1b2c;
+  transition: width 0.3s ease;
+}
+
+/* The photograph, as laid on the card: aged, until the ritual develops it. */
+.rt-photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  filter: sepia(0.5) contrast(0.96) brightness(0.94);
+  transition: filter 1.4s ease, opacity 1.4s ease;
+}
+.rt-photo[data-stage='queued'] {
+  filter: grayscale(1) blur(14px) brightness(0.6) sepia(0.4);
+  opacity: 0.7;
+}
+.rt-photo[data-stage='developing'] {
+  filter: grayscale(0.7) blur(6px) brightness(0.82) sepia(0.5);
+  opacity: 0.92;
+  animation: rt-develop 3.2s ease-in-out infinite alternate;
+}
+.rt-photo[data-stage='ready'] {
+  filter: none;
+  opacity: 1;
+}
+.rt-photo[data-stage='failed'] {
+  filter: grayscale(1) brightness(0.5);
+}
+@keyframes rt-develop {
+  from { filter: grayscale(0.8) blur(8px) brightness(0.74) sepia(0.5); }
+  to { filter: grayscale(0.55) blur(4px) brightness(0.92) sepia(0.45); }
+}
+
+/* The button laid over the photograph that begins the ritual. */
+.rt-begin {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 5cqh;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  box-shadow: inset 0 0 28px rgba(40, 20, 8, 0.55);
+  transition: box-shadow 0.3s ease, background-color 0.3s ease;
+}
+.rt-begin:hover:not(:disabled),
+.rt-begin:focus-visible {
+  background: rgba(255, 180, 90, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(255, 206, 130, 0.85), inset 0 0 46px rgba(255, 170, 80, 0.55);
+  outline: none;
+}
+.rt-begin__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.45em 1em;
+  font-size: clamp(11px, 4.6cqw, 15px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #fbeccb;
+  background: rgba(20, 9, 6, 0.86);
+  border: 1px solid rgba(214, 170, 96, 0.8);
+  border-radius: 999px;
+  box-shadow: 0 0 18px rgba(255, 160, 70, 0.35);
+}
+.rt-begin[data-ready='true'] .rt-begin__pill {
+  animation: rt-pill 2.6s ease-in-out infinite;
+}
+.rt-begin[data-ready='false'] .rt-begin__pill {
+  color: rgba(251, 236, 203, 0.82);
+  box-shadow: none;
+}
+@keyframes rt-pill {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 160, 70, 0.25); }
+  50% { box-shadow: 0 0 26px rgba(255, 170, 80, 0.7); }
+}
+
+/* ---------- 3. The ritual chamber --------------------------------------- */
+
+html[data-ritual='open'],
+html[data-ritual='open'] body {
+  overflow: hidden;
+}
+/* While the chamber is open, Mori and the drifting ghosts keep out of it (they come back afterwards, unchanged). */
+html[data-ritual='open'] .hf-avatar,
+html[data-ritual='open'] .hf-avatar__ghost,
+html[data-ritual='open'] .hf-ghosts {
+  visibility: hidden;
+  pointer-events: none;
+}
+.rt-ritual {
+  position: fixed;
+  inset: 0;
+  /* Above the page, dialogs and the dark room (7500); below the sound/settings buttons and the candle cursor (9600 up). */
+  z-index: 8200;
+  overflow: hidden;
+  background: #030205;
+  overscroll-behavior: contain;
+  touch-action: manipulation;
+  animation: rt-open 0.7s ease both;
+}
+.rt-ritual[data-leaving='true'] {
+  pointer-events: none;
+  animation: rt-close 0.8s ease forwards;
+}
+@keyframes rt-open {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rt-close {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.rt-chamber {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.rt-ritual[data-ready='true'] .rt-chamber {
+  opacity: 1;
+}
+.rt-chamber::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 110px 26px #030205;
+}
+/* On a tall screen the picture does not fill the screen: its top and bottom melt into the dark instead of ending in a hard edge. */
+.rt-chamber[data-letterbox='true']::after {
+  box-shadow: none;
+  background:
+    linear-gradient(to bottom, #030205 0, rgba(3, 2, 5, 0) 18%, rgba(3, 2, 5, 0) 82%, #030205 100%),
+    linear-gradient(to right, #030205 0, rgba(3, 2, 5, 0) 7%, rgba(3, 2, 5, 0) 93%, #030205 100%);
+}
+.rt-chamber__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.rt-ritual[data-complete='true'] .rt-chamber__img {
+  animation: rt-surge 2.6s ease-out 1;
+}
+@keyframes rt-surge {
+  0% { filter: brightness(1) saturate(1); }
+  18% { filter: brightness(1.28) saturate(1.25); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+.rt-mist {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  height: 46%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  background:
+    radial-gradient(ellipse at 30% 50%, rgba(150, 175, 190, 0.2), transparent 60%),
+    radial-gradient(ellipse at 74% 55%, rgba(130, 160, 175, 0.16), transparent 62%);
+  animation: rt-drift 38s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.rt-mist--a { bottom: 4%; }
+.rt-mist--b {
+  top: 18%;
+  opacity: 0.32;
+  animation-duration: 52s;
+  animation-direction: alternate-reverse;
+}
+@keyframes rt-drift {
+  from { transform: translateX(-6%); }
+  to { transform: translateX(6%); }
+}
+
+.rt-lightwell {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* The light a candle adds. "screen" lays it over the unlit picture so it matches the artwork exactly. */
+.rt-flamebox {
+  position: absolute;
+  opacity: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.rt-flamebox img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.rt-flamebox[data-lit='true'] {
+  opacity: 1;
+  animation: rt-flicker var(--rt-dur, 3s) ease-in-out var(--rt-delay, 0s) infinite;
+  will-change: opacity, transform;
+}
+.rt-flamebox[data-lit='true'] img {
+  opacity: 1;
+  animation: rt-ignite 1.1s ease-out both;
+}
+@keyframes rt-ignite {
+  0% { opacity: 0; filter: brightness(3.4); }
+  16% { opacity: 1; filter: brightness(2.5); }
+  100% { opacity: 1; filter: brightness(1); }
+}
+@keyframes rt-flicker {
+  0% { opacity: 0.9; transform: scale(1, 1) skewX(0deg); }
+  9% { opacity: 0.76; transform: scale(0.985, 1.035) skewX(-1.6deg); }
+  17% { opacity: 1; transform: scale(1.01, 0.99) skewX(1.2deg); }
+  29% { opacity: 0.82; transform: scale(0.99, 1.03) skewX(-0.8deg); }
+  38% { opacity: 0.97; transform: scale(1.01, 1.01) skewX(1.8deg); }
+  52% { opacity: 0.74; transform: scale(0.985, 1.04) skewX(-1.9deg); }
+  63% { opacity: 1; transform: scale(1, 0.99) skewX(0.6deg); }
+  77% { opacity: 0.84; transform: scale(0.99, 1.025) skewX(-1deg); }
+  90% { opacity: 0.98; transform: scale(1.005, 1.005) skewX(1.1deg); }
+  100% { opacity: 0.9; transform: scale(1, 1) skewX(0deg); }
+}
+.rt-bloom {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 232, 176, 0.85), rgba(255, 162, 62, 0.36) 34%, transparent 64%);
+  transform: translate(-50%, -50%) scale(0.2);
+  opacity: 0;
+  animation: rt-bloom 1.2s ease-out both;
+}
+@keyframes rt-bloom {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+.rt-spark {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: #ffc880;
+  box-shadow: 0 0 6px 2px rgba(255, 170, 80, 0.8);
+  opacity: 0;
+  animation: rt-spark 3.4s ease-out var(--rt-delay, 0s) infinite;
+}
+@keyframes rt-spark {
+  0% { opacity: 0; transform: translate(0, 0) scale(1); }
+  12% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--rt-sway, 0), calc(var(--rt-rise, 60px) * -1)) scale(0.3); }
+}
+
+/* The things to touch: invisible buttons laid over the candles, with a glow that invites a touch. */
+.rt-candle {
+  position: absolute;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 40% / 30%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.rt-candle[data-lit='true'] {
+  cursor: default;
+}
+.rt-candle__aura {
+  position: absolute;
+  left: 50%;
+  top: 6%;
+  width: 170%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle, rgba(255, 208, 146, 0.55), rgba(255, 160, 70, 0.18) 40%, transparent 68%);
+  transform: translate(-50%, -22%) scale(0.6);
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.rt-candle[data-lit='false'] .rt-candle__aura {
+  animation: rt-hint 3.4s ease-in-out infinite;
+}
+.rt-candle[data-lit='false']:hover .rt-candle__aura,
+.rt-candle[data-lit='false']:focus-visible .rt-candle__aura {
+  opacity: 0.95;
+  transform: translate(-50%, -22%) scale(1);
+  animation: none;
+}
+.rt-candle[data-lit='true'] .rt-candle__aura {
+  display: none;
+}
+.rt-candle:focus-visible {
+  outline: 2px solid #e8c77a;
+  outline-offset: 4px;
+}
+@keyframes rt-hint {
+  0%, 100% { opacity: 0; transform: translate(-50%, -22%) scale(0.5); }
+  50% { opacity: 0.45; transform: translate(-50%, -22%) scale(0.8); }
+}
+
+/* The words, in the middle of the circle. */
+.rt-message-wrap {
+  position: absolute;
+  left: 50%;
+  width: min(88vw, 30rem);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.rt-message-wrap[data-stacked='true'] {
+  transform: translate(-50%, 0);
+}
+.rt-message {
+  position: relative;
+  padding: 1.15rem 1.5rem 1.25rem;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 0%, rgba(70, 22, 30, 0.55), rgba(8, 5, 8, 0.9) 72%);
+  border: 1px solid rgba(201, 169, 97, 0.6);
+  box-shadow: 0 0 0 3px rgba(8, 5, 8, 0.85), 0 0 0 4px rgba(160, 122, 56, 0.5), inset 0 0 28px rgba(0, 0, 0, 0.7);
+}
+.rt-message::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  pointer-events: none;
+  box-shadow: 0 0 46px 8px rgba(255, 168, 80, 0.34);
+  animation: rt-box-glow 3.7s ease-in-out infinite;
+}
+.rt-message::after {
+  /* gold lozenges on the four corners */
+  content: '';
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  background:
+    linear-gradient(45deg, transparent 38%, #c9a961 40% 60%, transparent 62%) top left / 9px 9px no-repeat,
+    linear-gradient(45deg, transparent 38%, #c9a961 40% 60%, transparent 62%) top right / 9px 9px no-repeat,
+    linear-gradient(45deg, transparent 38%, #c9a961 40% 60%, transparent 62%) bottom left / 9px 9px no-repeat,
+    linear-gradient(45deg, transparent 38%, #c9a961 40% 60%, transparent 62%) bottom right / 9px 9px no-repeat;
+}
+.rt-message[data-final='true'] {
+  border-color: rgba(214, 96, 84, 0.8);
+}
+.rt-message[data-final='true']::before {
+  box-shadow: 0 0 56px 12px rgba(190, 36, 36, 0.5);
+}
+@keyframes rt-box-glow {
+  0%, 100% { opacity: 0.7; }
+  22% { opacity: 1; }
+  41% { opacity: 0.6; }
+  68% { opacity: 0.95; }
+}
+.rt-message__text {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: clamp(1rem, 2.3vw, 1.45rem);
+  line-height: 1.4;
+  color: #f4e9d2;
+  text-shadow: 0 0 14px rgba(255, 176, 96, 0.55);
+}
+.rt-message[data-intro='true'] .rt-message__text {
+  font-size: clamp(0.92rem, 2vw, 1.15rem);
+  color: #e3d3b4;
+}
+.rt-word {
+  display: inline-block;
+  opacity: 0;
+  animation: rt-word 0.7s ease-out forwards;
+  animation-delay: calc(var(--i, 0) * 85ms);
+}
+@keyframes rt-word {
+  from { opacity: 0; filter: blur(5px); transform: translateY(4px); }
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+.rt-word--shout {
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  color: #ffb4a4;
+  text-shadow: 0 0 18px rgba(255, 70, 50, 0.85);
+}
+
+.rt-count {
+  position: absolute;
+  left: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  transform: translateX(-50%);
+  color: #d8c597;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 6px #000;
+  pointer-events: none;
+}
+.rt-count__text {
+  margin-left: 0.4rem;
+}
+.rt-count__dot {
+  width: 10px;
+  height: 15px;
+  border: 1px solid rgba(201, 169, 97, 0.7);
+  border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.rt-count__dot[data-on='true'] {
+  background: radial-gradient(ellipse at 50% 70%, #fff3c8, #ffb457 58%, #d86f1f);
+  border-color: #ffd48a;
+  box-shadow: 0 0 9px rgba(255, 170, 80, 0.9);
+  animation: rt-dot 1.7s ease-in-out infinite;
+}
+@keyframes rt-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12, 1.2); }
+}
+
+.rt-close {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #e8d7ad;
+  background: rgba(10, 6, 8, 0.7);
+  border: 1px solid rgba(201, 169, 97, 0.55);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.rt-close:hover {
+  background: rgba(60, 20, 26, 0.85);
+}
+.rt-close:focus-visible {
+  outline: 2px solid #e8c77a;
+  outline-offset: 3px;
+}
+
+/* One slow wash of cold light through the circle when the fifth flame catches (a single, soft, 1.6 s swell). */
+.rt-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background: radial-gradient(circle at 50% 50%, rgba(190, 255, 245, 0.5), rgba(120, 230, 220, 0.16) 42%, transparent 72%);
+}
+.rt-ritual[data-complete='true'] .rt-flash {
+  animation: rt-flash 1.6s ease-out 1 both;
+}
+@keyframes rt-flash {
+  0% { opacity: 0; }
+  22% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* ---------- 4. Reduced motion ------------------------------------------- */
+/* The lights stay on and the words stay readable; nothing moves, fades in sequence or flashes. */
+
+html[data-motion='reduced'] .rt-board *,
+html[data-motion='reduced'] .rt-ritual,
+html[data-motion='reduced'] .rt-ritual *,
+html[data-motion='reduced'] .rt-stage *,
+html[data-motion='reduced'] .rt-stage {
+  animation: none !important;
+  transition: none !important;
+}
+html[data-motion='reduced'] .rt-board__specks,
+html[data-motion='reduced'] .rt-spark,
+html[data-motion='reduced'] .rt-bloom,
+html[data-motion='reduced'] .rt-flash {
+  display: none;
+}
+html[data-motion='reduced'] .rt-word {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rt-board *,
+  .rt-ritual,
+  .rt-ritual *,
+  .rt-stage,
+  .rt-stage * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .rt-board__specks,
+  .rt-spark,
+  .rt-bloom,
+  .rt-flash {
+    display: none;
+  }
+  .rt-word {
+    opacity: 1;
+  }
+}

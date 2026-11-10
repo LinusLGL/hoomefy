@@ -5,6 +5,7 @@ import {
   instrument,
   makeRoomPng,
   openSettings,
+  developPhotograph,
   openSignInForm,
   seedElegantSeen,
   signIn,
@@ -543,7 +544,7 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     await chip(page, /Sofas & seating/).click();
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('hoomefy_studio_state') as string).state.preferences.replaceFurniture);
     expect(stored).toEqual(['seating']);
-    await page.getByRole('button', { name: 'Develop the Photograph' }).click();
+    await developPhotograph(page);
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });
 
     const banner = page.getByTestId('outcome-banner');
@@ -565,7 +566,7 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
 
     // 2. Replace the lighting too: the room is cleared and the haunting thins out.
     await chip(page, /Lamps & lighting/).click();
-    await page.getByRole('button', { name: 'Develop the Photograph' }).click();
+    await developPhotograph(page);
     await expect(banner).toHaveAttribute('data-room-cleared', 'true', { timeout: 40_000 });
     await expect(banner).toContainText('The Living Room is at peace');
     expect(await clearedRooms(page)).toBe(6);
@@ -578,7 +579,7 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
   test('replacing nothing clears nothing, and the user is told why', async ({ page }) => {
     test.setTimeout(100_000);
     await toStudioWithPhoto(page, mansionWith([]));
-    await page.getByRole('button', { name: 'Develop the Photograph' }).click();
+    await developPhotograph(page);
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });
     const banner = page.getByTestId('outcome-banner');
     await expect(banner).toContainText('No furniture was replaced, so the spirits stay');
@@ -593,7 +594,7 @@ test.describe('Build the house, replace the furniture, clear the ghosts', () => 
     expect(await clearedRooms(page)).toBe(6);
     await chip(page, /Sofas & seating/).click();
     await chip(page, /Lamps & lighting/).click();
-    await page.getByRole('button', { name: 'Develop the Photograph' }).click();
+    await developPhotograph(page);
     const banner = page.getByTestId('outcome-banner');
     await expect(banner).toContainText('is built', { timeout: 40_000 });
     expect(await clearedRooms(page)).toBe(7);

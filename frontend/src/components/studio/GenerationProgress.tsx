@@ -32,9 +32,15 @@ interface GenerationProgressProps {
   onRetry?: () => void;
   /** Offered when the live AI service could not be used. */
   onDemo?: () => void;
+  /**
+   * "board" is the Haunted studio, where the photograph develops on the polaroid itself: this then shows only the
+   * status, the queue and the buttons, in a small plate under the polaroid, with no photograph of its own.
+   */
+  variant?: 'card' | 'board';
 }
 
-export function GenerationProgress({ job, imageSrc, onCancel, queue = null, errorCode = null, onRetry, onDemo }: GenerationProgressProps) {
+export function GenerationProgress({ job, imageSrc, onCancel, queue = null, errorCode = null, onRetry, onDemo, variant = 'card' }: GenerationProgressProps) {
+  const onBoard = variant === 'board';
   const haunted = useIsHaunted();
   const copy = getStudioCopy(haunted);
   const stage = stageFromJob(job);
@@ -44,7 +50,10 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
 
   return (
     <section
-      className="rounded-xl border border-navy-700 bg-navy-800 p-6 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-4"
+      className={cn(
+        'rounded-xl border border-navy-700 bg-navy-800 p-6',
+        onBoard ? 'rt-plate lg:p-3' : 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-4'
+      )}
       role="status"
       aria-live="polite"
       aria-busy={active}
@@ -65,7 +74,7 @@ export function GenerationProgress({ job, imageSrc, onCancel, queue = null, erro
         </p>
       )}
 
-      {imageSrc && (
+      {imageSrc && !onBoard && (
         <div className={cn('mt-5 lg:relative lg:mt-3 lg:min-h-0 lg:flex-1', haunted ? 'hf-develop hf-develop--fit' : 'overflow-hidden rounded-lg')} data-stage={stage}>
           <img
             src={imageSrc}

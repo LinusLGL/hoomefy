@@ -9,6 +9,7 @@ import {
   openSettings,
   phases,
   seedElegantSeen,
+  developPhotograph,
   signIn,
   waitForHaunted,
   waitForPhase,
@@ -123,7 +124,7 @@ test.describe('Mobile', () => {
     await page.getByTestId('mobile-nav').getByRole('button', { name: 'Settings' }).tap();
     await page.getByRole('button', { name: /Bedroom/ }).tap();
     await page.getByRole('button', { name: /Japandi/ }).tap();
-    await page.getByRole('button', { name: 'Develop the Photograph' }).tap();
+    await developPhotograph(page, { tap: true });
 
     await expect(page.getByRole('heading', { name: 'Reconstructing your space...' })).toBeVisible();
     await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });

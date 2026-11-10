@@ -9,6 +9,9 @@ import type { DesignPreferences } from '@/types';
 import { cn } from '@/utils/cn';
 import { Palette, Sparkles, MessageSquare, Wallet } from 'lucide-react';
 import { MAX_FREE_TEXT } from '@/features/studio/prompt';
+import { useIsHaunted } from '@/features/haunting/hauntingStore';
+import { WHISPERS, WHISPER_INTRO, WHISPER_LABEL, WHISPER_PLACEHOLDER } from '@/features/ritual/copy';
+import { appendPhrase } from '@/features/ritual/whisper';
 
 interface PreferencesPanelProps {
   preferences: DesignPreferences;
@@ -25,6 +28,7 @@ const COLOR_PALETTES = [
 
 export function PreferencesPanel({ preferences, onChange, disabled = false }: PreferencesPanelProps) {
   const intensity = preferences.intensity ?? 0.7;
+  const haunted = useIsHaunted();
 
   return (
     <div className="space-y-6 lg:space-y-2.5">
@@ -97,14 +101,36 @@ export function PreferencesPanel({ preferences, onChange, disabled = false }: Pr
       <div className="space-y-2 lg:space-y-1">
         <label htmlFor="custom-instructions" className="flex items-center gap-2 text-sm font-medium text-ivory lg:text-xs">
           <MessageSquare className="h-4 w-4 text-ivory/70" aria-hidden="true" />
-          Extra instructions <span className="font-normal text-ivory/70">(optional)</span>
+          {haunted ? WHISPER_LABEL : 'Extra instructions'} <span className="font-normal text-ivory/70">(optional)</span>
         </label>
+        {haunted && (
+          <details className="group text-xs text-ivory/80" data-testid="whisper-guide">
+            <summary className="cursor-pointer select-none text-accent hover:text-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
+              How to whisper to the spirits
+            </summary>
+            <p className="mt-1.5 leading-snug">{WHISPER_INTRO}</p>
+            <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Whispers to try">
+              {WHISPERS.map((phrase) => (
+                <li key={phrase}>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => onChange({ customInstructions: appendPhrase(preferences.customInstructions ?? '', phrase) })}
+                    className="rounded-full border border-amber-600/60 px-2.5 py-1 text-left text-xs italic text-ivory/90 transition-colors hover:border-amber-500 hover:bg-amber-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {phrase}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
         <textarea
           id="custom-instructions"
           value={preferences.customInstructions ?? ''}
           onChange={(e) => onChange({ customInstructions: e.target.value })}
           disabled={disabled}
-          placeholder="e.g. add more natural light, include plants, keep the fireplace"
+          placeholder={haunted ? WHISPER_PLACEHOLDER : 'e.g. add more natural light, include plants, keep the fireplace'}
           maxLength={MAX_FREE_TEXT}
           rows={3}
           className={cn(

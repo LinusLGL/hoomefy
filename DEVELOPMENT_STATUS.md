@@ -444,3 +444,25 @@ On laptop and desktop screens (1024px wide and up) the Design Studio is now one 
 - **Not changed or checked:** tablet (768 to 1023px) and phone layouts keep their existing scrolling and bottom-bar behaviour (checked by the existing tests, not redesigned); Safari and Firefox were not tried; browser zoom above 100% makes the viewport smaller, so it behaves like a shorter screen.
 
 - **Checked on the live site** (workers.dev, real Supabase account, real-AI mode, which shows the "More free AI time" panel that the test server never renders): zero page scroll at 1366x768, 1440x900 and 1920x1080; the footer is hidden. Measured again locally with that panel on (empty and photo states only, to spend no AI time): zero scroll anywhere at 1366x768 and larger in both experiences; at 1280x720 the right column scrolls up to 26px and the Haunted left column up to 22px. The allowance panel was tightened (`lg:p-2.5`) and the tabs panel minimum lowered to 8.5rem as a result.
+
+## Haunted studio: Ouija board and five-candle ritual (Nov 2026)
+
+In Haunted the Design Studio is now a spirit board. The photo goes on a blank polaroid in the middle of an animated Ouija board; touching it opens the "Gothic Moonlit Ritual Chamber" with five candles. The visitor lights them in any order. Each one shows a line in a box in the middle and plays a recording; the fifth starts the redesign. Elegant is unchanged. Spec: `.kiro/specs/haunted-ritual/`.
+
+- **Board and polaroid:** `BoardBackdrop` (the art with candle flicker, smoke and embers) and `PolaroidStage`. On laptop and desktop the stage is fixed over the board's blank card; on tablet and phone it is a cropped block of the board in the page. With no photo the polaroid is the drop zone; the photo then appears in its window, and develops there (the old card with its own image is gone in Haunted).
+- **Ritual:** `CandleRitual` is a labelled dialog on `<body>` with five real buttons (keyboard works), flicker, a word-by-word text box and a counter. The art was rebuilt by `scripts/build-ritual-assets.mjs` into an unlit chamber plus five transparent flame patches, so lighting a candle adds exactly that candle's light at the pixel it had. Recordings `script1..5.mp3` play from a player that never lets two overlap. After the fifth, the chamber waits for the recording to end (+1.2 s; 12 s at most, 3.8 s when muted), fades, and closes.
+- **Whisper guide:** the extra-instructions box is "Whisper your wishes" with a "How to whisper to the spirits" guide and four phrases that add themselves to the text.
+- **Placement:** `chamberPlacement` keeps the whole ring of candles on screen and centred at every size, letterboxing on tall screens; below 720 px the text box moves under the picture. Mori and the drifting ghosts are hidden while the chamber is open and come back after.
+- **Reduced motion:** every `rt-` animation stops; flames and words stay.
+- **Assets:** about 1.2 MB in total (board 336 KB, chamber 305 KB, five patches 2 to 3 KB each, five recordings 94 to 120 KB each).
+- **Tests and checks run:** type check and lint clean; 40 unit files, 586 tests pass (75 of them new: 64 in `features/ritual` and 11 in `hauntedStudioParts.test.tsx`); 158 Playwright tests pass, 151 desktop and 7 mobile, including 11 new ones in `ritual.spec.ts` (empty board, drop and photo, whisper guide, not-ready message, any-order lighting with the lines and sounds in order, the toolbar button, muted, Escape and restart, keyboard only, reduced motion, motion on, Elegant unchanged); production build ok. Screenshot walks at 1920x1080, 1366x768, 1280x720, 1024x768, 820x1180 and 390x844 ran with no page errors and showed `script1..5` playing in order.
+- **Page fit:** the page never scrolls at 1024 px and wider, Elegant or Haunted. In Haunted with a photo, the left column scrolls inside itself by up to 22 px at 1280x720 and 72 px at 1024x768 (the 22 px matches the earlier measurement; the 72 px at 1024x768 was not measured before). `studio-fit.spec.ts` asserts no scrolling at 1366x768 and up.
+
+**Assumptions made, to confirm** (each is one small change if you want it different):
+1. The line and the sound follow the number of candles lit (first lit = first line), not which candle was touched.
+2. A candle that is already lit ignores a second touch.
+3. Lighting the fifth candle starts the redesign; the toolbar "Develop the Photograph" button opens the same ritual.
+4. The "custom instruction guide" is the "Whisper your wishes" guide on the extra-instructions box.
+5. Sound obeys the site's sound switch; with sound off the words still show.
+
+**Not verified:** Safari and Firefox (blend mode on the flame patches, audio after a click); the live site with the ritual (this entry is written before the deploy); the contrast ratio of the text box was judged by eye, not measured; the licence of the artwork and the five recordings (they came from `Resource/`; confirm before the contest entry).

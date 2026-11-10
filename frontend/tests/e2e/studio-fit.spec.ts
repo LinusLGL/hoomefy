@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { SHOTS, makeRoomPng, seedElegantSeen, signIn } from './helpers';
+import { SHOTS, completeRitual, makeRoomPng, seedElegantSeen, signIn } from './helpers';
 
 /**
  * The Design Studio is one fixed screen on laptop and desktop: the page never scrolls, none of its three
@@ -120,6 +120,7 @@ for (const mode of ['elegant', 'haunted'] as const) {
         // 3. A finished design, with the history strip (two versions) and the tools showing.
         const generate = page.getByRole('button', { name: /Generate Design|Develop the Photograph/ });
         await generate.click();
+        if (mode === 'haunted') await completeRitual(page);
         await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 40_000 });
         await page.getByTestId('regenerate').click();
         await expect(page.getByTestId('history').getByRole('button')).toHaveCount(2, { timeout: 40_000 });

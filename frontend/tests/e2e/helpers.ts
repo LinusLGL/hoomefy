@@ -199,6 +199,32 @@ export async function signIn(page: Page) {
   await expect(page).toHaveURL(/\/studio$/);
 }
 
+export const CANDLE_ORDER = ['top', 'left', 'right', 'bottom-left', 'bottom-right'] as const;
+
+/**
+ * Haunted: a design begins with the candle ritual. Lights all five candles (in `order`, any order works) and waits
+ * for the ritual to complete. The design starts the moment the fifth candle catches.
+ */
+export async function completeRitual(page: Page, options: { order?: readonly string[]; tap?: boolean } = {}) {
+  const { order = CANDLE_ORDER, tap = false } = options;
+  const ritual = page.getByTestId('candle-ritual');
+  await expect(ritual).toBeVisible();
+  for (const id of order) {
+    const candle = ritual.locator(`button.rt-candle[data-candle="${id}"]`);
+    if (tap) await candle.tap();
+    else await candle.click();
+  }
+  await expect(ritual).toHaveAttribute('data-complete', 'true');
+}
+
+/** Presses "Develop the Photograph" in the Haunted studio and performs the ritual that follows. */
+export async function developPhotograph(page: Page, options: { tap?: boolean } = {}) {
+  const button = page.getByRole('button', { name: 'Develop the Photograph' });
+  if (options.tap) await button.tap();
+  else await button.click();
+  await completeRitual(page, options);
+}
+
 export async function noHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow, 'horizontal overflow in px').toBeLessThanOrEqual(1);

@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useState } from 'react';
-import { Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Upload, Image as ImageIcon, X, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/cn';
 import { useIsHaunted } from '@/features/haunting/hauntingStore';
@@ -18,6 +18,8 @@ interface ImageUploadProps {
   disabled?: boolean;
   /** Id of the file input, so other buttons can open the same chooser. */
   inputId?: string;
+  /** "polaroid" fills the window of the blank polaroid on the Haunted Ouija board; "card" is the ordinary drop area. */
+  variant?: 'card' | 'polaroid';
 }
 
 export function ImageUpload({
@@ -26,6 +28,7 @@ export function ImageUpload({
   acceptedFormats = ['image/jpeg', 'image/png', 'image/webp'],
   disabled = false,
   inputId = 'file-input',
+  variant = 'card',
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +103,49 @@ export function ImageUpload({
     }
   };
 
+  const fileInput = (
+    <input
+      id={inputId}
+      type="file"
+      accept={acceptedFormats.join(',')}
+      onChange={handleFileInput}
+      className="hidden"
+      disabled={disabled}
+    />
+  );
+
+  if (variant === 'polaroid') {
+    return (
+      <div className="rt-drop" data-dragging={isDragging && !disabled ? 'true' : 'false'} data-error={error ? 'true' : 'false'}>
+        <div
+          className="rt-drop__zone"
+          onClick={handleClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          data-testid="polaroid-dropzone"
+        >
+          {isDragging ? <Upload className="rt-drop__icon" aria-hidden="true" /> : <Camera className="rt-drop__icon" aria-hidden="true" />}
+          <p className="rt-drop__headline">{isDragging ? 'Let go. It will hold.' : copy.uploadHeadline}</p>
+          <p className="rt-drop__hint">{copy.uploadHint}</p>
+          <button type="button" className="rt-drop__browse" disabled={disabled} onClick={(e) => { e.stopPropagation(); handleClick(); }}>
+            Browse Files
+          </button>
+          <p className="rt-drop__limits">
+            JPEG, PNG or WebP • up to {maxSizeMB} MB • at least 512×512 px
+          </p>
+          {fileInput}
+        </div>
+        {error && (
+          <p className="rt-drop__error" role="alert">
+            <X className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>{error}</span>
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full lg:flex lg:h-full lg:flex-col">
       <div
@@ -152,14 +198,7 @@ export function ImageUpload({
         )}
 
         {/* Hidden File Input */}
-        <input
-          id={inputId}
-          type="file"
-          accept={acceptedFormats.join(',')}
-          onChange={handleFileInput}
-          className="hidden"
-          disabled={disabled}
-        />
+        {fileInput}
       </div>
 
       {/* Error Message */}

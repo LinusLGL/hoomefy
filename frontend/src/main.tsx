@@ -10,6 +10,7 @@ import './styles/haunted.css';
 import './styles/elegant.css';
 import './styles/haunted-landing.css';
 import './styles/haunted-holywater.css';
+import './styles/haunted-ritual.css';
 
 // Inject both palettes and set the persisted experience before the first paint,
 // so there is never a flash of the wrong theme.

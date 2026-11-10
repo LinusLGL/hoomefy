@@ -34,6 +34,10 @@ Built for **Kiroween 2026**, Costume Contest category.
 - **Accounts:** sign up and sign in with Supabase, a gallery of saved designs, delete any time.
 - **Haunted mode:** a gothic mansion theme with a candle cursor, a ghost, hidden holy water and a jumpscare.
   Everything in the studio works the same in both modes.
+- **The spirit board (Haunted studio):** the studio sits on an animated Ouija board. Your photo goes on a blank
+  polaroid in the middle. Touch it and a moonlit ritual chamber opens with five candles. Light them in any order;
+  each one speaks a line (spoken and written), and the fifth starts the redesign. The extra-instructions box
+  becomes "Whisper your wishes", with a short guide and phrases to add. Elegant mode is unchanged.
 
 ## Architecture
 
@@ -94,6 +98,7 @@ frontend/
     features/studio/                themes, prompt builder, photo pipeline, AI providers
     features/furniture/             taxonomy, on-device detection, product search, shopping list
     features/haunting/ mansion/ holywater/   the haunted experience
+    features/ritual/                the Ouija board, the polaroid and the five-candle ritual chamber
     services/                       auth and saved designs (Supabase, with a local fallback)
   worker/index.ts, wrangler.jsonc   Cloudflare Worker entry and deploy config
   functions/api/                    product search handler used by the worker
@@ -106,7 +111,7 @@ docs/DEPLOY.md                      free deployment guide
 ## Built with Kiro
 
 The project was built spec-first with Kiro. The requirements, design and task lists are in `.kiro/specs`
-(`hoomefy`, `scandinavian-elegant`, `haunted-takeover`, `haunted-mansion`, `design-studio`), and the product,
+(`hoomefy`, `scandinavian-elegant`, `haunted-takeover`, `haunted-mansion`, `design-studio`, `haunted-ritual`), and the product,
 design, tech, security, testing and structure rules that guided every change are in `.kiro/steering`.
 
 ## Credits and licence

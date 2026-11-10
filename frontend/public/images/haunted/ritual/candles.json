@@ -1,0 +1,71 @@
+{
+  "width": 1672,
+  "height": 941,
+  "candles": [
+    {
+      "n": 1,
+      "id": "top",
+      "x": 747,
+      "y": 91,
+      "w": 184,
+      "h": 218,
+      "cx": 839,
+      "tip": 183,
+      "end": 217,
+      "half": 7,
+      "file": "candle-1.webp"
+    },
+    {
+      "n": 2,
+      "id": "left",
+      "x": 332,
+      "y": 253,
+      "w": 206,
+      "h": 244,
+      "cx": 435,
+      "tip": 356,
+      "end": 394,
+      "half": 8,
+      "file": "candle-2.webp"
+    },
+    {
+      "n": 3,
+      "id": "right",
+      "x": 1126,
+      "y": 260,
+      "w": 200,
+      "h": 237,
+      "cx": 1226,
+      "tip": 360,
+      "end": 397,
+      "half": 9,
+      "file": "candle-3.webp"
+    },
+    {
+      "n": 4,
+      "id": "bottom-left",
+      "x": 475,
+      "y": 529,
+      "w": 200,
+      "h": 237,
+      "cx": 575,
+      "tip": 629,
+      "end": 666,
+      "half": 9,
+      "file": "candle-4.webp"
+    },
+    {
+      "n": 5,
+      "id": "bottom-right",
+      "x": 987,
+      "y": 524,
+      "w": 222,
+      "h": 263,
+      "cx": 1098,
+      "tip": 635,
+      "end": 676,
+      "half": 10,
+      "file": "candle-5.webp"
+    }
+  ]
+}

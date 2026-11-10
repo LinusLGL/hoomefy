@@ -22,6 +22,12 @@ Desktop: controls | canvas | assistant (summary, furniture, shopping list), side
 collapse. Phone: full-width canvas and a bottom bar (Design, Furniture, Settings); in Haunted mode the ghost and
 the sound/settings buttons sit above the bar.
 
+On laptop and desktop screens (1024 px and wider) the page is one fixed screen with no page scroll.
+
+In the Haunted experience the canvas is a Ouija board with a blank polaroid, and the redesign starts by lighting
+five candles in a ritual chamber. The studio logic, the AI chain and Elegant are unchanged. See
+`.kiro/specs/haunted-ritual/`.
+
 ## Out of scope
 
 Deleting an account (needs a server-side key), video, multi-room projects, payments.

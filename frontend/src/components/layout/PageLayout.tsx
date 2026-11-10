@@ -22,7 +22,7 @@ export default function PageLayout({
   fit = false,
 }: PageLayoutProps) {
   return (
-    <div className={cn('min-h-screen flex flex-col bg-navy-900', fit && 'lg:h-dvh lg:min-h-0 lg:overflow-hidden')}>
+    <div data-page-layout="" className={cn('min-h-screen flex flex-col bg-navy-900', fit && 'lg:h-dvh lg:min-h-0 lg:overflow-hidden')}>
       {showHeader && <Header />}
       <main className={cn('flex-1', fit && 'lg:min-h-0')}>{children}</main>
       {showFooter && (fit ? <div className="lg:hidden"><Footer /></div> : <Footer />)}

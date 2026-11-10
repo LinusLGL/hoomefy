@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { PanelLeftClose, PanelLeftOpen, RefreshCcw, ImagePlus, Sparkles, SlidersHorizontal, Armchair, Wand2, Trash2 } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, RefreshCcw, ImagePlus, Sparkles, SlidersHorizontal, Armchair, Wand2, Trash2, Flame } from 'lucide-react';
 import type { FurnitureKey, RoomType } from '@/types';
 import { FurniturePicker } from '@/features/mansion/FurniturePicker';
 import { SpiritReport } from '@/features/mansion/SpiritReport';
@@ -22,6 +22,22 @@ import { activeHouse, useMansionStore, type JobOutcome } from '@/features/mansio
 import { composeInstructions } from '@/features/mansion/spirits';
 import { Button } from '@/components/ui/button';
 import { FILE_INPUT_ID, UploadContainer } from '@/components/upload/UploadContainer';
+import { PrivacyNote } from '@/components/upload/PrivacyNote';
+import { stageFromJob } from '@/components/studio/generationStage';
+import {
+  BEGIN_READY,
+  BEGIN_WAITING,
+  BoardBackdrop,
+  CANDLES,
+  CHAMBER,
+  CandleRitual,
+  NOT_READY_BODY,
+  NOT_READY_TITLE,
+  PolaroidStage,
+  STAGE_LINES,
+  preloadRitualAssets,
+  type StageState,
+} from '@/features/ritual';
 import { RoomTypeSelector } from '@/components/studio/RoomTypeSelector';
 import { StyleSelector } from '@/components/studio/StyleSelector';
 import { PreferencesPanel } from '@/components/studio/PreferencesPanel';
@@ -46,7 +62,7 @@ import { cn } from '@/utils/cn';
 type Step = 'upload' | 'customize' | 'generate';
 type MobileTab = 'design' | 'furniture' | 'settings';
 
-const PANEL = 'rounded-xl border border-navy-700 bg-navy-800 p-6 lg:p-2.5';
+const PANEL = 'rt-panel rounded-xl border border-navy-700 bg-navy-800 p-6 lg:p-2.5';
 
 export function StudioPage() {
   const toast = useToast();
@@ -75,6 +91,11 @@ export function StudioPage() {
   const [consentOpen, setConsentOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
 
+  // Haunted only: the candle ritual that begins a design. The consent question, when it is needed, comes first.
+  const [ritualOpen, setRitualOpen] = useState(false);
+  const ritualDemoRef = useRef(false);
+  const consentForRitual = useRef(false);
+
   // Haunted only: spirits are bound to furniture, and replacing it drives them out.
   const replaceFurniture: FurnitureKey[] = preferences.replaceFurniture ?? [];
   const setReplaceFurniture = (next: FurnitureKey[]) => setPreferences({ replaceFurniture: next });
@@ -98,12 +119,31 @@ export function StudioPage() {
     if (result) setOutcome(result);
   }, [haunted, isGenerating, currentJob, lastRequest, applyJob]);
 
-  // Tell the haunting engine not to start anything while a generation runs.
+  // Tell the haunting engine not to start anything while a generation runs, or the ritual is under way.
   const setBusy = useHauntingStore((s) => s.setBusy);
   useEffect(() => {
     setBusy('generation', isGenerating);
     return () => setBusy('generation', false);
   }, [isGenerating, setBusy]);
+  useEffect(() => {
+    setBusy('ritual', ritualOpen);
+    return () => setBusy('ritual', false);
+  }, [ritualOpen, setBusy]);
+
+  // The Ouija board is the table of the Haunted studio: the page lets it show through.
+  useEffect(() => {
+    if (!haunted) return undefined;
+    document.documentElement.dataset.studioBoard = 'true';
+    return () => {
+      delete document.documentElement.dataset.studioBoard;
+    };
+  }, [haunted]);
+
+  // Fetch the ritual chamber while the visitor is still choosing a style, so it opens without a wait.
+  const hasPhoto = Boolean(originalImage);
+  useEffect(() => {
+    if (haunted && hasPhoto) preloadRitualAssets([CHAMBER.src, ...CANDLES.map((c) => c.patch.src)]);
+  }, [haunted, hasPhoto]);
 
   // Lets the page styles lift the ghost and the settings buttons above the phone's bottom bar.
   useEffect(() => {
@@ -163,6 +203,27 @@ export function StudioPage() {
       },
     });
   };
+
+  // Haunted: a design begins with the candle ritual. Lighting the fifth candle starts the design (see CandleRitual).
+  const needsConsent = () => getProviderMode() === 'live' && !hasAiConsent();
+  const beginRitual = (demo: boolean) => {
+    ritualDemoRef.current = demo;
+    setRitualOpen(true);
+  };
+  const developPhotograph = () => {
+    if (isGenerating || ritualOpen) return;
+    if (!isReady) {
+      toast.error(NOT_READY_TITLE, NOT_READY_BODY);
+      return;
+    }
+    if (needsConsent()) {
+      consentForRitual.current = true;
+      setConsentOpen(true);
+      return;
+    }
+    beginRitual(false);
+  };
+  const develop = () => (haunted ? developPhotograph() : void startGeneration(false));
 
   const startOver = () => {
     clear();
@@ -242,8 +303,28 @@ export function StudioPage() {
 
   const spiritReport = haunted && originalImage && roomType ? <SpiritReport roomType={roomType} /> : null;
 
+  // The polaroid on the Ouija board (Haunted): what it shows, and what the visitor can do with it.
+  const stageState: StageState = !originalImage ? 'empty' : showProgress ? 'working' : isReady ? 'ready' : 'photo';
+  const beginRitualButton =
+    originalImage && !showProgress ? (
+      <button
+        type="button"
+        className="rt-begin"
+        data-ready={isReady ? 'true' : 'false'}
+        data-testid="begin-ritual"
+        aria-label="Begin the candle ritual to develop this photograph"
+        onClick={developPhotograph}
+      >
+        <span className="rt-begin__pill" aria-hidden="true">
+          <Flame className="h-[1.1em] w-[1.1em]" />
+          {isReady ? BEGIN_READY : BEGIN_WAITING}
+        </span>
+      </button>
+    ) : undefined;
+
   return (
     <div className="min-h-screen pb-24 md:pb-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:pb-0">
+      {haunted && <BoardBackdrop dim={!wide} />}
       {/* Toolbar */}
       <div className="sticky top-16 z-10 border-b border-navy-700 bg-navy-900/95 backdrop-blur-md lg:static lg:shrink-0">
         <div className="mx-auto flex max-w-[1800px] flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:flex-nowrap lg:gap-3 lg:px-8 lg:py-1.5">
@@ -279,7 +360,7 @@ export function StudioPage() {
                 Reset
               </Button>
             )}
-            <Button className="lg:min-h-[36px] lg:py-1" onClick={() => void startGeneration(false)} disabled={!isReady || isGenerating} isLoading={isGenerating}>
+            <Button className="lg:min-h-[36px] lg:py-1" onClick={develop} disabled={!isReady || isGenerating} isLoading={isGenerating}>
               {!isGenerating && <Sparkles className="h-4 w-4" aria-hidden="true" />}
               {isGenerating ? copy.generatingLabel : copy.generateLabel}
             </Button>
@@ -359,14 +440,44 @@ export function StudioPage() {
               'md:block'
             )}
           >
-            {/* The file input must stay in the page (hidden) so Replace photo can open it. */}
-            <div className={cn(PANEL, hideUpload ? 'hidden' : 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col')}>
-              <h2 className="mb-4 font-heading text-lg font-semibold text-ivory lg:mb-2 lg:shrink-0 lg:text-base">{copy.uploadTitle}</h2>
-              <div className="lg:min-h-0 lg:flex-1">
-                <UploadContainer collapsed={hideUpload} />
+            {haunted ? (
+              // Haunted: the photograph goes on the polaroid on the Ouija board. It stays mounted (hidden) once the design
+              // is showing, so Replace photo can still open the file chooser.
+              <PolaroidStage
+                wide={wide}
+                state={stageState}
+                title={copy.uploadTitle}
+                line={STAGE_LINES[stageState]}
+                hidden={showResult}
+                below={
+                  showProgress ? (
+                    <GenerationProgress
+                      variant="board"
+                      job={currentJob}
+                      imageSrc={originalImage?.preview ?? null}
+                      onCancel={cancel}
+                      queue={queue}
+                      errorCode={errorCode}
+                      onRetry={() => void startGeneration(lastDemoRef.current)}
+                      onDemo={getProviderMode() === 'live' ? () => void startGeneration(true) : undefined}
+                    />
+                  ) : (
+                    <PrivacyNote className="rt-plate rt-privacy flex items-start gap-2 p-2 text-[11px] leading-snug text-ivory/85" />
+                  )
+                }
+              >
+                <UploadContainer variant="polaroid" stage={showProgress ? stageFromJob(currentJob) : null} overlay={beginRitualButton} />
+              </PolaroidStage>
+            ) : (
+              // The file input must stay in the page (hidden) so Replace photo can open it.
+              <div className={cn(PANEL, hideUpload ? 'hidden' : 'lg:flex lg:min-h-0 lg:flex-1 lg:flex-col')}>
+                <h2 className="mb-4 font-heading text-lg font-semibold text-ivory lg:mb-2 lg:shrink-0 lg:text-base">{copy.uploadTitle}</h2>
+                <div className="lg:min-h-0 lg:flex-1">
+                  <UploadContainer collapsed={hideUpload} />
+                </div>
+                {!originalImage && <p className="sr-only">Add a photo to begin.</p>}
               </div>
-              {!originalImage && <p className="sr-only">Add a photo to begin.</p>}
-            </div>
+            )}
 
             {originalImage && (!roomType || !styleReady) && (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-600/40 bg-navy-800 p-4 md:hidden" data-testid="settings-callout">
@@ -379,7 +490,7 @@ export function StudioPage() {
 
             {!wide && spiritReport}
 
-            {showProgress && (
+            {showProgress && !haunted && (
               <GenerationProgress
                 job={currentJob}
                 imageSrc={originalImage?.preview ?? null}
@@ -457,17 +568,25 @@ export function StudioPage() {
 
       <ConsentDialog
         open={consentOpen}
-        onCancel={() => setConsentOpen(false)}
+        onCancel={() => {
+          consentForRitual.current = false;
+          setConsentOpen(false);
+        }}
         onAccept={() => {
           grantAiConsent();
           setConsentOpen(false);
-          void startGeneration(false);
+          if (consentForRitual.current) beginRitual(false);
+          else void startGeneration(false);
+          consentForRitual.current = false;
         }}
         onDemo={() => {
           setConsentOpen(false);
-          void startGeneration(true);
+          if (consentForRitual.current) beginRitual(true);
+          else void startGeneration(true);
+          consentForRitual.current = false;
         }}
       />
+      {haunted && <CandleRitual open={ritualOpen} onComplete={() => void startGeneration(ritualDemoRef.current)} onClose={() => setRitualOpen(false)} />}
       <SaveDialog open={saveOpen} onClose={() => setSaveOpen(false)} />
     </div>
   );
