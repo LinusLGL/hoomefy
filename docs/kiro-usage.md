@@ -74,7 +74,13 @@ OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. The project config 
 
 (The editing tool used for this change was blocked from writing under `.kiro/settings/`, so this file must be added by hand.) The same server is in the power's `mcp.json`.
 
-The project owner reports that the images, videos and sound in the app came from OpenArt. **To confirm before submitting:** the list of assets and for each one the tool that produced it. The `Resource/` folder holds the originals. The one exception is the ambient music: `Resource/cinematic-soul-halloween-halloween-dark-music-617915.mp3` (the same file the app serves as `frontend/public/audio/haunted-ambient.mp3`) comes from [Pixabay Music](https://pixabay.com/music/), not from OpenArt. Say so on Devpost. **To confirm:** the track's Pixabay page and its licence terms at the time of download, and save the page link here. HeyGen is not used.
+The project owner reports that the images, videos and sound in the app came from OpenArt. **To confirm before submitting:** the list of assets and for each one the tool that produced it. The `Resource/` folder holds the originals. Three audio files are the exception and come from [Pixabay Music](https://pixabay.com/music/), not from OpenArt. Say so on Devpost:
+
+- `Resource/cinematic-soul-halloween-halloween-dark-music-617915.mp3` (served as `frontend/public/audio/haunted-ambient.mp3`)
+- `Resource/HauntingStart.mp3` (served as `frontend/public/audio/haunting-start.mp3`)
+- `Resource/firesound.mp3` (served as `frontend/public/audio/firesound.mp3`)
+
+The project owner reports these are free to use. **To confirm:** for each track, the Pixabay page link and the licence terms at the time of download, and save the links here. The five ritual voice lines, `Resource/script1.mp3` to `script5.mp3` (served from `frontend/public/audio/ritual/`), were generated with OpenArt. HeyGen is not used.
 
 ## Power
 
