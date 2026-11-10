@@ -9,8 +9,11 @@
  *   - shows the line in a box in the middle of the circle.
  * Which line is spoken depends on how many candles are lit, not on which one was touched.
  *
- * Lighting the fifth calls onComplete (the studio starts the design then), lets the last line finish, and fades
- * away by itself, calling onClose. Leaving earlier (Escape or the close button) calls onClose without onComplete.
+ * Lighting the fifth calls onComplete (the studio starts the design then) and lets the last line finish. The circle
+ * then stays until the design is done (`working` turns false), showing that the photograph is developing, and only
+ * then fades away by itself, calling onClose, so the finished picture is what the visitor sees next. A design that
+ * fails ends the wait the same way. Leaving earlier (Escape or the close button) calls onClose without onComplete,
+ * and after the fifth flame it only dismisses: the design carries on behind it.
  *
  * Accessible: a labelled modal dialog, real buttons for the candles (Tab, Enter and Space work), the words are
  * announced as they appear, and every animation stops under reduced motion.
@@ -21,7 +24,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useHauntingStore } from '@/features/haunting/hauntingStore';
 import { CANDLES, CANDLE_SOUNDS, CHAMBER, chamberPlacement, place, type CandleSpec } from './geometry';
-import { CANDLE_COUNT, RITUAL_INTRO, freshRitual, isComplete, isLit, lightCandle, messageFor, soundFor, type RitualState } from './ritualState';
+import { CANDLE_COUNT, RITUAL_INTRO, WAIT_LINE, freshRitual, isComplete, isLit, lightCandle, messageFor, soundFor, type RitualState } from './ritualState';
 import { createScriptPlayer, type ScriptPlayer } from './scriptAudio';
 import { useViewportSize } from './useViewportSize';
 
@@ -31,9 +34,16 @@ export interface CandleRitualProps {
   onComplete: () => void;
   /** The ritual is over: it was left early, or it finished and faded. */
   onClose: () => void;
+  /** The design is still being made. After the fifth flame the circle stays open while this is true. */
+  working?: boolean;
+  /** What the free service says about the wait (for example its queue), shown with the waiting line. */
+  status?: string | null;
 }
 
-/** How long the last line is given when it is not spoken, and the longest it is waited for when it is. */
+/**
+ * How long the last line is given when it is not spoken, and the longest it is waited for when it is. These only
+ * time the LINE; the circle itself stays as long as the design is being made.
+ */
 export const FINALE_SILENT_MS = 3800;
 export const FINALE_MAX_MS = 12_000;
 /** Pause after the last recording ends, and the length of the fade out. */
@@ -46,9 +56,9 @@ const STACK_BELOW = 720;
  * Drawn on <body>, outside the app layer, so its z-index is compared with the ghosts and the dark room (which also
  * live outside it) and not trapped below them.
  */
-export function CandleRitual({ open, onComplete, onClose }: CandleRitualProps) {
+export function CandleRitual({ open, onComplete, onClose, working = false, status = null }: CandleRitualProps) {
   if (!open || typeof document === 'undefined') return null;
-  return createPortal(<RitualScene onComplete={onComplete} onClose={onClose} />, document.body);
+  return createPortal(<RitualScene onComplete={onComplete} onClose={onClose} working={working} status={status} />, document.body);
 }
 
 const SHOUT = /^[A-Z]{3,}[!.,]?$/;
@@ -70,7 +80,7 @@ function Words({ text }: { text: string }) {
   );
 }
 
-function RitualScene({ onComplete, onClose }: Omit<CandleRitualProps, 'open'>) {
+function RitualScene({ onComplete, onClose, working = false, status = null }: Omit<CandleRitualProps, 'open'>) {
   const audioEnabled = useHauntingStore((s) => s.audioEnabled);
   const view = useViewportSize();
   const placement = useMemo(() => chamberPlacement(view), [view]);
@@ -80,6 +90,8 @@ function RitualScene({ onComplete, onClose }: Omit<CandleRitualProps, 'open'>) {
   const [loaded, setLoaded] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [heard, setHeard] = useState(false);
+  // The last line has been spoken (or given its time). The circle may close once the design is also done.
+  const [lineDone, setLineDone] = useState(false);
   const [leaving, setLeaving] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
@@ -148,13 +160,18 @@ function RitualScene({ onComplete, onClose }: Omit<CandleRitualProps, 'open'>) {
     return () => document.removeEventListener('keydown', onKey, true);
   }, [finishing]);
 
-  // After the fifth flame: wait for the voice to end (or a fixed time when it is silent or does not end), then fade away.
+  // After the fifth flame: let the voice end (or give a fixed time when it is silent or does not end)...
   useEffect(() => {
     if (!finishing) return undefined;
     const wait = audioEnabled ? (heard ? AFTER_VOICE_MS : FINALE_MAX_MS) : FINALE_SILENT_MS;
-    const id = window.setTimeout(() => setLeaving(true), wait);
+    const id = window.setTimeout(() => setLineDone(true), wait);
     return () => window.clearTimeout(id);
   }, [finishing, heard, audioEnabled]);
+
+  // ...then stay until the design is finished, and only then fade away onto it.
+  useEffect(() => {
+    if (lineDone && !working) setLeaving(true);
+  }, [lineDone, working]);
 
   useEffect(() => {
     if (!leaving) return undefined;
@@ -294,6 +311,21 @@ function RitualScene({ onComplete, onClose }: Omit<CandleRitualProps, 'open'>) {
             <Words text={message ?? RITUAL_INTRO} />
           </p>
         </div>
+        {lineDone && working && !leaving && (
+          <p className="rt-wait" role="status" aria-live="polite" data-testid="ritual-wait">
+            <span className="rt-wait__text">{WAIT_LINE}</span>
+            <span className="rt-wait__dots" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            {status && (
+              <span className="rt-wait__status" data-testid="ritual-wait-status">
+                {status}
+              </span>
+            )}
+          </p>
+        )}
       </div>
 
       <p className="rt-count" aria-label={`${lit} of ${CANDLE_COUNT} flames lit`} data-testid="ritual-count">

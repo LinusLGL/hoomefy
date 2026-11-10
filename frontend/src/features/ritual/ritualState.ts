@@ -21,6 +21,17 @@ export const CANDLE_COUNT = CANDLES.length;
 /** Shown before any candle is lit. */
 export const RITUAL_INTRO = 'Five flames wait in the circle. Touch any one of them to wake it.';
 
+/** Shown under the last line while the photograph is still being developed. */
+export const WAIT_LINE = 'The photograph is developing. Stay within the circle';
+
+/** What the free service says about the wait, from its queue; null when there is nothing to say. */
+export function waitStatus(queue: { position?: number; etaSeconds?: number } | null | undefined): string | null {
+  if (!queue || queue.position === undefined || queue.position <= 1) return null;
+  const seconds = queue.etaSeconds ? Math.max(1, Math.round(queue.etaSeconds)) : 0;
+  const eta = seconds ? `, about ${seconds} ${seconds === 1 ? 'second' : 'seconds'}` : '';
+  return `${queue.position} spirits are ahead of you in the free queue${eta}.`;
+}
+
 export interface RitualState {
   /** The candles that are lit, in the order they were lit. */
   lit: readonly CandleId[];

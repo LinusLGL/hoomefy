@@ -81,7 +81,11 @@ export const CHAMBER = {
   ring: { x: 330, y: 120, w: 1010, h: 710 } as Rect,
 };
 
-export const CANDLE_SOUNDS = [1, 2, 3, 4, 5].map((n) => `/audio/ritual/script${n}.mp3`);
+/**
+ * The recording for each flame, in order. The second is `script2.1.mp3`, which replaced the first take of `script2`;
+ * it keeps its own name so a browser or the CDN does not keep serving the old recording from its cache.
+ */
+export const CANDLE_SOUNDS = ['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3'].map((file) => `/audio/ritual/${file}`);
 
 /** Draw `art` so it covers the whole viewport (some of it may be cropped). */
 export function coverPlacement(view: Size, art: Size = ART): Placement {

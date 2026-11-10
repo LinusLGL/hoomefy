@@ -33,7 +33,7 @@ changed.
    | Lit | Words | Sound |
    |---|---|---|
    | 1st | By the first flame, awaken the secrets buried beneath these walls. | `script1.mp3` |
-   | 2nd | By the second flame, bind the restless echoes wandering between worlds. | `script2.mp3` |
+   | 2nd | By the second flame, bind the restless echoes wandering between worlds. | `script2.1.mp3` |
    | 3rd | By the third flame, purge the darkness from every forgotten memory. | `script3.mp3` |
    | 4th | By the fourth flame, let all corrupted spirits dissolve into eternal silence. | `script4.mp3` |
    | 5th | By the fifth and final flame, the power of the circle COMPELS YOU! | `script5.mp3` |
@@ -46,7 +46,7 @@ changed.
 ## R4. Developing the photograph
 
 1. Lighting the fifth candle SHALL start the redesign **(assumed)**, through the same path as the old "Develop the Photograph" button (consent, AI chain, quota, demo fallback).
-2. The chamber SHALL stay until the fifth recording has ended (plus a short pause), then fade out, and the studio SHALL show the photograph developing on the polaroid. With sound off the chamber stays 3.8 s; it never stays longer than 12 s.
+2. After the fifth recording has ended (plus a short pause; 3.8 s with sound off, 12 s at most) the chamber SHALL stay open while the design is still being made, showing "The photograph is developing. Stay within the circle" and the queue position. When the design finishes or fails it SHALL fade out and the studio SHALL show the result. Close or Escape only dismisses; the design carries on.
 3. The room type and style SHALL be chosen first. If they are not, pressing the photograph SHALL say "The flames are not ready" and explain what is missing, and no chamber opens.
 4. When the live AI is in use, the existing consent dialog SHALL come **before** the chamber opens.
 
@@ -72,3 +72,8 @@ changed.
 ## Out of scope
 
 Lighting candles on the Elegant side; a different set of words per candle position; a way to replay the ritual after the photograph is developed (the studio's Regenerate button does that without it).
+
+## Click sound and candle dimming (follow-up)
+
+- Every click in the Haunted site plays the first 1.4 s of `firesound.mp3` (volume 0.55, restarts on each click, silent when sound is off or a video plays).
+- The candle cursor light now shrinks every 3.3 s (was 5 s) down to a floor of 12 % (was 15 %), so it is very dim before the 12 s jumpscare starts **(interpretation of 'dim 50 % more', to be confirmed)**.

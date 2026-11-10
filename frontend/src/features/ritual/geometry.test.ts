@@ -123,7 +123,8 @@ describe('the candles', () => {
   it('are five, numbered 1 to 5, each with its own voice', () => {
     expect(CANDLES.map((c) => c.n)).toEqual([1, 2, 3, 4, 5]);
     expect(new Set(CANDLES.map((c) => c.id)).size).toBe(5);
-    expect(CANDLE_SOUNDS).toEqual([1, 2, 3, 4, 5].map((n) => `/audio/ritual/script${n}.mp3`));
+    // The second flame uses the second take of its line, script2.1.
+    expect(CANDLE_SOUNDS).toEqual(['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3'].map((f) => `/audio/ritual/${f}`));
   });
 
   it('keep the numbers in candles.json (written by scripts/build-ritual-assets.mjs) in step with the code', () => {

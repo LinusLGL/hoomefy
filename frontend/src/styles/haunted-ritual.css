@@ -727,6 +727,67 @@ html[data-ritual='open'] .hf-ghosts {
   font-size: clamp(0.92rem, 2vw, 1.15rem);
   color: #e3d3b4;
 }
+/* While the photograph is developing, a line under the box says so. */
+.rt-wait {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 0;
+  right: 0;
+  width: max-content;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 auto;
+  padding: 0.55rem 1.1rem 0.65rem;
+  text-align: center;
+  /* a dark plate, so it reads over the glowing runes */
+  background: radial-gradient(ellipse at 50% 50%, rgba(8, 5, 8, 0.88), rgba(8, 5, 8, 0.72) 80%);
+  border: 1px solid rgba(201, 169, 97, 0.35);
+  border-radius: 2px;
+  color: #f1e3c2;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: clamp(0.9rem, 1.9vw, 1.1rem);
+  text-shadow: 0 0 12px rgba(255, 150, 70, 0.6), 0 1px 6px #000;
+  pointer-events: none;
+  animation: rt-wait-in 0.8s ease-out both;
+}
+/* On a narrow screen the floating buttons sit below the box, so the line goes above it, over the picture. */
+.rt-message-wrap[data-stacked='true'] .rt-wait {
+  top: auto;
+  bottom: calc(100% + 14px);
+}
+.rt-wait__status {
+  font-family: var(--font-body, inherit);
+  font-style: normal;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: #d8c597;
+}
+.rt-wait__dots {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+.rt-wait__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffb457;
+  box-shadow: 0 0 8px rgba(255, 170, 80, 0.9);
+  animation: rt-wait-dot 1.4s ease-in-out infinite;
+}
+.rt-wait__dots i:nth-child(2) { animation-delay: 0.22s; }
+.rt-wait__dots i:nth-child(3) { animation-delay: 0.44s; }
+@keyframes rt-wait-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes rt-wait-dot {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
 .rt-word {
   display: inline-block;
   opacity: 0;

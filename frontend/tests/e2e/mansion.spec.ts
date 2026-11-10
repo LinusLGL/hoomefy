@@ -308,7 +308,7 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     await expect(light(page)).toHaveAttribute('data-lit', 'false');
   });
 
-  test('a click also restarts the 5 seconds, so it is not followed by an instant shrink', async ({ page }) => {
+  test('a click also restarts the burn-down wait, so it is not followed by an instant shrink', async ({ page }) => {
     test.setTimeout(60_000);
     await seedHaunted(page);
     await gotoHome(page);
@@ -316,7 +316,7 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     const box = (await plain.boundingBox()) as { x: number; y: number; width: number; height: number };
     await page.mouse.move(box.x + 6, box.y + box.height / 2);
 
-    await page.waitForTimeout(3500); // the first burn-down is about 1.5 s away
+    await page.waitForTimeout(2000); // the first burn-down is about 1.3 s away
     await page.mouse.click(box.x + 6, box.y + box.height / 2);
     await expect(light(page)).toHaveAttribute('data-radius', '50');
     await page.waitForTimeout(2500); // past the original burn-down moment
@@ -324,7 +324,7 @@ test.describe('Candlelight: a dark room lit by the candle', () => {
     await expect.poll(async () => Number(await light(page).getAttribute('data-radius')), { timeout: 6000 }).toBeLessThan(50);
   });
 
-  test('burns lower: the circle shrinks by 10% about every 5 seconds', async ({ page }) => {
+  test('burns lower: the circle shrinks by 10% about every 3.3 seconds', async ({ page }) => {
     test.setTimeout(60_000);
     await seedHaunted(page);
     await gotoHome(page);

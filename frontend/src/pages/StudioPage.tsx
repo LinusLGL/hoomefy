@@ -36,6 +36,7 @@ import {
   PolaroidStage,
   STAGE_LINES,
   preloadRitualAssets,
+  waitStatus,
   type StageState,
 } from '@/features/ritual';
 import { RoomTypeSelector } from '@/components/studio/RoomTypeSelector';
@@ -586,7 +587,15 @@ export function StudioPage() {
           consentForRitual.current = false;
         }}
       />
-      {haunted && <CandleRitual open={ritualOpen} onComplete={() => void startGeneration(ritualDemoRef.current)} onClose={() => setRitualOpen(false)} />}
+      {haunted && (
+        <CandleRitual
+          open={ritualOpen}
+          working={isGenerating}
+          status={waitStatus(queue)}
+          onComplete={() => void startGeneration(ritualDemoRef.current)}
+          onClose={() => setRitualOpen(false)}
+        />
+      )}
       <SaveDialog open={saveOpen} onClose={() => setSaveOpen(false)} />
     </div>
   );

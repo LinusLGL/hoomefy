@@ -453,11 +453,11 @@ test.describe('Using the holy water on the ghost', () => {
 });
 
 test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
-  // Stepping a frozen clock 36 s forward makes the browser run about two thousand animation frames of
+  // Stepping a frozen clock 30 s forward makes the browser run about two thousand animation frames of
   // the page's own work, so these tests take 40 to 60 real seconds each.
   test.describe.configure({ timeout: 180_000 });
 
-  /** A frozen clock, so the 5-second and 12-second timers can be stepped exactly. */
+  /** A frozen clock, so the burn-down (3.3 s) and 12-second timers can be stepped exactly. */
   async function startFrozen(page: Page, s: Seed) {
     await page.clock.install();
     await seed(page, { candle: true, ...s });
@@ -469,16 +469,16 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
   const radius = (page: Page) => page.getByTestId('candle-light').getAttribute('data-radius');
 
   /**
-   * Lets the candle burn down (30% loses a tenth of itself every 5 s: seven ticks to the 15% floor), one
+   * Lets the candle burn down (30% loses a tenth of itself every 3.3 s: nine ticks to the 12% floor), one
    * second at a time, and stops the moment it reaches the floor. The 12 seconds are counted from there, so
    * the caller is at most one second past the start of them.
    */
   async function burnDown(page: Page) {
-    for (let step = 0; step < 60 && (await radius(page)) !== '15'; step++) {
+    for (let step = 0; step < 60 && (await radius(page)) !== '12'; step++) {
       await page.clock.runFor(1000);
       await page.waitForTimeout(40); // let the page draw the new light
     }
-    await expect(page.getByTestId('candle-light')).toHaveAttribute('data-radius', '15');
+    await expect(page.getByTestId('candle-light')).toHaveAttribute('data-radius', '12');
     await page.waitForTimeout(100); // and set the 12-second timer
   }
 
@@ -510,7 +510,7 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
     // once only: the candle is still at its lowest, and a further 12 s there does nothing
     await page.clock.runFor(20_000);
     await expect(video(page)).toHaveCount(0);
-    await expect(page.getByTestId('candle-light')).toHaveAttribute('data-radius', '15');
+    await expect(page.getByTestId('candle-light')).toHaveAttribute('data-radius', '12');
   });
 
   test('Escape ends it early', async ({ page }) => {
@@ -528,7 +528,7 @@ test.describe('The jumpscare: the candle at its lowest for 12 seconds', () => {
     await page.clock.runFor(9_000);
     // a click anywhere brightens the candle; dispatched on the body so it cannot land on a link
     await page.evaluate(() => document.body.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-    await expect(page.getByTestId('candle-light')).not.toHaveAttribute('data-radius', '15');
+    await expect(page.getByTestId('candle-light')).not.toHaveAttribute('data-radius', '12');
     await page.clock.runFor(10_000);
     await expect(video(page)).toHaveCount(0);
   });

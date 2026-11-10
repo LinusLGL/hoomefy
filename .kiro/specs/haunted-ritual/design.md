@@ -31,7 +31,7 @@ Code is in `frontend/src/features/ritual/`; styles in `frontend/src/styles/haunt
 ## Finale timing
 
 After the fifth candle: wait for the `script5` recording to end plus 1200 ms; if it never ends, 12 s; if sound is
-off, 3.8 s. Then fade 800 ms and close. Close or Escape before the fifth candle leaves early and starts nothing;
+off, 3.8 s. Then, while the design is still working, the chamber stays open with the `.rt-wait` line (props `working`, `status`). When `working` turns false it fades 800 ms and closes. Close or Escape before the fifth candle leaves early and starts nothing;
 after it, they only dismiss.
 
 ## Candle geometry (art is 1672 x 941)

@@ -23,6 +23,8 @@ vi.mock('./scriptAudio', () => ({
 const candle = (id: string) => document.querySelector(`button.rt-candle[data-candle="${id}"]`) as HTMLButtonElement;
 const light = (id: string) => fireEvent.click(candle(id));
 const ALL = CANDLES.map((c) => c.id);
+// The second flame speaks the second take of its line.
+const SCRIPTS = ['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3'];
 
 function mount(props: Partial<{ open: boolean }> = {}) {
   const onComplete = vi.fn();
@@ -85,7 +87,7 @@ describe('CandleRitual', () => {
     order.forEach((id, i) => {
       light(id);
       expect(screen.getByTestId('ritual-message')).toHaveTextContent(RITUAL_MESSAGES[i]);
-      expect(audio.plays[i]).toBe(`/audio/ritual/script${i + 1}.mp3`);
+      expect(audio.plays[i]).toBe(`/audio/ritual/${SCRIPTS[i]}`);
     });
     expect(candle('left')).toHaveAttribute('data-lit', 'false');
   });
@@ -145,6 +147,109 @@ describe('CandleRitual', () => {
       vi.advanceTimersByTime(800);
     });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  describe('while the design is being made', () => {
+    const mountWorking = (working: boolean, status: string | null = null) => {
+      const onClose = vi.fn();
+      const view = render(<CandleRitual open working={working} status={status} onComplete={vi.fn()} onClose={onClose} />);
+      const again = (next: boolean, nextStatus: string | null = status) =>
+        view.rerender(<CandleRitual open working={next} status={nextStatus} onComplete={vi.fn()} onClose={onClose} />);
+      return { onClose, again };
+    };
+
+    it('stays open after the last line, however long it takes, and shows that the photograph is developing', () => {
+      vi.useFakeTimers();
+      const { onClose } = mountWorking(true);
+      ALL.forEach(light);
+      expect(screen.queryByTestId('ritual-wait')).toBeNull(); // the last line is still being spoken
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      expect(screen.getByTestId('ritual-wait')).toHaveTextContent(/photograph is developing/i);
+      act(() => {
+        vi.advanceTimersByTime(10 * 60_000); // ten minutes in the free queue
+      });
+      expect(onClose).not.toHaveBeenCalled();
+      expect(screen.getByTestId('candle-ritual')).toHaveAttribute('data-leaving', 'false');
+    });
+
+    it('fades away and closes once the design is finished', () => {
+      vi.useFakeTimers();
+      const { onClose, again } = mountWorking(true);
+      ALL.forEach(light);
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      again(false); // the design is ready
+      expect(screen.getByTestId('candle-ritual')).toHaveAttribute('data-leaving', 'true');
+      expect(screen.queryByTestId('ritual-wait')).toBeNull();
+      expect(onClose).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('also waits for the last line when the design finishes first', () => {
+      vi.useFakeTimers();
+      const { onClose, again } = mountWorking(true);
+      ALL.forEach(light);
+      again(false); // a quick design: ready while the last line is still speaking
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(screen.getByTestId('candle-ritual')).toHaveAttribute('data-leaving', 'false');
+      expect(onClose).not.toHaveBeenCalled();
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      expect(screen.getByTestId('candle-ritual')).toHaveAttribute('data-leaving', 'true');
+    });
+
+    it('closes too when the design fails (the studio then shows what went wrong)', () => {
+      vi.useFakeTimers();
+      const { onClose, again } = mountWorking(true);
+      ALL.forEach(light);
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      again(false);
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('says what the free service reports about the wait', () => {
+      vi.useFakeTimers();
+      mountWorking(true, '3 spirits are ahead of you in the free queue, about 20 seconds.');
+      ALL.forEach(light);
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      expect(screen.getByTestId('ritual-wait-status')).toHaveTextContent('3 spirits are ahead of you');
+    });
+
+    it('can still be dismissed while waiting; the design carries on behind it', () => {
+      vi.useFakeTimers();
+      const { onClose } = mountWorking(true);
+      ALL.forEach(light);
+      act(() => audio.onEnded?.());
+      act(() => {
+        vi.advanceTimersByTime(1200);
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('does not wait forever for a voice that never ends', () => {

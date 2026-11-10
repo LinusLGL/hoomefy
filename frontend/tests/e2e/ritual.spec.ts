@@ -8,6 +8,9 @@ import { SHOTS, instrument, makeRoomPng, seedElegantSeen, signIn } from './helpe
  * Demo rendering is used, so no real AI is involved.
  */
 
+// The second flame speaks the second take of its line (script2.1), not the first.
+const SCRIPTS = ['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3'];
+
 const MESSAGES = [
   'By the first flame, awaken the secrets buried beneath these walls.',
   'By the second flame, bind the restless echoes wandering between worlds.',
@@ -137,7 +140,7 @@ test.describe('The candle ritual', () => {
       await expect(candle(page, order[i])).toHaveAttribute('data-lit', 'true');
       await expect(message(page)).toHaveText(MESSAGES[i]);
       await expect(page.getByTestId('ritual-count')).toHaveAttribute('aria-label', `${i + 1} of 5 flames lit`);
-      expect(await played(page)).toEqual([1, 2, 3, 4, 5].slice(0, i + 1).map((n) => `/audio/ritual/script${n}.mp3`));
+      expect(await played(page)).toEqual(SCRIPTS.slice(0, i + 1).map((f) => `/audio/ritual/${f}`));
       if (i === 1) await page.screenshot({ path: `${SHOTS}/63-ritual-two-lit.png` });
     }
     // The candles that were not touched are still dark; nothing has started yet.
@@ -154,7 +157,7 @@ test.describe('The candle ritual', () => {
     await candle(page, order[4]).click();
     await expect(message(page)).toHaveText(MESSAGES[4]);
     await expect(ritual).toHaveAttribute('data-complete', 'true');
-    expect(await played(page)).toEqual([1, 2, 3, 4, 5].map((n) => `/audio/ritual/script${n}.mp3`));
+    expect(await played(page)).toEqual(SCRIPTS.map((f) => `/audio/ritual/${f}`));
     await page.screenshot({ path: `${SHOTS}/64-ritual-complete.png` });
 
     // The room fades away by itself once the last voice has finished, leaving the design on its way.
@@ -266,6 +269,95 @@ test.describe('The candle ritual', () => {
     await candle(page, 'right').click();
     const flicker = await page.evaluate(() => getComputedStyle(document.querySelector('.rt-flamebox[data-lit="true"]') as HTMLElement).animationName);
     expect(flicker).toBe('rt-flicker');
+  });
+
+  test('after the fifth flame the circle waits for the design to finish, and only then shows it', async ({ page }) => {
+    test.setTimeout(120_000);
+    // The demo renderer takes 2.3 s, less than the last line. Stretch only its "running" wait (1600 ms) so the design
+    // outlasts the line and the chamber has to wait for it.
+    await page.addInitScript(() => {
+      const set = window.setTimeout.bind(window);
+      window.setTimeout = ((handler: TimerHandler, ms?: number, ...args: unknown[]) =>
+        set(handler, ms === 1600 ? 9000 : ms, ...args)) as typeof window.setTimeout;
+    });
+    await seedHaunted(page, { sound: false });
+    await signIn(page);
+    await uploadRoom(page);
+    await chooseRoomAndStyle(page);
+    await page.getByTestId('begin-ritual').click();
+    const ritual = page.getByTestId('candle-ritual');
+    await expect(ritual).toBeVisible();
+    for (const id of ['left', 'top', 'bottom-right', 'right']) await candle(page, id).click();
+    await expect(page.getByTestId('ritual-wait')).toHaveCount(0); // nothing to wait for yet
+    await candle(page, 'bottom-left').click();
+    await expect(message(page)).toHaveText(MESSAGES[4]);
+
+    // The last line is given its time (3.8 s without sound); the design is still being made, so the circle stays
+    // and says so.
+    const wait = page.getByTestId('ritual-wait');
+    await expect(wait).toBeVisible({ timeout: 10_000 });
+    await expect(wait).toContainText(/photograph is developing/i);
+    await page.screenshot({ path: `${SHOTS}/66-ritual-waiting.png` });
+    await expect(ritual).toHaveAttribute('data-leaving', 'false');
+    await expect(page.getByTestId('result-panel')).toHaveCount(0);
+    await page.waitForTimeout(1500);
+    await expect(ritual).toBeVisible(); // still there, still waiting
+
+    // When the design is ready the circle fades away onto it.
+    await expect(ritual).toHaveCount(0, { timeout: 30_000 });
+    await expect(page.getByTestId('result-panel')).toBeVisible({ timeout: 3_000 });
+  });
+});
+
+test.describe('The sound of a click', () => {
+  const fire = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __played: string[] }).__played.filter((p) => p.endsWith('/audio/firesound.mp3')).length);
+
+  test('every click in the Haunted site crackles like a flame, and none when the sound is muted', async ({ page }) => {
+    await seedHaunted(page, { sound: true });
+    await signIn(page);
+    await expect(page.getByTestId('ouija-board')).toBeAttached();
+    const before = await fire(page);
+
+    // A plain heading: nothing is activated by the click.
+    const heading = page.getByRole('heading', { name: 'Design Studio' }).first();
+    await heading.click();
+    await expect.poll(() => fire(page)).toBe(before + 1);
+    await heading.click();
+    await expect.poll(() => fire(page)).toBe(before + 2);
+  });
+
+  test('the file really is served', async ({ page, request }) => {
+    const response = await request.get('/audio/firesound.mp3');
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('audio');
+    expect((await response.body()).byteLength).toBeGreaterThan(100_000);
+    await page.goto('/');
+  });
+
+  test('is silent when the sound is muted', async ({ page }) => {
+    await seedHaunted(page, { sound: false });
+    await signIn(page);
+    await expect(page.getByTestId('ouija-board')).toBeAttached();
+    await page.getByRole('heading', { name: 'Design Studio' }).first().click();
+    await page.getByRole('heading', { name: 'Design Studio' }).first().click();
+    expect(await fire(page)).toBe(0);
+  });
+
+  test('is not added to the Elegant site', async ({ page }) => {
+    await page.addInitScript(() => {
+      const w = window as unknown as { __played: string[] };
+      w.__played = [];
+      const play = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function () {
+        w.__played.push(new URL(this.currentSrc || this.src, location.href).pathname);
+        return play.call(this);
+      };
+    });
+    await seedElegantSeen(page);
+    await signIn(page);
+    await page.getByRole('heading', { name: 'Design Studio' }).first().click();
+    expect(await fire(page)).toBe(0);
   });
 });
 

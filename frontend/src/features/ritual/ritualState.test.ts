@@ -1,6 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { CANDLES, CANDLE_SOUNDS, type CandleId } from './geometry';
-import { CANDLE_COUNT, RITUAL_MESSAGES, freshRitual, isComplete, isLit, lightCandle, messageFor, soundFor, type RitualState } from './ritualState';
+import {
+  CANDLE_COUNT,
+  RITUAL_MESSAGES,
+  freshRitual,
+  isComplete,
+  isLit,
+  lightCandle,
+  messageFor,
+  soundFor,
+  waitStatus,
+  type RitualState,
+} from './ritualState';
 
 const ids = CANDLES.map((c) => c.id);
 
@@ -21,6 +32,21 @@ describe('the five lines', () => {
     expect(CANDLE_COUNT).toBe(5);
     expect(RITUAL_MESSAGES).toHaveLength(CANDLE_COUNT);
     expect(CANDLE_SOUNDS).toHaveLength(CANDLE_COUNT);
+  });
+});
+
+describe('the wait for the design', () => {
+  it('says nothing when there is no queue, or when the photograph is next', () => {
+    expect(waitStatus(null)).toBeNull();
+    expect(waitStatus(undefined)).toBeNull();
+    expect(waitStatus({})).toBeNull();
+    expect(waitStatus({ position: 1 })).toBeNull();
+  });
+
+  it('says how many are ahead, with the estimate when there is one', () => {
+    expect(waitStatus({ position: 3 })).toBe('3 spirits are ahead of you in the free queue.');
+    expect(waitStatus({ position: 4, etaSeconds: 21.4 })).toBe('4 spirits are ahead of you in the free queue, about 21 seconds.');
+    expect(waitStatus({ position: 2, etaSeconds: 0.2 })).toBe('2 spirits are ahead of you in the free queue, about 1 second.');
   });
 });
 
@@ -45,7 +71,7 @@ describe('lighting candles', () => {
     order.forEach((id, i) => {
       s = lightCandle(s, id);
       expect(messageFor(s)).toBe(RITUAL_MESSAGES[i]);
-      expect(soundFor(s)).toBe(`/audio/ritual/script${i + 1}.mp3`);
+      expect(soundFor(s)).toBe(`/audio/ritual/${['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3'][i]}`);
     });
   });
 

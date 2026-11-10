@@ -25,6 +25,7 @@ import { HorrorTakeoverController } from './HorrorTakeoverController';
 import { HauntingControls } from './HauntingControls';
 import { HauntedSoundtrack } from './HauntedSoundtrack';
 import { CandleCursor } from './CandleCursor';
+import { useClickSound } from './useClickSound';
 import { FloatingGhosts } from './FloatingGhosts';
 import { HolyWaterLayer } from '@/features/holywater/HolyWaterLayer';
 
@@ -48,6 +49,7 @@ export function HauntedExperienceProvider({ children }: { children: ReactNode })
   const phase = useHauntingStore((s) => s.phase);
   const candleCursor = useHauntingStore((s) => s.candleCursor);
   const candleDarkness = useHauntingStore((s) => s.candleDarkness);
+  const audioEnabled = useHauntingStore((s) => s.audioEnabled);
 
   const reducedMotion = useMedia(REDUCED_MOTION_QUERY);
   const mobile = useMedia(COARSE_POINTER_QUERY);
@@ -66,6 +68,8 @@ export function HauntedExperienceProvider({ children }: { children: ReactNode })
     return () => window.removeEventListener('pointermove', onMove);
   }, [finePointerQuery, sawMouse]);
   const finePointer = finePointerQuery || sawMouse;
+  // Every click in the Haunted site crackles like a flame (unless the sound is muted).
+  useClickSound(haunted && audioEnabled);
   // The candle burns down only while it is shown with the darkness; that is when the scare can happen.
   const candleBurning = haunted && candleCursor && finePointer && candleDarkness && phase === 'none';
 

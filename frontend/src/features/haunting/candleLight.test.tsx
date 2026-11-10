@@ -69,6 +69,25 @@ describe('light model', () => {
     expect(r).toBe(MIN_RADIUS);
   });
 
+  it('dims 50% faster than the 5 second pace it had, and ends very dim', () => {
+    // One burn-down step every 5000 / 1.5 ms: a rate of 0.3 steps a second instead of 0.2.
+    expect(DECAY_INTERVAL_MS).toBe(Math.round(5000 / 1.5));
+    expect(1000 / DECAY_INTERVAL_MS / (1000 / 5000)).toBeCloseTo(1.5, 2);
+    // From the first light (30%) the floor is reached after nine steps, about 30 seconds.
+    let r = 30;
+    let steps = 0;
+    while (r > MIN_RADIUS) {
+      r = decayedRadius(r);
+      steps += 1;
+    }
+    expect(steps).toBe(9);
+    expect((steps * DECAY_INTERVAL_MS) / 1000).toBeLessThan(31);
+    // The floor is a small circle: smaller than the 15% it used to be, and than the 30% it starts at.
+    expect(MIN_RADIUS).toBeLessThan(15);
+    expect(MIN_RADIUS).toBeLessThan(30);
+    expect(lightRadiusPx(MIN_RADIUS, 1366, 768)).toBeLessThan(0.15 * 768);
+  });
+
   it('a lift steps up from the step the light is burning down from', () => {
     // 22% burned down from the first step (30%), so the next step is 50%.
     useLightStore.setState({ radius: 22 });
@@ -107,7 +126,7 @@ describe('light model', () => {
 });
 
 describe('useCandleLight', () => {
-  it('burns the candle down every 5 seconds while enabled', () => {
+  it('burns the candle down every 3.3 seconds while enabled', () => {
     renderHook(() => useCandleLight(true));
     tick();
     expect(useLightStore.getState().radius).toBeCloseTo(27);
@@ -221,10 +240,10 @@ describe('clicking brightens the light', () => {
     expect(useLightStore.getState().radius).toBe(50);
   });
 
-  it('the light still shrinks afterwards, and a click starts the 5 seconds over', () => {
+  it('the light still shrinks afterwards, and a click starts the wait over', () => {
     renderHook(() => useCandleLight(true));
     click(); // 50%
-    wait(DECAY_INTERVAL_MS - 100); // almost 5 s since the click: no shrink yet
+    wait(DECAY_INTERVAL_MS - 100); // almost a full wait since the click: no shrink yet
     expect(useLightStore.getState().radius).toBe(50);
     click(); // 80%, timer starts over
     wait(DECAY_INTERVAL_MS - 100);

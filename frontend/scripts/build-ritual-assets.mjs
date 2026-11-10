@@ -212,10 +212,14 @@ result.patches.forEach((p, i) => {
 });
 fs.writeFileSync(path.join(outImages, 'candles.json'), JSON.stringify(meta, null, 2) + '\n');
 
-for (let i = 1; i <= 5; i++) {
-  const from = path.join(resource, `script${i}.mp3`);
-  const to = path.join(outAudio, `script${i}.mp3`);
-  fs.copyFileSync(from, to);
-  sizes[`script${i}.mp3`] = fs.statSync(to).size;
+// The second flame uses the second take, script2.1.mp3 (the first take, script2.mp3, was wrong and is not shipped).
+for (const file of ['script1.mp3', 'script2.1.mp3', 'script3.mp3', 'script4.mp3', 'script5.mp3']) {
+  const to = path.join(outAudio, file);
+  fs.copyFileSync(path.join(resource, file), to);
+  sizes[file] = fs.statSync(to).size;
 }
+// The sound of every click in the Haunted site.
+const fire = path.resolve(here, '..', 'public', 'audio', 'firesound.mp3');
+fs.copyFileSync(path.join(resource, 'firesound.mp3'), fire);
+sizes['firesound.mp3'] = fs.statSync(fire).size;
 for (const [name, bytes] of Object.entries(sizes)) console.log(`${name.padEnd(22)} ${(bytes / 1024).toFixed(0).padStart(5)} KB`);

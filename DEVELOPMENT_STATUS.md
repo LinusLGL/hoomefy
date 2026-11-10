@@ -468,3 +468,9 @@ In Haunted the Design Studio is now a spirit board. The photo goes on a blank po
 **Checked live** (workers.dev, commit `90d3c4c`, Cloudflare build passed, a real Supabase sign-up, Chrome at 1366x768): the board and the polaroid drop zone are there; the photo appears on the polaroid; pressing it shows the consent dialog first; after choosing the demo rendering the chamber opens with the intro line; five candles lit in the order bottom-right, left, top, right, bottom-left showed the five lines in order and played `script1..5.mp3` in order; the chamber closed by itself and the result panel appeared; no console errors and no failed ritual files. The new files are served with the right types and a one-week cache, `Range` on the recordings answers 206, and a missing recording is a real 404. The real AI was not used on this pass (the demo rendering was chosen).
 
 **Not verified:** Safari and Firefox (blend mode on the flame patches, audio after a click); the live ritual on a phone and tablet (those sizes were checked locally only); the live ritual with the real AI; the contrast ratio of the text box was judged by eye, not measured; the licence of the artwork and the five recordings (they came from `Resource/`; confirm before the contest entry).
+
+### Ritual follow-ups (Nov 5, 2026)
+
+- Second line uses `script2.1.mp3`; the chamber waits for the design, then shows the result; `firesound.mp3` plays (1.4 s) on every Haunted click; candle light dims every 3.3 s to 12 %.
+- Checks: tsc, eslint, 608 unit tests, build, 92 desktop e2e (ritual, holywater, mansion, studio-fit) pass. Not yet live-verified.
+
