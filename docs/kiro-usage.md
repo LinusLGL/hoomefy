@@ -9,8 +9,8 @@ This page lists each Kiro feature, what is in the repository, and what has been 
 | Agent hooks | `.kiro/hooks/` (3 hooks) | `credential-guard` blocked a test write in Kiro. The checklist hook fired during development. `quality-gate` is tested outside Kiro; a run at the end of a turn has not been observed. |
 | Property-based tests | `*.property.test.ts` (6 files) | Run with Vitest; results below |
 | Custom agents | `.kiro/agents/` (2 agents) | Both ran once in the Kiro IDE as sub-agents (details below). The asset director had no OpenArt tools in that session. |
-| MCP (OpenArt) | `powers/hoomefy-media-studio/mcp.json` and the snippet below | Configured. A project-level `.kiro/settings/mcp.json` with the same contents is shown below. |
-| Power | `powers/hoomefy-media-studio/` | Defined. Not imported into Kiro yet; the Kiro session reported no powers installed. |
+| MCP (OpenArt) | `.kiro/settings/mcp.json` and the power's `mcp.json` | Configured. In the Kiro session where this was checked, the OpenArt server was not connected, so no OpenArt tool call from Kiro has been recorded. |
+| Power | `powers/hoomefy-media-studio/` | Imported into the Kiro IDE (Add Custom Power, from a folder). Activated, and its skill was read, in a Kiro session. Its OpenArt tools were not available. |
 
 ## Specs
 
@@ -57,7 +57,7 @@ Other failures during the work were wrong assumptions in the properties themselv
 **First runs (Kiro IDE, November 11, 2026):**
 
 - `hoomefy-reviewer`: the first call returned "Agent not found in registry". The permission rules in both agent files were then corrected to match Kiro's configuration reference (`match` as a list, and `*` instead of `**` for shell patterns), and the second call ran. The reviewer read `frontend/worker/guard.ts` and `detect.ts` against the security steering file and returned "ship with fixes": no high findings, two medium and several low. The medium findings are that the per-user rate limit is skipped silently if the limiter binding is missing (production does declare it), and that 4 calls a minute per user still allows a few accounts to use up the shared daily AI allowance. It also listed what it checked and found sound: sign-in check before any work, input validation, cleaning of model output, and nothing sensitive logged. It reported that it ran no tests. These findings are recorded here and have not been acted on.
-- `hoomefy-asset-director`: it ran, read the existing haunted audio and images, and drafted (without sending) a prompt for a short candle-ignition sound. It reported that no OpenArt tools were available in that session, so nothing was generated.
+- `hoomefy-asset-director`: it ran, read the existing haunted audio and images, and drafted (without sending) a prompt for a short candle-ignition sound. It reported that no OpenArt tools were available in that session, so nothing was generated. A second run, after `.kiro/settings/mcp.json` was added and the power was installed, gave the same answer: no OpenArt tools.
 
 It is not established whether the first "not found" was caused by the configuration format or by the agent list not having reloaded. Both were changed or reloaded before the second call.
 
@@ -79,7 +79,7 @@ OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. It is configured wi
 }
 ```
 
-The same server is in the power's `mcp.json`, which is in the repository.
+The same server is in the power's `mcp.json`, which is in the repository. After both files were in place, a Kiro session listed no OpenArt tools: the power reported no available servers, and the asset-director agent reported no OpenArt tool. So the connection (or its sign-in) was not established in that session, and no media was generated through Kiro's MCP connection.
 
 The generated images, video clips and the five ritual voice lines (`frontend/public/audio/ritual/script1.mp3` to `script5.mp3`) were produced with OpenArt. HeyGen was not used.
 
@@ -91,7 +91,7 @@ Three audio files come from [Pixabay Music](https://pixabay.com/music/) and not 
 
 ## Power
 
-`powers/hoomefy-media-studio/` holds `plugin.json`, `mcp.json` and one skill, `generate-haunted-media`, which carries the brand rules and the steps for writing a prompt and generating media. To use it, import it in Kiro: Powers panel, Add Custom Power, Import from a folder.
+`powers/hoomefy-media-studio/` holds `plugin.json`, `mcp.json` and one skill, `generate-haunted-media`, which carries the brand rules and the steps for writing a prompt and generating media. To use it, import it in Kiro: Powers panel, Add Custom Power, Import from a folder. It was imported this way on November 11, 2026, and Kiro then listed it as installed with the keywords and the `generate-haunted-media` skill. In that session the skill's full instructions were read through Kiro, which confirms the power loads. The skill's final step, generating through OpenArt, has not run.
 
 ## Verification loop
 
