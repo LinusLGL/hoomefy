@@ -9,7 +9,7 @@ This page lists each Kiro feature, what is in the repository, and what has been 
 | Agent hooks | `.kiro/hooks/` (3 hooks) | `credential-guard` blocked a test write in Kiro. The checklist hook fired during development. `quality-gate` is tested outside Kiro; a run at the end of a turn has not been observed. |
 | Property-based tests | `*.property.test.ts` (6 files) | Run with Vitest; results below |
 | Custom agents | `.kiro/agents/` (2 agents) | Both ran once in the Kiro IDE as sub-agents (details below). The asset director had no OpenArt tools in that session. |
-| MCP (OpenArt) | `.kiro/settings/mcp.json` and the power's `mcp.json` | Configured. In the Kiro session where this was checked, the OpenArt server was not connected, so no OpenArt tool call from Kiro has been recorded. |
+| MCP (OpenArt) | `.kiro/settings/mcp.json` and the power's `mcp.json` | Connected in the Kiro IDE after the server was authorised. Two read-only calls returned results (account summary, model price list). No generation has been run through Kiro yet. |
 | Power | `powers/hoomefy-media-studio/` | Imported into the Kiro IDE (Add Custom Power, from a folder). Activated, and its skill was read, in a Kiro session. Its OpenArt tools were not available. |
 
 ## Specs
@@ -79,7 +79,7 @@ OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. It is configured wi
 }
 ```
 
-The same server is in the power's `mcp.json`, which is in the repository. After both files were in place, a Kiro session listed no OpenArt tools: the power reported no available servers, and the asset-director agent reported no OpenArt tool. So the connection (or its sign-in) was not established in that session, and no media was generated through Kiro's MCP connection.
+The same server is in the power's `mcp.json`, which is in the repository. After both files were in place, a Kiro session listed no OpenArt tools: the power reported no available servers, and the asset-director agent reported no OpenArt tool. So the connection (or its sign-in) was not established in that session, and no media was generated through Kiro's MCP connection. After the server was authorised in Kiro, the OpenArt tools loaded and two read-only calls returned results: the account summary (a Free plan with a small credit balance) and the price list for image and video models. Video models were not affordable on that balance, and the cheapest image model costs 10 credits per image. No generation has been run through Kiro yet.
 
 The generated images, video clips and the five ritual voice lines (`frontend/public/audio/ritual/script1.mp3` to `script5.mp3`) were produced with OpenArt. HeyGen was not used.
 
