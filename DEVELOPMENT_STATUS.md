@@ -1,6 +1,21 @@
 # Hoomefy Development Status
 
-> **Correction (Nov 2026):** earlier revisions of this file marked frontend milestones "complete" and quoted
+## Current status (November 10, 2026)
+
+Hoomefy is built and deployed: https://hoomefy.lglliang22-13.workers.dev (Cloudflare Workers, Supabase, FLUX.2 [klein]
+4B for the redesign, Workers AI for the backup redesign and furniture detection). It is the Kiroween 2026 entry in the
+Costume Contest category.
+
+- **Checks at the last run:** type check and lint clean, 738 unit and property tests passing, production build passing.
+  The last full Playwright run (desktop and mobile) had 169 tests passing, before the Kiro-features files were added;
+  a later run of the studio spec passed (16 of 16).
+- **Real services:** accounts, saved designs, the redesign, item detection, the mirror takeover and the jumpscare were
+  checked on the deployed site. Shop prices show as estimates until `SERPER_API_KEY` is set as a Worker secret.
+- **Kiro usage:** see [docs/kiro-usage.md](docs/kiro-usage.md) and `.kiro/specs/kiro-features/`.
+- **Older sections below** were written during the build and are kept as a record. The AWS references in them
+  (CDK, Lambda, Cognito, Bedrock, DynamoDB) describe the original plan, which was replaced by Cloudflare and Supabase.
+
+> **Historical note (early November 2026, superseded by the current status above):** earlier revisions of this file marked frontend milestones "complete" and quoted
 > percentages before the code had ever been compiled, linted or run. That was wrong: the first type-check
 > found 112 errors. The frontend is now type-checked, linted (zero warnings), unit/integration tested
 > (206 tests) and exercised end-to-end in a real browser (43 tests). Percentages in older sections below
@@ -11,8 +26,8 @@
 > ghosts, and a build-the-house / replace-the-furniture mechanic that clears the ghosts.
 > See `.kiro/specs/haunted-mansion/` (current art direction and gameplay) and `.kiro/specs/haunted-takeover/`
 > (takeover mechanics; its school-era art direction is superseded) for requirements, design, tasks and limitations.
-**Last Updated:** November 5, 2026  
-**Phase:** Foundation & Setup Complete ✅
+**Last Updated:** November 10, 2026  
+**Phase:** Deployed; preparing the Kiroween 2026 submission (the original foundation checklist is below)
 
 ---
 

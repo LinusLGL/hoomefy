@@ -9,6 +9,8 @@ mansion without changing what the studio can do.
 
 Built for **Kiroween 2026**, Costume Contest category.
 
+**Live site:** https://hoomefy.lglliang22-13.workers.dev (sign up in a few seconds, or see the Devpost submission for a test login).
+
 ---
 
 ## What it does
@@ -85,7 +87,7 @@ Settings live in `frontend/.env.example`.
 cd frontend
 npm run type-check
 npm run lint
-npx vitest --run     # unit and component tests
+npx vitest --run     # unit, component and property-based (fast-check) tests
 npm run test:e2e     # Playwright, desktop and mobile (uses the demo renderer)
 ```
 
@@ -111,17 +113,39 @@ frontend/
   scripts/live-smoke.mjs            one-off check of the real AI service
 supabase/migrations/0001_init.sql   database table, storage bucket and security rules
 docs/DEPLOY.md                      free deployment guide
-.kiro/                              specs, steering and hooks used to build the project
+.kiro/                              specs, steering, hooks and custom agents used to build the project
+powers/hoomefy-media-studio/        a local Kiro power (manifest, MCP config and a skill)
+docs/kiro-usage.md                  how each Kiro feature was used, and what has been verified
 ```
 
 ## Built with Kiro
 
 The project was built spec-first with Kiro. The requirements, design and task lists are in `.kiro/specs`
-(`hoomefy`, `scandinavian-elegant`, `haunted-takeover`, `haunted-mansion`, `design-studio`, `haunted-ritual`), and the product,
-design, tech, security, testing and structure rules that guided every change are in `.kiro/steering`.
+(`hoomefy`, `design-studio`, `haunted-takeover`, `haunted-mansion`, `scandinavian-elegant`, `haunted-ritual`, `studio-items`,
+`kiro-features`), and the product, design, tech, security, testing and structure rules that guided every change are in
+`.kiro/steering`.
+
+What else is in the repository:
+
+- **Agent hooks** (`.kiro/hooks`): `credential-guard` blocks a file write that contains a key or token, `quality-gate`
+  runs the type check and lint when the agent finishes, and `worker-security-checklist` reminds the agent of the Worker
+  security rules when a Worker route is saved.
+- **Custom agents** (`.kiro/agents`): `hoomefy-reviewer` (read-only review against the steering files) and
+  `hoomefy-asset-director` (media briefs and generation through the OpenArt MCP server).
+- **Property-based tests**: six `*.property.test.ts` files using fast-check. They found three input-handling gaps
+  (an infinite or absurd shop price accepted in two places, and a resize function that returned `NaN`), each fixed with
+  a regression test.
+- **A local power** in `powers/hoomefy-media-studio`.
+
+[docs/kiro-usage.md](docs/kiro-usage.md) describes each of these and says exactly what has and has not been verified.
 
 ## Credits and licence
 
 - Image model: FLUX.2 [klein] 4B by Black Forest Labs, Apache 2.0. Furniture detector: OWL-ViT (Apache 2.0) via
-  Transformers.js.
+  Transformers.js (the optional on-device fallback).
+- Furniture detection on the server: Meta Llama 4 Scout, with Google Gemma as the backup, run on Cloudflare Workers AI
+  under their own licences. The backup redesign model is also FLUX.2 [klein] 4B on Workers AI.
+- Generated images, video and the ritual voice lines were made with OpenArt. Three audio tracks (ambient music,
+  the haunting sting and the fire sound) come from [Pixabay Music](https://pixabay.com/music/). Fonts are from
+  Google Fonts.
 - MIT licence, see [LICENSE](LICENSE).

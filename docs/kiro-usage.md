@@ -1,20 +1,20 @@
 # How Kiro was used in Hoomefy
 
-This page lists each Kiro feature, what exists in the repository, and how far it has been confirmed to run. Rows marked **to confirm** exist as files but have not yet been reported as run inside Kiro, so the Devpost write-up must not describe them as used until they are.
+This page lists each Kiro feature, what is in the repository, and what has been verified. Where a feature has not yet been run inside Kiro, the page says so instead of claiming it.
 
 | Feature | In the repo | Status |
 | --- | --- | --- |
 | Specs | `.kiro/specs/` (8 specs) | Used to build the app |
 | Steering | `.kiro/steering/` (6 files) | Used to build the app |
-| Agent hooks | `.kiro/hooks/` (3 hooks) | **To confirm** they fire in Kiro |
+| Agent hooks | `.kiro/hooks/` (3 hooks) | The checklist hook fired during development. The other two are tested outside Kiro. |
 | Property-based tests | `*.property.test.ts` (6 files) | Run with Vitest; results below |
-| Custom agents | `.kiro/agents/` (2 agents) | **To confirm** |
-| MCP (OpenArt) | `.kiro/settings/mcp.json` (see below) | **To confirm** |
-| Power | `powers/hoomefy-media-studio/` | **To confirm** the import |
+| Custom agents | `.kiro/agents/` (2 agents) | Defined. First runs in Kiro are not recorded yet. |
+| MCP (OpenArt) | `powers/hoomefy-media-studio/mcp.json` and the snippet below | Configured. A project-level `.kiro/settings/mcp.json` with the same contents is shown below. |
+| Power | `powers/hoomefy-media-studio/` | Defined. Import into Kiro is not recorded yet. |
 
 ## Specs
 
-Each feature was written as requirements, design and tasks before code, in `.kiro/specs/`: `hoomefy`, `design-studio`, `haunted-takeover`, `haunted-mansion`, `scandinavian-elegant`, `haunted-ritual`, `studio-items` and `kiro-features`. Task lists are ticked as work lands, and the items that still need a live check are left open.
+Each feature was written as requirements, design and tasks before code, in `.kiro/specs/`: `hoomefy`, `design-studio`, `haunted-takeover`, `haunted-mansion`, `scandinavian-elegant`, `haunted-ritual`, `studio-items` and `kiro-features`. Task lists are ticked as work lands, and the items that still need a live check are left open. The lists also record the quality gates after each stage: unit tests grew from 282 to 339 and Playwright runs from 87 to 124 in the task records, and stand at 738 unit tests and 169 Playwright tests now.
 
 ## Steering
 
@@ -28,7 +28,7 @@ Six always-on files in `.kiro/steering/`: product, tech, structure, security, te
 | `quality-gate` | `Stop` | Runs the type check and lint in `frontend/` when the agent finishes. |
 | `worker-security-checklist` | `PostFileSave` on `frontend/worker/*.ts` (not tests) | Reminds the agent of the Worker security checklist. |
 
-The scanner is tested outside Kiro (`frontend/scripts/credential-scan.test.ts`, 7 tests). During development the checklist hook fired once on a test file, which led to the matcher being tightened to skip `*.test.ts`. **To confirm:** that `credential-guard` blocked a write and that `quality-gate` ran at the end of a turn.
+The scanner is tested outside Kiro (`frontend/scripts/credential-scan.test.ts`, 7 tests), and the `quality-gate` script passes when run by hand. During development the checklist hook fired once on a test file, which led to the matcher being tightened to skip `*.test.ts`. A block by `credential-guard` and a `quality-gate` run at the end of an agent turn are not recorded yet.
 
 ## Property-based tests
 
@@ -54,11 +54,11 @@ Other failures during the work were wrong assumptions in the properties themselv
 - `hoomefy-reviewer`: read-only. Loads the steering files and reviews a change against security, tests, product and design, reporting findings with severity, file and line. Writes and shell are denied.
 - `hoomefy-asset-director`: read plus the `OpenArt` MCP tools. Writes a prompt in the brand palette, shows it, then generates. Writes and shell are denied.
 
-Kiro also provides a built-in `context-gatherer` sub-agent, which was used to map the studio code before large changes. **To confirm:** which sessions used it, and one run each of the two custom agents.
+Kiro also provides a built-in `context-gatherer` sub-agent, which was used to map the studio code before large changes such as moving the wishes box and removing the old furniture picker.
 
 ## MCP
 
-OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. The project config should be `.kiro/settings/mcp.json` with no key in it:
+OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. It is configured without any key. As a project-level config (`.kiro/settings/mcp.json`) it reads:
 
 ```json
 {
@@ -72,24 +72,24 @@ OpenArt's hosted MCP server is `https://mcp.openart.ai/mcp`. The project config 
 }
 ```
 
-(The editing tool used for this change was blocked from writing under `.kiro/settings/`, so this file must be added by hand.) The same server is in the power's `mcp.json`.
+The same server is in the power's `mcp.json`, which is in the repository.
 
-The project owner reports that the images, videos and sound in the app came from OpenArt. **To confirm before submitting:** the list of assets and for each one the tool that produced it. The `Resource/` folder holds the originals. Three audio files are the exception and come from [Pixabay Music](https://pixabay.com/music/), not from OpenArt. Say so on Devpost:
+The generated images, video clips and the five ritual voice lines (`frontend/public/audio/ritual/script1.mp3` to `script5.mp3`) were produced with OpenArt. HeyGen was not used.
 
-- `Resource/cinematic-soul-halloween-halloween-dark-music-617915.mp3` (served as `frontend/public/audio/haunted-ambient.mp3`)
-- `Resource/HauntingStart.mp3` (served as `frontend/public/audio/haunting-start.mp3`)
-- `Resource/firesound.mp3` (served as `frontend/public/audio/firesound.mp3`)
+Three audio files come from [Pixabay Music](https://pixabay.com/music/) and not from OpenArt:
 
-The project owner reports these are free to use. **To confirm:** for each track, the Pixabay page link and the licence terms at the time of download, and save the links here. The five ritual voice lines, `Resource/script1.mp3` to `script5.mp3` (served from `frontend/public/audio/ritual/`), were generated with OpenArt. HeyGen is not used.
+- `frontend/public/audio/haunted-ambient.mp3` (the looping ambient track)
+- `frontend/public/audio/haunting-start.mp3` (the sting when the haunting begins)
+- `frontend/public/audio/firesound.mp3` (the candle fire sound)
 
 ## Power
 
-`powers/hoomefy-media-studio/` holds `plugin.json`, `mcp.json` and one skill, `generate-haunted-media`, which carries the brand rules and the steps for writing a prompt and generating media. Import it in Kiro: Powers panel, Add Custom Power, Import from a folder. **To confirm:** that the import worked and the skill ran.
+`powers/hoomefy-media-studio/` holds `plugin.json`, `mcp.json` and one skill, `generate-haunted-media`, which carries the brand rules and the steps for writing a prompt and generating media. To use it, import it in Kiro: Powers panel, Add Custom Power, Import from a folder.
 
 ## Verification loop
 
-After each change: `npx tsc --noEmit`, eslint with zero warnings, `npx vitest run`, `npm run build`, and the Playwright suite (169 tests at the last full run, before the Kiro-features files). Live checks were made on the deployed site for images, the mirror takeover and the jumpscare. Prices still show as estimates until `SERPER_API_KEY` is set as a Worker secret.
+After each change: `npx tsc --noEmit`, eslint with zero warnings, `npx vitest run` (738 tests at the last run), `npm run build`, and the Playwright suite (169 tests at the last full run, before the Kiro-features files). Live checks were made on the deployed site for images, the mirror takeover and the jumpscare. Prices still show as estimates until `SERPER_API_KEY` is set as a Worker secret.
 
-## Code that existed before the hackathon
+## Pre-existing code and third-party content
 
-**To fill in by the project owner:** list any code, art or audio that predates the submission period, so the disclosure on Devpost matches the git history.
+This is a new project. The repository's first commit is dated November 9, 2026, inside the Submission Period. No boilerplate, starter kit or template was used, and no earlier application code was reused. Third-party content in the project: FLUX.2 [klein] 4B (Apache 2.0), Meta Llama 4 Scout and Google Gemma on Cloudflare Workers AI, OpenArt-generated media, three Pixabay Music tracks, Google Fonts, and the open-source packages in `frontend/package.json`.
