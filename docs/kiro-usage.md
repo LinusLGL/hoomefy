@@ -6,11 +6,11 @@ This page lists each Kiro feature, what is in the repository, and what has been 
 | --- | --- | --- |
 | Specs | `.kiro/specs/` (8 specs) | Used to build the app |
 | Steering | `.kiro/steering/` (6 files) | Used to build the app |
-| Agent hooks | `.kiro/hooks/` (3 hooks) | The checklist hook fired during development. The other two are tested outside Kiro. |
+| Agent hooks | `.kiro/hooks/` (3 hooks) | `credential-guard` blocked a test write in Kiro. The checklist hook fired during development. `quality-gate` is tested outside Kiro; a run at the end of a turn has not been observed. |
 | Property-based tests | `*.property.test.ts` (6 files) | Run with Vitest; results below |
-| Custom agents | `.kiro/agents/` (2 agents) | Defined. First runs in Kiro are not recorded yet. |
+| Custom agents | `.kiro/agents/` (2 agents) | Both ran once in the Kiro IDE as sub-agents (details below). The asset director had no OpenArt tools in that session. |
 | MCP (OpenArt) | `powers/hoomefy-media-studio/mcp.json` and the snippet below | Configured. A project-level `.kiro/settings/mcp.json` with the same contents is shown below. |
-| Power | `powers/hoomefy-media-studio/` | Defined. Import into Kiro is not recorded yet. |
+| Power | `powers/hoomefy-media-studio/` | Defined. Not imported into Kiro yet; the Kiro session reported no powers installed. |
 
 ## Specs
 
@@ -28,7 +28,7 @@ Six always-on files in `.kiro/steering/`: product, tech, structure, security, te
 | `quality-gate` | `Stop` | Runs the type check and lint in `frontend/` when the agent finishes. |
 | `worker-security-checklist` | `PostFileSave` on `frontend/worker/*.ts` (not tests) | Reminds the agent of the Worker security checklist. |
 
-The scanner is tested outside Kiro (`frontend/scripts/credential-scan.test.ts`, 7 tests), and the `quality-gate` script passes when run by hand. During development the checklist hook fired once on a test file, which led to the matcher being tightened to skip `*.test.ts`. A block by `credential-guard` and a `quality-gate` run at the end of an agent turn are not recorded yet.
+The scanner is tested outside Kiro (`frontend/scripts/credential-scan.test.ts`, 7 tests), and the `quality-gate` script passes when run by hand. During development the checklist hook fired once on a test file, which led to the matcher being tightened to skip `*.test.ts`. **Test run in Kiro (November 11, 2026):** the agent tried to write a file containing a fake, obviously test-only Supabase-style secret key. Kiro intercepted the write before it ran, and `credential-guard` returned "Blocked: this write contains what looks like a secret (Supabase secret key)". The file was not created. A `quality-gate` run at the end of an agent turn has not been observed.
 
 ## Property-based tests
 
@@ -53,6 +53,13 @@ Other failures during the work were wrong assumptions in the properties themselv
 
 - `hoomefy-reviewer`: read-only. Loads the steering files and reviews a change against security, tests, product and design, reporting findings with severity, file and line. Writes and shell are denied.
 - `hoomefy-asset-director`: read plus the `OpenArt` MCP tools. Writes a prompt in the brand palette, shows it, then generates. Writes and shell are denied.
+
+**First runs (Kiro IDE, November 11, 2026):**
+
+- `hoomefy-reviewer`: the first call returned "Agent not found in registry". The permission rules in both agent files were then corrected to match Kiro's configuration reference (`match` as a list, and `*` instead of `**` for shell patterns), and the second call ran. The reviewer read `frontend/worker/guard.ts` and `detect.ts` against the security steering file and returned "ship with fixes": no high findings, two medium and several low. The medium findings are that the per-user rate limit is skipped silently if the limiter binding is missing (production does declare it), and that 4 calls a minute per user still allows a few accounts to use up the shared daily AI allowance. It also listed what it checked and found sound: sign-in check before any work, input validation, cleaning of model output, and nothing sensitive logged. It reported that it ran no tests. These findings are recorded here and have not been acted on.
+- `hoomefy-asset-director`: it ran, read the existing haunted audio and images, and drafted (without sending) a prompt for a short candle-ignition sound. It reported that no OpenArt tools were available in that session, so nothing was generated.
+
+It is not established whether the first "not found" was caused by the configuration format or by the agent list not having reloaded. Both were changed or reloaded before the second call.
 
 Kiro also provides a built-in `context-gatherer` sub-agent, which was used to map the studio code before large changes such as moving the wishes box and removing the old furniture picker.
 

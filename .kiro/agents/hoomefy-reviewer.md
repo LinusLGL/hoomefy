@@ -12,13 +12,13 @@ resources:
 permissions:
   rules:
     - capability: fs_read
-      match: "**"
+      match: ["**"]
       effect: allow
     - capability: fs_write
-      match: "**"
+      match: ["**"]
       effect: deny
     - capability: shell
-      match: "**"
+      match: ["*"]
       effect: deny
 welcomeMessage: "Hoomefy reviewer ready. Tell me which files or which change to review. I only read; I never edit."
 ---

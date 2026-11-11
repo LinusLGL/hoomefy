@@ -11,13 +11,13 @@ resources:
 permissions:
   rules:
     - capability: fs_read
-      match: "**"
+      match: ["**"]
       effect: allow
     - capability: fs_write
-      match: "**"
+      match: ["**"]
       effect: deny
     - capability: shell
-      match: "**"
+      match: ["*"]
       effect: deny
 welcomeMessage: "Asset director ready. Tell me which image, clip or sound you need and where it appears in the app."
 ---
